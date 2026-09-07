@@ -3,6 +3,6 @@
   "package": "dev.itemnamecopy.mixin",
   "compatibilityLevel": "JAVA_${java}",
   ${refmap}
-  "client": ["ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin"${keyboard_mixin}],
+  "client": ["ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin"${keyboard_mixin}${recipe_screen_mixin}],
   "injectors": { "defaultRequire": 1 }
 }

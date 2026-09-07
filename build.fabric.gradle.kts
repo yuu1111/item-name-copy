@@ -39,9 +39,6 @@ tasks.processResources {
         "java" to project.property("java_version"), "loader" to project.property("loader_version"))
     inputs.properties(values)
     filesMatching("fabric.mod.json") { expand(values) }
-    filesMatching("itemnamecopy.mixins.json") {
-        expand("keyboard_mixin" to ", \"FabricKeyboardMixin\"", "refmap" to "", "java" to project.property("java_version").toString())
-    }
     exclude("META-INF/**")
 }
 

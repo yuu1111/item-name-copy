@@ -12,8 +12,6 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -42,14 +40,14 @@ public final class ItemNameCopyClient {
     public static boolean tryCopy(Screen screen, int key, int modifiers, int action, boolean handled) {
         if (key != GLFW.GLFW_KEY_C || action == GLFW.GLFW_RELEASE) return false;
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.screen != screen || !(screen instanceof AbstractContainerScreen)) return false;
+        if (MinecraftAccess.currentScreen() != screen || !(screen instanceof AbstractContainerScreen)) return false;
         // GLFWのModifierはmacOSでも左右の物理Ctrlを表す
         boolean control = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
         boolean other = (modifiers & (GLFW.GLFW_MOD_ALT | GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_SUPER)) != 0;
         return HANDLER.pressC(control, other, action != GLFW.GLFW_PRESS, handled, new CopyShortcutHandler.Target() {
             public boolean isTextInputFocused() {
-                if (screen instanceof RecipeUpdateListener) {
-                    RecipeBookComponent recipeBook = ((RecipeUpdateListener) screen).getRecipeBookComponent();
+                RecipeBookComponent recipeBook = MinecraftAccess.recipeBook(screen);
+                if (recipeBook != null) {
                     EditBox search = ((RecipeBookAccessor) recipeBook).itemnamecopy$getSearchBox();
                     if (recipeBook.isVisible() && search != null && search.isFocused()) return true;
                 }
@@ -65,7 +63,7 @@ public final class ItemNameCopyClient {
             public boolean writeClipboard(String name) {
                 try {
                     // KeyboardHandlerは空文字を無視するため同じ内部APIを直接使う
-                    CLIPBOARD.setClipboard(minecraft.getWindow().getWindow(), name);
+                    MinecraftAccess.writeClipboard(CLIPBOARD, name);
                     boolean success = name.equals(minecraft.keyboardHandler.getClipboard());
                     if (!success) LOGGER.warn("Clipboard did not retain the item name");
                     return success;
@@ -76,9 +74,7 @@ public final class ItemNameCopyClient {
             }
 
             public void showFeedback(String name) {
-                if (minecraft.player != null) {
-                    minecraft.player.displayClientMessage(Component.translatable("itemnamecopy.copied", name), true);
-                }
+                MinecraftAccess.feedback(name);
             }
         });
     }

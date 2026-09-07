@@ -12,6 +12,15 @@ val requiredJava = project.property("java_version").toString().toInt()
 val artifactName = "item-name-copy-${project.version}+$loaderTarget-mc$minecraftTarget.jar"
 val artifact = layout.buildDirectory.file("libs/$artifactName")
 val legacyForge = plugins.hasPlugin("net.neoforged.moddev.legacyforge")
+val hasRecipeScreen = org.gradle.util.GradleVersion.version(minecraftTarget) >= org.gradle.util.GradleVersion.version("1.21.2")
+tasks.named<ProcessResources>("processResources") {
+    val mixinValues = mapOf("java" to requiredJava.toString(),
+        "keyboard_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyboardMixin\"" else "",
+        "recipe_screen_mixin" to if (hasRecipeScreen) ", \"RecipeScreenAccessor\"" else "",
+        "refmap" to if (legacyForge) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
+    inputs.properties(mixinValues)
+    filesMatching("itemnamecopy.mixins.json") { expand(mixinValues) }
+}
 val artifactTask = when {
     loaderTarget == "fabric" && minecraftTarget.substringBefore('.').toInt() < 26 -> "remapJar"
     legacyForge -> "reobfJar"
@@ -35,6 +44,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
             val clientMixins = mixins["client"] as List<*>
             check(clientMixins.containsAll(listOf("ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin")))
             check(clientMixins.contains("FabricKeyboardMixin") == (loaderTarget == "fabric"))
+            check(clientMixins.contains("RecipeScreenAccessor") == hasRecipeScreen)
             clientMixins.forEach {
                 check(zip.getEntry("dev/itemnamecopy/mixin/$it.class") != null) { "Missing mixin class $it" }
             }

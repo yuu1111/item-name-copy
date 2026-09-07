@@ -8,7 +8,9 @@ group = "dev.itemnamecopy"
 base.archivesName = "item-name-copy"
 
 minecraft {
-    mappings("official", project.property("minecraft_version").toString())
+    if (project.property("minecraft_version").toString().substringBefore('.').toInt() < 26) {
+        mappings("official", project.property("minecraft_version").toString())
+    }
     runs {
         configureEach {
             workingDir.convention(layout.projectDirectory.dir("run"))
@@ -54,9 +56,6 @@ tasks.processResources {
         "fml" to project.property("loader_version").toString().substringBefore('.'))
     inputs.properties(values)
     filesMatching("META-INF/mods.toml") { expand(values) }
-    filesMatching("itemnamecopy.mixins.json") {
-        expand("keyboard_mixin" to "", "refmap" to "", "java" to project.property("java_version").toString())
-    }
     exclude("fabric.mod.json", "META-INF/neoforge.mods.toml")
 }
 

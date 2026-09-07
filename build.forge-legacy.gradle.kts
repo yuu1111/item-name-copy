@@ -63,10 +63,6 @@ tasks.processResources {
         "fml" to project.property("loader_version").toString().substringBefore('.'))
     inputs.properties(values)
     filesMatching("META-INF/mods.toml") { expand(values) }
-    filesMatching("itemnamecopy.mixins.json") {
-        expand("keyboard_mixin" to "", "refmap" to "\"refmap\": \"itemnamecopy.refmap.json\",",
-            "java" to project.property("java_version").toString())
-    }
     exclude("fabric.mod.json", "META-INF/neoforge.mods.toml")
 }
 

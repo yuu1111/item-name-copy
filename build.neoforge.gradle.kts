@@ -9,7 +9,10 @@ base.archivesName = "item-name-copy"
 repositories { mavenCentral() }
 
 neoForge {
-    version = project.property("loader_version") as String
+    enable {
+        version = project.property("loader_version") as String
+        setDisableRecompilation(true)
+    }
     mods {
         register("itemnamecopy") { sourceSet(sourceSets.main.get()) }
     }
@@ -43,9 +46,6 @@ tasks.processResources {
         "java" to project.property("java_version"), "loader" to project.property("loader_version"))
     inputs.properties(values)
     filesMatching("META-INF/neoforge.mods.toml") { expand(values) }
-    filesMatching("itemnamecopy.mixins.json") {
-        expand("keyboard_mixin" to "", "refmap" to "", "java" to project.property("java_version").toString())
-    }
     exclude("fabric.mod.json", "META-INF/mods.toml")
 }
 
