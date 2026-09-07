@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "dev.itemnamecopy.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": ["ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin"${keyboard_mixin}],
+  "injectors": { "defaultRequire": 1 }
+}
