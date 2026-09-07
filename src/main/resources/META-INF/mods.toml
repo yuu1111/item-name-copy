@@ -6,6 +6,7 @@ license="MIT"
 modId="itemnamecopy"
 version="${version}"
 displayName="ItemNameCopy"
+logoFile="assets/itemnamecopy/icon.png"
 displayTest="IGNORE_ALL_VERSION"
 description='''Copy a hovered item display name with Ctrl+C.'''
 

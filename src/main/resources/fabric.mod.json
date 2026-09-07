@@ -3,6 +3,7 @@
   "id": "itemnamecopy",
   "version": "${version}",
   "name": "ItemNameCopy",
+  "icon": "assets/itemnamecopy/icon.png",
   "description": "Copy a hovered item display name with Ctrl+C.",
   "environment": "client",
   "license": "MIT",

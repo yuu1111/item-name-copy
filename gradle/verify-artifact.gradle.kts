@@ -38,6 +38,12 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 return zip.getInputStream(entry).bufferedReader().use { it.readText() }
             }
             check(read("LICENSE").startsWith("MIT License")) { "Missing MIT license" }
+            val iconPath = "assets/itemnamecopy/icon.png"
+            val iconEntry = checkNotNull(zip.getEntry(iconPath)) { "Missing mod icon" }
+            zip.getInputStream(iconEntry).use { input ->
+                val icon = checkNotNull(javax.imageio.ImageIO.read(input)) { "Unreadable mod icon" }
+                check(icon.width == 256 && icon.height == 256) { "Mod icon must be 256 x 256" }
+            }
             val mixins = JsonSlurper().parseText(read("itemnamecopy.mixins.json")) as Map<*, *>
             check(mixins["required"] == true)
             check(mixins["mixins"] == null) { "Client mixins must not load on a dedicated server" }
@@ -57,6 +63,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 val metadata = JsonSlurper().parseText(read("fabric.mod.json")) as Map<*, *>
                 check(metadata["id"] == "itemnamecopy" && metadata["environment"] == "client")
                 check(metadata["version"] == project.version.toString() && metadata["license"] == "MIT")
+                check(metadata["icon"] == iconPath)
                 val depends = metadata["depends"] as Map<*, *>
                 check(depends["minecraft"] == "=$minecraftTarget")
                 check(depends["java"] == ">=$requiredJava")
@@ -67,6 +74,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 val metadata = read(metadataPath)
                 check(!metadata.contains("\${")) { "Unexpanded metadata" }
                 check(metadata.contains("modId=\"itemnamecopy\""))
+                check(metadata.contains("logoFile=\"$iconPath\""))
                 check(metadata.contains("version=\"${project.version}\""))
                 check(metadata.contains("versionRange=\"[$minecraftTarget]\""))
                 check(metadata.contains("versionRange=\"[${project.property("loader_version")},)\""))

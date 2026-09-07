@@ -22,7 +22,7 @@ public final class MinecraftAccess {
     }
 
     public static long windowHandle() {
-        //? if >=26.2 {
+        //? if >=26.1 {
         /*return Minecraft.getInstance().getWindow().handle();
         *///?} else {
         return Minecraft.getInstance().getWindow().getWindow();
@@ -40,7 +40,7 @@ public final class MinecraftAccess {
     }
 
     public static void writeClipboard(ClipboardManager clipboard, String name) {
-        //? if >=26.2 {
+        //? if >=26.1 {
         /*clipboard.setClipboard(Minecraft.getInstance().getWindow(), name);
         *///?} else {
         clipboard.setClipboard(windowHandle(), name);
@@ -51,7 +51,7 @@ public final class MinecraftAccess {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) return;
         Component message = Component.translatable("itemnamecopy.copied", name);
-        //? if >=26.2 {
+        //? if >=26.1 {
         /*minecraft.player.sendOverlayMessage(message);
         *///?} else {
         minecraft.player.displayClientMessage(message, true);
