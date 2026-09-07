@@ -33,7 +33,7 @@ val packMetadata = JsonOutput.toJson(mapOf("pack" to buildMap<String, Any> {
     } else put("pack_format", resourceFormat)
 }))
 tasks.named<ProcessResources>("processResources") {
-    val mixinValues = mapOf("java" to requiredJava.toString(),
+    val mixinValues = mapOf("java" to (if (loaderTarget == "forge") minOf(requiredJava, 21) else requiredJava).toString(),
         "keyboard_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyboardMixin\"" else "",
         "recipe_screen_mixin" to if (hasRecipeScreen) ", \"RecipeScreenAccessor\"" else "",
         "refmap" to if (requiresRefmap) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
@@ -111,7 +111,9 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 val metadata = read(metadataPath)
                 check(!metadata.contains("\${")) { "Unexpanded metadata" }
                 check(metadata.contains("modId=\"itemnamecopy\""))
-                check(metadata.contains("logoFile=\"$iconPath\""))
+                val iconProperty = if (loaderTarget == "neoforge" &&
+                    org.gradle.util.GradleVersion.version(minecraftTarget) >= org.gradle.util.GradleVersion.version("26.2")) "iconFile" else "logoFile"
+                check(metadata.contains("$iconProperty=\"$iconPath\""))
                 check(metadata.contains("version=\"${project.version}\""))
                 check(metadata.contains("versionRange=\"[$minecraftTarget]\""))
                 check(metadata.contains("versionRange=\"[${project.property("loader_version")},)\""))

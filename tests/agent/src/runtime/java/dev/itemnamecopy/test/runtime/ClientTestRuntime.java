@@ -160,8 +160,12 @@ public final class ClientTestRuntime {
             press(findButton("Create New World", false));
             nextStage();
         } else if (stage == 9) {
+            if (name.equals("ConfirmScreen")) {
+                press(findButton("Yes", false));
+                return;
+            }
             if (player() == null || screen() != null) throw new Pending();
-            require(Reflect.call(minecraft, "getSingleplayerServer|integratedServer") != null, "Expected a local integrated server");
+            require(Reflect.call(minecraft, "getSingleplayerServer|getIntegratedServer|integratedServer") != null, "Expected a local integrated server");
             command("difficulty peaceful");
             nextStage();
         } else if (stage == 10) {
@@ -194,7 +198,7 @@ public final class ClientTestRuntime {
             () -> {
                 Object level = Reflect.get(minecraft, "level", "world");
                 equal("PEACEFUL", String.valueOf(Reflect.call(level, "getDifficulty")));
-                Object server = Reflect.call(minecraft, "getSingleplayerServer|integratedServer");
+                Object server = Reflect.call(minecraft, "getSingleplayerServer|getIntegratedServer|integratedServer");
                 Object data;
                 if (Reflect.has(server, "getWorldData", 0)) data = Reflect.call(server, "getWorldData");
                 else {
@@ -215,7 +219,7 @@ public final class ClientTestRuntime {
                     require((Boolean) Reflect.call(Reflect.call(data, "worldGenSettings"), "isFlatWorld"), "World is not flat");
                 }
                 else {
-                    Object worldType = Reflect.call(data, "getGeneratorType|getTerrainType");
+                    Object worldType = Reflect.call(data, "getGeneratorType|getTerrainType|getGenerator");
                     String type = String.valueOf(Reflect.call(worldType, "getName"));
                     require(type.toLowerCase(java.util.Locale.ROOT).contains("flat"), "World is not flat: " + type);
                 }
@@ -251,6 +255,7 @@ public final class ClientTestRuntime {
                 Object book = recipeBook();
                 if (!(Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
                 search = Reflect.get(book, "searchBox", "searchBar", "searchField");
+                if (!LEGACY) Reflect.call(testScreen, "setFocused", book);
                 select(search, "recipe-copy-test");
             },
             () -> seed("recipe-sentinel"), () -> hover(36), () -> copy(1, 2), () -> copy(0, 2),
@@ -438,7 +443,7 @@ public final class ClientTestRuntime {
     }
 
     private static Object player() { return Reflect.optionalGet(minecraft, "player"); }
-    private static Object window() { return Reflect.has(minecraft, "getWindow|getMainWindow", 0) ? Reflect.call(minecraft, "getWindow|getMainWindow") : Reflect.get(minecraft, "window"); }
+    private static Object window() { return Reflect.has(minecraft, "getWindow|getMainWindow", 0) ? Reflect.call(minecraft, "getWindow|getMainWindow") : Reflect.get(minecraft, "window", "mainWindow"); }
     private static long handle() { return ((Number) Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "windowHandle")).longValue(); }
 
     private static Object screen() {
@@ -475,6 +480,8 @@ public final class ClientTestRuntime {
         Object hud = Reflect.optionalGet(gui, "hud");
         if (hud != null) gui = hud;
         Object message = Reflect.get(gui, "overlayMessageString", "overlayMessage", "recordPlaying");
+        if (LEGACY) return (String) Reflect.call(Reflect.type("net.minecraft.util.text.TextFormatting"),
+            "getTextWithoutFormattingCodes", text(message));
         return text(message);
     }
 
@@ -487,7 +494,7 @@ public final class ClientTestRuntime {
             Object language = Reflect.call(manager, "getLanguage", code);
             Reflect.call(manager, "setSelected|setCurrentLanguage", language);
         }
-        Object result = Reflect.call(minecraft, "reloadResourcePacks|refreshResources");
+        Object result = Reflect.call(minecraft, "reloadResourcePacks|reloadResources|refreshResources");
         reload = result instanceof Future ? (Future<?>) result : null;
     }
 

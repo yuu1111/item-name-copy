@@ -24,6 +24,7 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
         if (!minecraft && !screen && !keyboard && !mouse) return null;
         try {
             ClassReader reader = new ClassReader(bytes);
+            final boolean stackMapFrames = reader.readUnsignedShort(6) >= V1_6;
             ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
             reader.accept(new ClassVisitor(ASM9, writer) {
                 @Override
@@ -69,7 +70,7 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                             visitJumpInsn(IFLT, fallback);
                             visitInsn(IRETURN);
                             visitLabel(fallback);
-                            visitFrame(F_SAME1, 0, null, 1, new Object[] { INTEGER });
+                            if (stackMapFrames) visitFrame(F_SAME1, 0, null, 1, new Object[] { INTEGER });
                             visitInsn(POP);
                         }
                     };
