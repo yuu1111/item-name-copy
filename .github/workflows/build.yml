@@ -24,6 +24,7 @@ jobs:
         shell: pwsh
         run: |
           $matrix = ./scripts/Get-BuildMatrix.ps1
+          ./scripts/Get-DistributionManifest.ps1
           "matrix=$matrix" >> $env:GITHUB_OUTPUT
           "count=$(($matrix | ConvertFrom-Json).include.Count)" >> $env:GITHUB_OUTPUT
 
@@ -66,6 +67,7 @@ jobs:
     needs: [matrix, tests, build]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           pattern: item-name-copy-*
@@ -90,6 +92,11 @@ jobs:
             }
           })
           @{ schemaVersion = 1; artifacts = $entries } | ConvertTo-Json -Depth 4 | Set-Content dist/verification-manifest.json
+          ./scripts/Get-DistributionManifest.ps1 -OutputPath dist/distribution-manifest.json
+          $distribution = Get-Content dist/distribution-manifest.json -Raw | ConvertFrom-Json
+          if (@(Compare-Object @($distribution.artifacts.file) @($jars.Name)).Count -ne 0) {
+            throw 'Distribution metadata/Jar mismatch'
+          }
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: item-name-copy-all-targets

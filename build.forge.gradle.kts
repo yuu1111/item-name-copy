@@ -11,16 +11,28 @@ group = "dev.itemnamecopy"
 base.archivesName = "item-name-copy"
 val obfuscatedRuntime = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
     org.gradle.util.GradleVersion.version("1.20.5")
+val mixinRuntime = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) >=
+    org.gradle.util.GradleVersion.version("1.15.2")
 if (obfuscatedRuntime) apply(plugin = "net.minecraftforge.renamer")
 
 minecraft {
+    if (!mixinRuntime) {
+        val accessFile = rootProject.file(".gradle/legacy-forge-access/${project.name}.cfg")
+        val searchField = if (project.findProperty("mappings_channel") == "snapshot") "searchBar" else "searchBox"
+        val accessRules = rootProject.file("src/legacy-forge/resources/META-INF/accesstransformer.cfg").readText()
+            .replace("field_147006_u", "hoveredSlot").replace("field_193962_q", searchField)
+        accessFile.parentFile.mkdirs()
+        if (!accessFile.isFile || accessFile.readText() != accessRules) accessFile.writeText(accessRules)
+        accessTransformers.from(accessFile)
+    }
     if (project.property("minecraft_version").toString().substringBefore('.').toInt() < 26) {
-        mappings("official", project.property("minecraft_version").toString())
+        mappings(project.findProperty("mappings_channel")?.toString() ?: "official",
+            project.findProperty("mappings_version")?.toString() ?: project.property("minecraft_version").toString())
     }
     runs {
         configureEach {
             workingDir.convention(layout.projectDirectory.dir("run"))
-            args("--mixin.config=itemnamecopy.mixins.json")
+            if (mixinRuntime) args("--mixin.config=itemnamecopy.mixins.json")
         }
         register("client")
     }
@@ -34,8 +46,13 @@ repositories {
 }
 
 dependencies {
-    implementation(minecraft.dependency("net.minecraftforge:forge:${property("minecraft_version")}-${property("loader_version")}"))
-    annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
+    implementation(minecraft.dependency(project.name,
+        "net.minecraftforge:forge:${property("minecraft_version")}-${property("loader_version")}"))
+    if (mixinRuntime) annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
+    if (org.gradle.util.GradleVersion.version(project.property("minecraft_version").toString()) <
+        org.gradle.util.GradleVersion.version("1.17")) {
+        compileOnly("org.lwjgl:lwjgl-glfw:3.2.2")
+    }
 }
 
 java {
@@ -46,25 +63,32 @@ java {
 sourceSets.main {
     java.srcDir(rootProject.file("core/src/main/java"))
     java.exclude("**/FabricKeyboardMixin.java", "**/NeoForgeClient.java")
+    if (mixinRuntime) java.exclude("**/LegacyForgeEvents.java")
+    else {
+        java.exclude("**/mixin/**")
+        resources.srcDir(rootProject.file("src/legacy-forge/resources"))
+    }
 }
 
 tasks.jar {
     archiveFileName = "item-name-copy-${project.version}+forge-mc${project.property("minecraft_version")}.jar"
     if (obfuscatedRuntime) destinationDirectory = layout.buildDirectory.dir("devlibs")
-    manifest.attributes("MixinConfigs" to "itemnamecopy.mixins.json")
+    if (mixinRuntime) manifest.attributes("MixinConfigs" to "itemnamecopy.mixins.json")
 }
 
 if (obfuscatedRuntime) {
     val renamer = extensions.getByType<RenamerExtension>()
-    renamer.enableMixinRefmaps {
-        config("itemnamecopy.mixins.json")
-        refMap.set("itemnamecopy.refmap.json")
-        source(sourceSets.main.get()).refMap.set("itemnamecopy.refmap.json")
-        jar(tasks.jar)
+    if (mixinRuntime) {
+        renamer.enableMixinRefmaps {
+            config("itemnamecopy.mixins.json")
+            refMap.set("itemnamecopy.refmap.json")
+            source(sourceSets.main.get()).refMap.set("itemnamecopy.refmap.json")
+            jar(tasks.jar)
+        }
     }
-    renamer.mappings(minecraft.dependency.toSrg)
+    renamer.mappings(minecraft.getDependency(project.name).toSrg)
     val reobfuscatedJar = renamer.classes(tasks.jar) {
-        mappings(renamer.mixin.generatedMappings)
+        if (mixinRuntime) mappings(renamer.mixin.generatedMappings)
         output.set(layout.buildDirectory.file(
             "libs/item-name-copy-${project.version}+forge-mc${project.property("minecraft_version")}.jar"))
     }
@@ -81,6 +105,7 @@ tasks.processResources {
     inputs.properties(values)
     filesMatching("META-INF/mods.toml") { expand(values) }
     exclude("fabric.mod.json", "META-INF/neoforge.mods.toml")
+    if (!mixinRuntime) exclude("itemnamecopy.mixins.json")
 }
 
 apply(from = rootProject.file("gradle/verify-artifact.gradle.kts"))

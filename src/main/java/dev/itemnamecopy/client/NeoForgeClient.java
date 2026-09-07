@@ -5,18 +5,18 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.common.NeoForge;
-//? if <1.20.5 {
+//? if <1.20.6 {
 /*import net.neoforged.fml.loading.FMLEnvironment;
 *///?}
 
-//? if >=1.20.5 {
+//? if >=1.20.6 {
 @Mod(value = "itemnamecopy", dist = Dist.CLIENT)
 //?} else {
 /*@Mod("itemnamecopy")
 *///?}
 public final class NeoForgeClient {
     public NeoForgeClient() {
-        //? if <1.20.5 {
+        //? if <1.20.6 {
         /*if (FMLEnvironment.dist != Dist.CLIENT) return;
         *///?}
         ClientEvents.register();

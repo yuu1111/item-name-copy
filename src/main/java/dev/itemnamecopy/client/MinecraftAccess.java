@@ -1,14 +1,24 @@
 package dev.itemnamecopy.client;
 
 import com.mojang.blaze3d.platform.ClipboardManager;
+//? if !forge_without_mixins {
+import dev.itemnamecopy.mixin.ContainerScreenAccessor;
+import dev.itemnamecopy.mixin.RecipeBookAccessor;
 import dev.itemnamecopy.mixin.RecipeScreenAccessor;
+//?}
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 //? if <1.21.2 {
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 //?}
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.Slot;
+//? if <1.19 {
+/*import net.minecraft.network.chat.TranslatableComponent;
+*///?}
 
 public final class MinecraftAccess {
     private MinecraftAccess() {}
@@ -22,7 +32,13 @@ public final class MinecraftAccess {
     }
 
     public static long windowHandle() {
-        //? if >=1.21.9 {
+        //? if mcp_names && <1.15 {
+        /*return Minecraft.getInstance().mainWindow.getHandle();
+        *///?} elif mcp_names {
+        /*return Minecraft.getInstance().getMainWindow().getHandle();
+        *///?} elif <1.15 {
+        /*return Minecraft.getInstance().window.getWindow();
+        *///?} elif >=1.21.9 {
         /*return Minecraft.getInstance().getWindow().handle();
         *///?} else {
         return Minecraft.getInstance().getWindow().getWindow();
@@ -39,6 +55,23 @@ public final class MinecraftAccess {
         //?}
     }
 
+    public static Slot hoveredSlot(Screen screen) {
+        //? if forge_without_mixins {
+        /*return ((AbstractContainerScreen<?>) screen).hoveredSlot;
+        *///?} else {
+        return ((ContainerScreenAccessor) screen).itemnamecopy$getHoveredSlot();
+        //?}
+    }
+
+    public static boolean isRecipeSearchFocused(RecipeBookComponent recipeBook) {
+        //? if forge_without_mixins {
+        /*EditBox search = recipeBook.searchBox;
+        *///?} else {
+        EditBox search = ((RecipeBookAccessor) recipeBook).itemnamecopy$getSearchBox();
+        //?}
+        return recipeBook.isVisible() && search != null && search.isFocused();
+    }
+
     public static void writeClipboard(ClipboardManager clipboard, String name) {
         //? if >=1.21.9 {
         /*clipboard.setClipboard(Minecraft.getInstance().getWindow(), name);
@@ -50,7 +83,11 @@ public final class MinecraftAccess {
     public static void feedback(String name) {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null) return;
+        //? if >=1.19 {
         Component message = Component.translatable("itemnamecopy.copied", name);
+        //?} else {
+        /*Component message = new TranslatableComponent("itemnamecopy.copied", name);
+        *///?}
         //? if >=26.1 {
         /*minecraft.player.sendOverlayMessage(message);
         *///?} else {

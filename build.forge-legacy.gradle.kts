@@ -34,7 +34,7 @@ java {
 
 sourceSets.main {
     java.srcDir(rootProject.file("core/src/main/java"))
-    java.exclude("**/FabricKeyboardMixin.java", "**/NeoForgeClient.java")
+    java.exclude("**/FabricKeyboardMixin.java", "**/NeoForgeClient.java", "**/LegacyForgeEvents.java")
 }
 
 dependencies { annotationProcessor("org.spongepowered:mixin:0.8.5:processor") }

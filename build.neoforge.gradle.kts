@@ -28,7 +28,7 @@ java {
 
 sourceSets.main {
     java.srcDir(rootProject.file("core/src/main/java"))
-    java.exclude("**/FabricKeyboardMixin.java", "**/ForgeClient.java")
+    java.exclude("**/FabricKeyboardMixin.java", "**/ForgeClient.java", "**/LegacyForgeEvents.java")
 }
 
 tasks.named("createMinecraftArtifacts") { dependsOn("stonecutterGenerate") }

@@ -42,11 +42,24 @@
 ./gradlew '-Ptarget=1.21.1-fabric' :1.21.1-fabric:build
 ```
 
+## 開発環境で動作確認
+
+- `target`とタスクのNode名に、確認するMinecraft版とLoaderを指定する
+- `runClient`はソースをコンパイルして開発用クライアントを起動するため、Jarの手動配置は不要
+- 初回はゲームのアセットや実行用ライブラリを取得する
+
+```powershell
+./gradlew '-Ptarget=1.21.1-fabric' :1.21.1-fabric:runClient
+```
+
+- Forgeは`1.21.1-forge`、NeoForgeは`1.21.1-neoforge`へ両方のNode名を置き換える
+- ゲーム内では下のチェックリストに沿って操作する
+
 ## リリース前チェックリスト
 
 - [ ] タグ対象のコミットでGitHub Actionsの全ビルドとコアテストが成功している
 - [ ] Node数と配布Jar数が一致し、各JarのMinecraft、Loader、必要Java、Mod版が配布設定と一致している
-- [ ] 配布する各JarのSHA-256を動作確認したJarと照合している
+- [ ] 配布対象のソースとMinecraft／Loaderの組み合わせで、開発環境の動作確認が完了している
 - [ ] 配布するすべての組み合わせでクライアントが起動する
 - [ ] サバイバルとクリエイティブのインベントリ、チェスト、作業台、かまど、金床でコピーできる
 - [ ] 各Loaderで標準コンテナ画面を継承するMod画面を一つ確認している

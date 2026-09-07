@@ -13,7 +13,9 @@ val artifactName = "item-name-copy-${project.version}+$loaderTarget-mc$minecraft
 val artifact = layout.buildDirectory.file("libs/$artifactName")
 val legacyForge = plugins.hasPlugin("net.neoforged.moddev.legacyforge")
 val renamedForge = plugins.hasPlugin("net.minecraftforge.renamer")
-val requiresRefmap = legacyForge || renamedForge
+val usesMixins = loaderTarget != "forge" ||
+    org.gradle.util.GradleVersion.version(minecraftTarget) >= org.gradle.util.GradleVersion.version("1.15.2")
+val requiresRefmap = usesMixins && (legacyForge || renamedForge)
 val hasRecipeScreen = org.gradle.util.GradleVersion.version(minecraftTarget) >= org.gradle.util.GradleVersion.version("1.21.2")
 tasks.named<ProcessResources>("processResources") {
     val mixinValues = mapOf("java" to requiredJava.toString(),
@@ -47,20 +49,29 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 val icon = checkNotNull(javax.imageio.ImageIO.read(input)) { "Unreadable mod icon" }
                 check(icon.width == 256 && icon.height == 256) { "Mod icon must be 256 x 256" }
             }
-            val mixins = JsonSlurper().parseText(read("itemnamecopy.mixins.json")) as Map<*, *>
-            check(mixins["required"] == true)
-            check(mixins["mixins"] == null) { "Client mixins must not load on a dedicated server" }
-            val clientMixins = mixins["client"] as List<*>
-            check(clientMixins.containsAll(listOf("ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin")))
-            check(clientMixins.contains("FabricKeyboardMixin") == (loaderTarget == "fabric"))
-            check(clientMixins.contains("RecipeScreenAccessor") == hasRecipeScreen)
-            clientMixins.forEach {
-                check(zip.getEntry("dev/itemnamecopy/mixin/$it.class") != null) { "Missing mixin class $it" }
-            }
-            if (requiresRefmap) {
-                check(mixins["refmap"] == "itemnamecopy.refmap.json")
-                check((JsonSlurper().parseText(read("itemnamecopy.refmap.json")) as Map<*, *>).isNotEmpty())
-                check(read("META-INF/MANIFEST.MF").contains("MixinConfigs: itemnamecopy.mixins.json"))
+            if (usesMixins) {
+                val mixins = JsonSlurper().parseText(read("itemnamecopy.mixins.json")) as Map<*, *>
+                check(mixins["required"] == true)
+                check(mixins["mixins"] == null) { "Client mixins must not load on a dedicated server" }
+                val clientMixins = mixins["client"] as List<*>
+                check(clientMixins.containsAll(listOf("ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin")))
+                check(clientMixins.contains("FabricKeyboardMixin") == (loaderTarget == "fabric"))
+                check(clientMixins.contains("RecipeScreenAccessor") == hasRecipeScreen)
+                clientMixins.forEach {
+                    check(zip.getEntry("dev/itemnamecopy/mixin/$it.class") != null) { "Missing mixin class $it" }
+                }
+                if (requiresRefmap) {
+                    check(mixins["refmap"] == "itemnamecopy.refmap.json")
+                    check((JsonSlurper().parseText(read("itemnamecopy.refmap.json")) as Map<*, *>).isNotEmpty())
+                    check(read("META-INF/MANIFEST.MF").contains("MixinConfigs: itemnamecopy.mixins.json"))
+                }
+            } else {
+                check(zip.getEntry("itemnamecopy.mixins.json") == null)
+                check(zip.entries().asSequence().none { it.name.startsWith("dev/itemnamecopy/mixin/") })
+                check(zip.getEntry("dev/itemnamecopy/client/LegacyForgeEvents.class") != null)
+                check(read("META-INF/accesstransformer.cfg").trim() == rootProject.file(
+                    "src/legacy-forge/resources/META-INF/accesstransformer.cfg").readText().trim())
+                check(!read("META-INF/MANIFEST.MF").contains("MixinConfigs:"))
             }
             if (loaderTarget == "fabric") {
                 val metadata = JsonSlurper().parseText(read("fabric.mod.json")) as Map<*, *>
@@ -90,7 +101,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 check(zip.getEntry(otherMetadata) == null) { "Jar contains metadata for another loader generation" }
                 if (legacyForge || loaderTarget == "forge") {
                     check(metadata.contains("displayTest=\"IGNORE_ALL_VERSION\""))
-                    check(read("META-INF/MANIFEST.MF").contains("MixinConfigs: itemnamecopy.mixins.json"))
+                    if (usesMixins) check(read("META-INF/MANIFEST.MF").contains("MixinConfigs: itemnamecopy.mixins.json"))
                 }
             }
             for (language in listOf("en_us", "ja_jp")) {
@@ -105,7 +116,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 }
             }
         }
-        logger.lifecycle("Verified $artifactName: metadata, client mixins, translations, license and Java $requiredJava")
+        logger.lifecycle("Verified $artifactName: metadata, client hooks, translations, license and Java $requiredJava")
     }
 }
 

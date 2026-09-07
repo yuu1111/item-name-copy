@@ -10,9 +10,14 @@ repositories {
     mavenCentral()
 }
 
+val legacyMappings = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
+    org.gradle.util.GradleVersion.version("1.14.4")
+if (legacyMappings) apply(from = rootProject.file("gradle/legacy-fabric-mappings.gradle.kts"))
+
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
-    loomx.applyMojangMappings()
+    if (legacyMappings) mappings(project.extra["legacyFabricMappings"].toString())
+    else loomx.applyMojangMappings()
     modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
 }
 
@@ -23,7 +28,7 @@ java {
 
 sourceSets.main {
     java.srcDir(rootProject.file("core/src/main/java"))
-    java.exclude("**/NeoForgeClient.java", "**/ForgeClient.java")
+    java.exclude("**/NeoForgeClient.java", "**/ForgeClient.java", "**/LegacyForgeEvents.java")
 }
 
 loomx.modJar.configure {

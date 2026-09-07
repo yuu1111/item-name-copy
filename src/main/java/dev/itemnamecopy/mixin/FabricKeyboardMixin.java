@@ -4,6 +4,9 @@ import dev.itemnamecopy.client.ItemNameCopyClient;
 import dev.itemnamecopy.client.MinecraftAccess;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
+//? if <1.17 {
+/*import net.minecraft.client.gui.components.events.ContainerEventHandler;
+*///?}
 //? if >=1.21.9 {
 /*import net.minecraft.client.input.KeyEvent;
 *///?}
@@ -34,10 +37,15 @@ abstract class FabricKeyboardMixin {
         }
     }
     *///?}
-    //? if <1.21.2 {
+    //? if >=1.17 && <1.21.2 {
     @Inject(method = "method_1454", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(III)Z"), cancellable = true)
-    private static void itemnamecopy$beforeScreen(int action, Screen screen, boolean[] handled,
+    //? if >=1.19.3 {
+    private static
+    //?} else {
+    /*private
+    *///?}
+    void itemnamecopy$beforeScreen(int action, Screen screen, boolean[] handled,
                                                 int key, int scanCode, int modifiers, CallbackInfo ci) {
         if (ItemNameCopyClient.tryCopy(screen, key, modifiers, action, handled[0])) {
             handled[0] = true;
@@ -45,4 +53,16 @@ abstract class FabricKeyboardMixin {
         }
     }
     //?}
+    //? if <1.17 {
+    /*@Inject(method = "method_1454", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/components/events/ContainerEventHandler;keyPressed(III)Z"),
+            cancellable = true)
+    private void itemnamecopy$beforeScreen(int action, boolean[] handled, ContainerEventHandler listener,
+                                          int key, int scanCode, int modifiers, CallbackInfo ci) {
+        if (listener instanceof Screen && ItemNameCopyClient.tryCopy((Screen) listener, key, modifiers, action, handled[0])) {
+            handled[0] = true;
+            ci.cancel();
+        }
+    }
+    *///?}
 }
