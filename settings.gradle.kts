@@ -20,15 +20,16 @@ rootProject.name = "ItemNameCopy"
 include("core")
 
 val vcsNode = "1.21.1-fabric"
-val selectedTarget = providers.gradleProperty("target").orNull
+val selectedTargets = providers.gradleProperty("target").orNull?.split(',')?.map { it.trim() }?.toSet()
 val nodeDirectories = file("versions").listFiles().orEmpty()
     .filter { it.resolve("gradle.properties").isFile }.sortedBy { it.name }
-check(selectedTarget == null || nodeDirectories.any { it.name == selectedTarget }) { "Unknown target: $selectedTarget" }
+val unknownTargets = selectedTargets.orEmpty() - nodeDirectories.map { it.name }.toSet()
+check(unknownTargets.isEmpty()) { "Unknown targets: ${unknownTargets.joinToString()}" }
 
 stonecutter {
     create(rootProject) {
         for (directory in nodeDirectories) {
-            if (selectedTarget != null && directory.name !in listOf(vcsNode, selectedTarget)) continue
+            if (selectedTargets != null && directory.name != vcsNode && directory.name !in selectedTargets) continue
             val properties = Properties().apply { directory.resolve("gradle.properties").inputStream().use(::load) }
             val minecraft = properties.getProperty("minecraft_version")
             val script = checkNotNull(properties.getProperty("build_script")) { "Missing build_script in ${directory.name}" }

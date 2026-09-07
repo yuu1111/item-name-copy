@@ -1,11 +1,17 @@
+import net.minecraftforge.renamer.gradle.RenamerExtension
+
 plugins {
     java
     id("net.minecraftforge.gradle") version "7.0.36"
+    id("net.minecraftforge.renamer") version "1.0.14" apply false
 }
 
 version = property("mod.version") as String
 group = "dev.itemnamecopy"
 base.archivesName = "item-name-copy"
+val obfuscatedRuntime = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
+    org.gradle.util.GradleVersion.version("1.20.5")
+if (obfuscatedRuntime) apply(plugin = "net.minecraftforge.renamer")
 
 minecraft {
     if (project.property("minecraft_version").toString().substringBefore('.').toInt() < 26) {
@@ -44,7 +50,25 @@ sourceSets.main {
 
 tasks.jar {
     archiveFileName = "item-name-copy-${project.version}+forge-mc${project.property("minecraft_version")}.jar"
+    if (obfuscatedRuntime) destinationDirectory = layout.buildDirectory.dir("devlibs")
     manifest.attributes("MixinConfigs" to "itemnamecopy.mixins.json")
+}
+
+if (obfuscatedRuntime) {
+    val renamer = extensions.getByType<RenamerExtension>()
+    renamer.enableMixinRefmaps {
+        config("itemnamecopy.mixins.json")
+        refMap.set("itemnamecopy.refmap.json")
+        source(sourceSets.main.get()).refMap.set("itemnamecopy.refmap.json")
+        jar(tasks.jar)
+    }
+    renamer.mappings(minecraft.dependency.toSrg)
+    val reobfuscatedJar = renamer.classes(tasks.jar) {
+        mappings(renamer.mixin.generatedMappings)
+        output.set(layout.buildDirectory.file(
+            "libs/item-name-copy-${project.version}+forge-mc${project.property("minecraft_version")}.jar"))
+    }
+    tasks.assemble { dependsOn(reobfuscatedJar) }
 }
 
 tasks.withType<Jar>().configureEach { from(rootProject.file("LICENSE")) }

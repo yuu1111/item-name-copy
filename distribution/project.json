@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "name": "ItemNameCopy",
+  "slug": "item-name-copy",
+  "summary": "Copy a hovered item's display name with Ctrl+C.",
+  "descriptionFile": "distribution/description.md",
+  "iconFile": "src/main/resources/assets/itemnamecopy/icon.png",
+  "license": "MIT",
+  "sourceUrl": "https://github.com/yuu1111/item-name-copy",
+  "issuesUrl": "https://github.com/yuu1111/item-name-copy/issues",
+  "clientSide": "required",
+  "serverSide": "unsupported",
+  "platforms": ["modrinth", "curseforge"],
+  "status": "draft"
+}

@@ -12,18 +12,21 @@ val requiredJava = project.property("java_version").toString().toInt()
 val artifactName = "item-name-copy-${project.version}+$loaderTarget-mc$minecraftTarget.jar"
 val artifact = layout.buildDirectory.file("libs/$artifactName")
 val legacyForge = plugins.hasPlugin("net.neoforged.moddev.legacyforge")
+val renamedForge = plugins.hasPlugin("net.minecraftforge.renamer")
+val requiresRefmap = legacyForge || renamedForge
 val hasRecipeScreen = org.gradle.util.GradleVersion.version(minecraftTarget) >= org.gradle.util.GradleVersion.version("1.21.2")
 tasks.named<ProcessResources>("processResources") {
     val mixinValues = mapOf("java" to requiredJava.toString(),
         "keyboard_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyboardMixin\"" else "",
         "recipe_screen_mixin" to if (hasRecipeScreen) ", \"RecipeScreenAccessor\"" else "",
-        "refmap" to if (legacyForge) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
+        "refmap" to if (requiresRefmap) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
     inputs.properties(mixinValues)
     filesMatching("itemnamecopy.mixins.json") { expand(mixinValues) }
 }
 val artifactTask = when {
     loaderTarget == "fabric" && minecraftTarget.substringBefore('.').toInt() < 26 -> "remapJar"
     legacyForge -> "reobfJar"
+    renamedForge -> "renameJar"
     else -> "jar"
 }
 
@@ -54,7 +57,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
             clientMixins.forEach {
                 check(zip.getEntry("dev/itemnamecopy/mixin/$it.class") != null) { "Missing mixin class $it" }
             }
-            if (legacyForge) {
+            if (requiresRefmap) {
                 check(mixins["refmap"] == "itemnamecopy.refmap.json")
                 check((JsonSlurper().parseText(read("itemnamecopy.refmap.json")) as Map<*, *>).isNotEmpty())
                 check(read("META-INF/MANIFEST.MF").contains("MixinConfigs: itemnamecopy.mixins.json"))
@@ -70,7 +73,10 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 check(depends["fabricloader"] == ">=${project.property("loader_version")}")
                 check(zip.getEntry("META-INF/mods.toml") == null && zip.getEntry("META-INF/neoforge.mods.toml") == null)
             } else {
-                val metadataPath = if (legacyForge || loaderTarget == "forge") "META-INF/mods.toml" else "META-INF/neoforge.mods.toml"
+                val oldNeoMetadata = loaderTarget == "neoforge" &&
+                    org.gradle.util.GradleVersion.version(minecraftTarget) < org.gradle.util.GradleVersion.version("1.20.5")
+                val metadataPath = if (legacyForge || loaderTarget == "forge" || oldNeoMetadata)
+                    "META-INF/mods.toml" else "META-INF/neoforge.mods.toml"
                 val metadata = read(metadataPath)
                 check(!metadata.contains("\${")) { "Unexpanded metadata" }
                 check(metadata.contains("modId=\"itemnamecopy\""))
@@ -80,6 +86,8 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 check(metadata.contains("versionRange=\"[${project.property("loader_version")},)\""))
                 check(metadata.contains("javaVersion=\"[$requiredJava,)\""))
                 check(zip.getEntry("fabric.mod.json") == null)
+                val otherMetadata = if (metadataPath == "META-INF/mods.toml") "META-INF/neoforge.mods.toml" else "META-INF/mods.toml"
+                check(zip.getEntry(otherMetadata) == null) { "Jar contains metadata for another loader generation" }
                 if (legacyForge || loaderTarget == "forge") {
                     check(metadata.contains("displayTest=\"IGNORE_ALL_VERSION\""))
                     check(read("META-INF/MANIFEST.MF").contains("MixinConfigs: itemnamecopy.mixins.json"))
@@ -102,3 +110,5 @@ val verifyArtifact = tasks.register("verifyArtifact") {
 }
 
 tasks.named("check") { dependsOn(verifyArtifact) }
+
+apply(from = rootProject.file("gradle/verify-minecraft-hooks.gradle.kts"))

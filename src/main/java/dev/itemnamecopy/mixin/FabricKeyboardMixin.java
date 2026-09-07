@@ -23,7 +23,18 @@ abstract class FabricKeyboardMixin {
             ci.cancel();
         }
     }
-    *///?} else {
+    *///?}
+    //? if >=1.21.2 && <1.21.9 {
+    /*@Inject(method = "keyPress", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(III)Z"), cancellable = true)
+    private void itemnamecopy$beforeScreen(long window, int key, int scanCode, int action, int modifiers,
+                                          CallbackInfo ci) {
+        if (ItemNameCopyClient.tryCopy(MinecraftAccess.currentScreen(), key, modifiers, action, false)) {
+            ci.cancel();
+        }
+    }
+    *///?}
+    //? if <1.21.2 {
     @Inject(method = "method_1454", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(III)Z"), cancellable = true)
     private static void itemnamecopy$beforeScreen(int action, Screen screen, boolean[] handled,

@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[4,)"
+loaderVersion="[${fml},)"
 license="MIT"
 
 [[mods]]
@@ -7,6 +7,7 @@ modId="itemnamecopy"
 version="${version}"
 displayName="ItemNameCopy"
 logoFile="assets/itemnamecopy/icon.png"
+${display_test}
 description='''Copy a hovered item display name with Ctrl+C.'''
 
 [features.itemnamecopy]
@@ -17,14 +18,14 @@ config="itemnamecopy.mixins.json"
 
 [[dependencies.itemnamecopy]]
 modId="neoforge"
-type="required"
+${dependency_kind}
 versionRange="[${loader},)"
 ordering="NONE"
 side="CLIENT"
 
 [[dependencies.itemnamecopy]]
 modId="minecraft"
-type="required"
+${dependency_kind}
 versionRange="[${minecraft}]"
 ordering="NONE"
 side="CLIENT"

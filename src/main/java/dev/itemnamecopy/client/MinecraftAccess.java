@@ -22,7 +22,7 @@ public final class MinecraftAccess {
     }
 
     public static long windowHandle() {
-        //? if >=26.1 {
+        //? if >=1.21.9 {
         /*return Minecraft.getInstance().getWindow().handle();
         *///?} else {
         return Minecraft.getInstance().getWindow().getWindow();
@@ -40,7 +40,7 @@ public final class MinecraftAccess {
     }
 
     public static void writeClipboard(ClipboardManager clipboard, String name) {
-        //? if >=26.1 {
+        //? if >=1.21.9 {
         /*clipboard.setClipboard(Minecraft.getInstance().getWindow(), name);
         *///?} else {
         clipboard.setClipboard(windowHandle(), name);

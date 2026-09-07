@@ -1,5 +1,5 @@
 plugins {
-    id("net.neoforged.moddev") version "2.0.141"
+    id("net.neoforged.gradle.userdev") version "7.1.38"
 }
 
 version = property("mod.version") as String
@@ -8,22 +8,13 @@ base.archivesName = "item-name-copy"
 
 repositories { mavenCentral() }
 
-neoForge {
-    enable {
-        version = project.property("loader_version") as String
-        setDisableRecompilation(true)
-    }
-    mods {
-        register("itemnamecopy") { sourceSet(sourceSets.main.get()) }
-    }
-    runs {
-        register("client") { client() }
-    }
-}
-
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(property("java_version").toString().toInt())
     withSourcesJar()
+}
+
+dependencies {
+    implementation("net.neoforged:neoforge:${property("loader_version")}")
 }
 
 sourceSets.main {
@@ -31,15 +22,15 @@ sourceSets.main {
     java.exclude("**/FabricKeyboardMixin.java", "**/ForgeClient.java")
 }
 
-tasks.named("createMinecraftArtifacts") { dependsOn("stonecutterGenerate") }
+runs {
+    configureEach { modSource(sourceSets.main.get()) }
+}
 
 tasks.jar {
     archiveFileName = "item-name-copy-${project.version}+neoforge-mc${project.property("minecraft_version")}.jar"
 }
-
-tasks.withType<Jar>().configureEach {
-    from(rootProject.file("LICENSE"))
-}
+tasks.withType<Jar>().configureEach { from(rootProject.file("LICENSE")) }
+tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
 
 apply(from = rootProject.file("gradle/neoforge-resources.gradle.kts"))
 apply(from = rootProject.file("gradle/verify-artifact.gradle.kts"))
