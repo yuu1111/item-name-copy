@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.17.20"
+    id("dev.kikugie.loom-back-compat")
 }
 
 version = property("mod.version") as String
@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     minecraft("com.mojang:minecraft:${property("minecraft_version")}")
-    mappings(loom.officialMojangMappings())
+    loomx.applyMojangMappings()
     modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
 }
 
@@ -26,7 +26,7 @@ sourceSets.main {
     java.exclude("**/NeoForgeClient.java", "**/ForgeClient.java")
 }
 
-tasks.remapJar {
+loomx.modJar.configure {
     archiveFileName = "item-name-copy-${project.version}+fabric-mc${project.property("minecraft_version")}.jar"
 }
 
@@ -39,6 +39,10 @@ tasks.processResources {
         "java" to project.property("java_version"), "loader" to project.property("loader_version"))
     inputs.properties(values)
     filesMatching("fabric.mod.json") { expand(values) }
-    filesMatching("itemnamecopy.mixins.json") { expand("keyboard_mixin" to ", \"FabricKeyboardMixin\"") }
+    filesMatching("itemnamecopy.mixins.json") {
+        expand("keyboard_mixin" to ", \"FabricKeyboardMixin\"", "refmap" to "", "java" to project.property("java_version").toString())
+    }
     exclude("META-INF/**")
 }
+
+apply(from = rootProject.file("gradle/verify-artifact.gradle.kts"))

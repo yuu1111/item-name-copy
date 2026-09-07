@@ -39,7 +39,7 @@ public final class ItemNameCopyClient {
         return currentAction;
     }
 
-    public static boolean afterKey(Screen screen, int key, int modifiers, int action, boolean handled) {
+    public static boolean tryCopy(Screen screen, int key, int modifiers, int action, boolean handled) {
         if (key != GLFW.GLFW_KEY_C || action == GLFW.GLFW_RELEASE) return false;
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.screen != screen || !(screen instanceof AbstractContainerScreen)) return false;

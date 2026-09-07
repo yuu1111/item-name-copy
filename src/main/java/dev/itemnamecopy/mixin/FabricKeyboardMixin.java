@@ -14,7 +14,7 @@ abstract class FabricKeyboardMixin {
             target = "Lnet/minecraft/client/gui/screens/Screen;keyPressed(III)Z"), cancellable = true)
     private static void itemnamecopy$beforeScreen(int action, Screen screen, boolean[] handled,
                                                 int key, int scanCode, int modifiers, CallbackInfo ci) {
-        if (ItemNameCopyClient.afterKey(screen, key, modifiers, action, handled[0])) {
+        if (ItemNameCopyClient.tryCopy(screen, key, modifiers, action, handled[0])) {
             handled[0] = true;
             ci.cancel();
         }

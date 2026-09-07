@@ -1,29 +1,27 @@
 modLoader="javafml"
-loaderVersion="[4,)"
+loaderVersion="[${fml},)"
 license="MIT"
 
 [[mods]]
 modId="itemnamecopy"
 version="${version}"
 displayName="ItemNameCopy"
+displayTest="IGNORE_ALL_VERSION"
 description='''Copy a hovered item display name with Ctrl+C.'''
 
 [features.itemnamecopy]
 javaVersion="[${java},)"
 
-[[mixins]]
-config="itemnamecopy.mixins.json"
-
 [[dependencies.itemnamecopy]]
-modId="neoforge"
-type="required"
+modId="forge"
+mandatory=true
 versionRange="[${loader},)"
 ordering="NONE"
 side="CLIENT"
 
 [[dependencies.itemnamecopy]]
 modId="minecraft"
-type="required"
+mandatory=true
 versionRange="[${minecraft}]"
 ordering="NONE"
 side="CLIENT"

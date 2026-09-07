@@ -43,6 +43,10 @@ tasks.processResources {
         "java" to project.property("java_version"), "loader" to project.property("loader_version"))
     inputs.properties(values)
     filesMatching("META-INF/neoforge.mods.toml") { expand(values) }
-    filesMatching("itemnamecopy.mixins.json") { expand("keyboard_mixin" to "") }
+    filesMatching("itemnamecopy.mixins.json") {
+        expand("keyboard_mixin" to "", "refmap" to "", "java" to project.property("java_version").toString())
+    }
     exclude("fabric.mod.json", "META-INF/mods.toml")
 }
+
+apply(from = rootProject.file("gradle/verify-artifact.gradle.kts"))

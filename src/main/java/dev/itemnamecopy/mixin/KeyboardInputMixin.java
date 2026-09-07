@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(KeyboardHandler.class)
+@Mixin(value = KeyboardHandler.class, remap = MappingPolicy.REMAP)
 abstract class KeyboardInputMixin {
     @Inject(method = "keyPress", at = @At("HEAD"))
     private void itemnamecopy$begin(long window, int key, int scanCode, int action, int modifiers, CallbackInfo ci) {
