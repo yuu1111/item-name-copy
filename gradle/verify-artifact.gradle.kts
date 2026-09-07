@@ -1,4 +1,6 @@
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+import java.util.Properties
 import java.util.zip.ZipFile
 
 tasks.withType<Jar>().configureEach {
@@ -17,6 +19,19 @@ val usesMixins = loaderTarget != "forge" ||
     org.gradle.util.GradleVersion.version(minecraftTarget) >= org.gradle.util.GradleVersion.version("1.15.2")
 val requiresRefmap = usesMixins && (legacyForge || renamedForge)
 val hasRecipeScreen = org.gradle.util.GradleVersion.version(minecraftTarget) >= org.gradle.util.GradleVersion.version("1.21.2")
+val resourceFormats = Properties().apply {
+    rootProject.file("gradle/resource-pack-formats.properties").inputStream().use(::load)
+}
+val resourceFormat = checkNotNull(resourceFormats.getProperty(minecraftTarget)) {
+    "Missing resource pack format for $minecraftTarget"
+}.toInt()
+val packMetadata = JsonOutput.toJson(mapOf("pack" to buildMap<String, Any> {
+    put("description", "ItemNameCopy translations")
+    if (resourceFormat >= 65) {
+        put("min_format", resourceFormat)
+        put("max_format", resourceFormat)
+    } else put("pack_format", resourceFormat)
+}))
 tasks.named<ProcessResources>("processResources") {
     val mixinValues = mapOf("java" to requiredJava.toString(),
         "keyboard_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyboardMixin\"" else "",
@@ -24,6 +39,8 @@ tasks.named<ProcessResources>("processResources") {
         "refmap" to if (requiresRefmap) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
     inputs.properties(mixinValues)
     filesMatching("itemnamecopy.mixins.json") { expand(mixinValues) }
+    inputs.property("packMetadata", packMetadata)
+    filesMatching("pack.mcmeta") { expand("pack_metadata" to packMetadata) }
 }
 val artifactTask = when {
     loaderTarget == "fabric" && minecraftTarget.substringBefore('.').toInt() < 26 -> "remapJar"
@@ -43,6 +60,9 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 return zip.getInputStream(entry).bufferedReader().use { it.readText() }
             }
             check(read("LICENSE").startsWith("MIT License")) { "Missing MIT license" }
+            check(JsonSlurper().parseText(read("pack.mcmeta")) == JsonSlurper().parseText(packMetadata)) {
+                "Resource pack metadata does not match $minecraftTarget"
+            }
             val iconPath = "assets/itemnamecopy/icon.png"
             val iconEntry = checkNotNull(zip.getEntry(iconPath)) { "Missing mod icon" }
             zip.getInputStream(iconEntry).use { input ->

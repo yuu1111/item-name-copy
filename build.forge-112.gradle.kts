@@ -54,6 +54,8 @@ val generateLegacyResources = tasks.register("generateLegacyResources") {
         val output = generatedResources.get().asFile
         output.mkdirs()
         output.resolve("version.properties").writeText("itemnamecopy.version=${project.version}\n")
+        output.resolve("pack.mcmeta").writeText(JsonOutput.toJson(mapOf("pack" to mapOf(
+            "pack_format" to 3, "description" to "ItemNameCopy translations"))))
         output.resolve("mcmod.info").writeText(JsonOutput.prettyPrint(JsonOutput.toJson(listOf(mapOf(
             "modid" to "itemnamecopy", "name" to "ItemNameCopy", "version" to project.version.toString(),
             "mcversion" to project.property("minecraft_version"), "description" to "Copy hovered item names with Ctrl+C",

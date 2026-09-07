@@ -7,9 +7,23 @@ permissions:
   contents: read
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - id: targets
+        shell: pwsh
+        run: '"matrix=$(./scripts/Get-BuildMatrix.ps1)" >> $env:GITHUB_OUTPUT'
+
   client:
+    needs: matrix
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
     env:
       LIBGL_ALWAYS_SOFTWARE: '1'
     steps:
@@ -18,16 +32,18 @@ jobs:
         with:
           distribution: temurin
           java-version: |
-            21
+            ${{ matrix.java }}
             25
       - uses: gradle/actions/setup-gradle@4c125117fe7c5aed11272ec4213f602f012f89f2
       - run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libasound2t64
-      - run: xvfb-run -a bash ./gradlew -Ptarget=1.21.1-fabric :1.21.1-fabric:runClientTest --no-daemon --console=plain
+      - run: xvfb-run -a pwsh -NoProfile -File ./scripts/Invoke-ClientTests.ps1 -Target '${{ matrix.node }}'
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: always()
         with:
-          name: client-test-1.21.1-fabric
+          name: client-test-${{ matrix.node }}
           path: |
-            versions/1.21.1-fabric/build/reports/client-test/
-            versions/1.21.1-fabric/build/client-test/run/logs/
-            versions/1.21.1-fabric/build/client-test/run/crash-reports/
+            build/runtime-verification/
+            versions/${{ matrix.node }}/build/reports/client-agent/
+            versions/${{ matrix.node }}/build/client-agent/run/logs/
+            versions/${{ matrix.node }}/build/client-agent/run/crash-reports/
+            /tmp/itemnamecopy-client-tests-*/*.log
