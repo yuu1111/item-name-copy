@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "itemnamecopy_client_test",
+  "version": "1.0.0",
+  "name": "ItemNameCopy Client Tests",
+  "environment": "client",
+  "mixins": ["itemnamecopy-client-test.mixins.json"],
+  "depends": {"minecraft": "=1.21.1", "itemnamecopy": "*"}
+}

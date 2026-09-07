@@ -48,3 +48,7 @@ tasks.processResources {
 }
 
 apply(from = rootProject.file("gradle/verify-artifact.gradle.kts"))
+
+if (project.name == "1.21.1-fabric") {
+    apply(from = rootProject.file("gradle/client-test.gradle"))
+}

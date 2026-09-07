@@ -19,6 +19,9 @@ import net.minecraft.world.inventory.Slot;
 //? if <1.19 {
 /*import net.minecraft.network.chat.TranslatableComponent;
 *///?}
+//? if fabric && <1.19 {
+/*import net.minecraft.network.chat.TextComponent;
+*///?}
 
 public final class MinecraftAccess {
     private MinecraftAccess() {}
@@ -88,6 +91,16 @@ public final class MinecraftAccess {
         //?} else {
         /*Component message = new TranslatableComponent("itemnamecopy.copied", name);
         *///?}
+        //? if fabric {
+        if ("itemnamecopy.copied".equals(message.getString())) {
+            String fallback = BundledFeedback.copied(minecraft.options.languageCode, name);
+            //? if >=1.19 {
+            message = Component.literal(fallback);
+            //?} else {
+            /*message = new TextComponent(fallback);
+            *///?}
+        }
+        //?}
         //? if >=26.1 {
         /*minecraft.player.sendOverlayMessage(message);
         *///?} else {

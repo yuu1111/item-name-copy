@@ -1,0 +1,48 @@
+import groovy.json.JsonSlurper
+
+def testSource = sourceSets.create('clientTest') {
+    java.srcDir(rootProject.file('tests/client-1.21.1/java'))
+    resources.srcDir(rootProject.file('tests/client-1.21.1/resources'))
+    compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+    runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+}
+
+loom {
+    mods {
+        itemnamecopy { sourceSet sourceSets.main }
+        itemnamecopy_client_test { sourceSet testSource }
+    }
+    runs {
+        clientTest {
+            client()
+            source testSource
+            runDir 'build/client-test/run'
+            vmArg '-Ditemnamecopy.clientTest=true'
+            vmArg "-Ditemnamecopy.testReport=${layout.buildDirectory.file('reports/client-test/results.json').get().asFile.absolutePath}"
+        }
+    }
+}
+
+tasks.named('runClientTest') {
+    timeout = java.time.Duration.ofMinutes(5)
+    group = 'verification'
+    description = 'Runs Minecraft 1.21.1 client integration tests without an LLM.'
+    doFirst {
+        def report = layout.buildDirectory.file('reports/client-test/results.json').get().asFile
+        if (report.exists() && !report.delete()) throw new GradleException("Cannot remove stale report: $report")
+        def junit = new File(report.parentFile, 'TEST-client.xml')
+        if (junit.exists() && !junit.delete()) throw new GradleException("Cannot remove stale report: $junit")
+        def options = layout.buildDirectory.file('client-test/run/options.txt').get().asFile
+        options.parentFile.mkdirs()
+        options.text = 'lang:ja_jp\nguiScale:2\nonboardAccessibility:false\n'
+    }
+    doLast {
+        def report = layout.buildDirectory.file('reports/client-test/results.json').get().asFile
+        if (!report.isFile()) throw new GradleException('Client test did not produce a report')
+        def result = new JsonSlurper().parse(report)
+        logger.lifecycle("Client tests: ${result.passed} passed, ${result.failed} failed")
+        if (result.failed != 0 || result.passed != 10) {
+            throw new GradleException("Client tests failed; see $report")
+        }
+    }
+}
