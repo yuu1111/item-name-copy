@@ -18,6 +18,7 @@ plugins {
 
 rootProject.name = "ItemNameCopy"
 include("core")
+includeBuild("tests/agent")
 
 val vcsNode = "1.21.1-fabric"
 val selectedTargets = providers.gradleProperty("target").orNull?.split(',')?.map { it.trim() }?.toSet()
