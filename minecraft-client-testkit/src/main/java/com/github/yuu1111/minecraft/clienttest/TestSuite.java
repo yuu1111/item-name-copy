@@ -1,4 +1,4 @@
-package dev.itemnamecopy.test.runtime;
+package com.github.yuu1111.minecraft.clienttest;
 
 import java.util.List;
 

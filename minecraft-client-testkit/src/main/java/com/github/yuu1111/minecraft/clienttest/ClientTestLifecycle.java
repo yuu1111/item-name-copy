@@ -1,4 +1,4 @@
-package dev.itemnamecopy.test.runtime;
+package com.github.yuu1111.minecraft.clienttest;
 
 public interface ClientTestLifecycle {
     void initialize(Object client);

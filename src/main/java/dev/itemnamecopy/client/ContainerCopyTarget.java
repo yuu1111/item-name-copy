@@ -69,7 +69,7 @@ final class ContainerCopyTarget implements CopyShortcutHandler.Target {
     }
 
     private static boolean hasFocusedTextInput(GuiEventListener listener) {
-        if (listener instanceof EditBox && listener.isFocused()) return true;
+        if (listener instanceof EditBox && ((EditBox) listener).isFocused()) return true;
         if (!(listener instanceof ContainerEventHandler)) return false;
 
         ContainerEventHandler container = (ContainerEventHandler) listener;

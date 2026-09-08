@@ -1,4 +1,4 @@
-package dev.itemnamecopy.test.runtime;
+package com.github.yuu1111.minecraft.clienttest;
 
 public final class SyntheticInput {
     private int modifiers = -1;

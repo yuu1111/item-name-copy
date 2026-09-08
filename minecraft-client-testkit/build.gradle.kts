@@ -1,6 +1,6 @@
 plugins { `java-library` }
 
-group = "dev.itemnamecopy.test"
+group = "com.github.yuu1111"
 version = "0.0.0"
 
 java { toolchain.languageVersion = JavaLanguageVersion.of(25) }

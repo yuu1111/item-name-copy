@@ -16,8 +16,25 @@ public final class FileDriver {
     private int pending;
     private long deadline;
 
+    public static String quote(String value) {
+        StringBuilder out = new StringBuilder("\"");
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if {
+                (c == '\\' || c == '"')
+            } out.append('\\').append(c);
+            else if (c < 32) {
+                out.append(String.format("\\u%04x", (int) c));
+            } else {
+                out.append(c);
+            }
+        } return out.append('"').toString();
+    }
+
     public void submit(String action, String fields) throws Exception {
-        if (pending != 0) throw new IllegalStateException("An external action is already pending");
+        if (pending != 0) {
+            throw new IllegalStateException("An external action is already pending");
+        }
         int id = ++sequence;
         String request = "{\"id\":" + id + ",\"pid\":" + pid + ",\"action\":" + quote(action) + fields + "}";
         Path temporary = directory.resolve("request.tmp");
@@ -53,16 +70,5 @@ public final class FileDriver {
             if (poll()) return;
             Thread.sleep(5);
         } while (true);
-    }
-
-    public static String quote(String value) {
-        StringBuilder out = new StringBuilder("\"");
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            if (c == '\\' || c == '"') out.append('\\').append(c);
-            else if (c < 32) out.append(String.format("\\u%04x", (int) c));
-            else out.append(c);
-        }
-        return out.append('"').toString();
     }
 }
