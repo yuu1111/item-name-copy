@@ -4,6 +4,7 @@ import java.util.Properties
 
 plugins {
     id("dev.kikugie.stonecutter")
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.3" apply false
 }
 
 stonecutter active "1.21.1-fabric"

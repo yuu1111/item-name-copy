@@ -15,8 +15,13 @@ children=()
 cleanup() {
     local status=$?
     trap - EXIT
+    local peak=null
+    if [[ -r /sys/fs/cgroup/memory.peak ]]; then
+        peak=$(cat /sys/fs/cgroup/memory.peak)
+    fi
     jq -n --argjson exitCode "$status" --argjson durationSeconds "$(($(date +%s) - started))" \
-        --arg runId "$run_id" '{schemaVersion: 1, runId: $runId, exitCode: $exitCode, durationSeconds: $durationSeconds}' \
+        --argjson peakMemoryBytes "$peak" --arg runId "$run_id" \
+        '{schemaVersion: 1, runId: $runId, exitCode: $exitCode, durationSeconds: $durationSeconds, peakMemoryBytes: $peakMemoryBytes}' \
         >"$E2E_ARTIFACTS/run.json"
     for child in "${children[@]}"; do
         kill "$child" 2>/dev/null || true

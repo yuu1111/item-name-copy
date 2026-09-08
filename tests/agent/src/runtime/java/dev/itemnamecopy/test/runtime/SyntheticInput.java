@@ -1,40 +1,40 @@
 package dev.itemnamecopy.test.runtime;
 
-final class SyntheticInput {
+public final class SyntheticInput {
     private int modifiers = -1;
     private int action;
     private int pointerX = -1;
     private int pointerY = -1;
 
-    int controlState() {
+    public int controlState() {
         return modifiers < 0 ? -1 : (modifiers & 2) == 0 ? 0 : 1;
     }
 
-    int eventKey() {
+    public int eventKey() {
         return modifiers < 0 ? -1 : 46;
     }
 
-    int eventCharacter() {
+    public int eventCharacter() {
         return modifiers < 0 ? -1 : 'c';
     }
 
-    int eventKeyState() {
+    public int eventKeyState() {
         return modifiers < 0 ? -1 : action == 0 ? 0 : 1;
     }
 
-    int repeatState() {
+    public int repeatState() {
         return modifiers < 0 ? -1 : action == 2 ? 1 : 0;
     }
 
-    int mouseX() {
+    public int mouseX() {
         return pointerX;
     }
 
-    int mouseY() {
+    public int mouseY() {
         return pointerY;
     }
 
-    int keyDown(int key) {
+    public int keyDown(int key) {
         if (modifiers < 0) return -1;
         if (key == 29 || key == 157) return controlState();
         if (key == 42 || key == 54) return (modifiers & 1) == 0 ? 0 : 1;
@@ -43,21 +43,21 @@ final class SyntheticInput {
         return key == 46 && action != 0 ? 1 : 0;
     }
 
-    void beginKeyEvent(int action, int modifiers) {
+    public void beginKeyEvent(int action, int modifiers) {
         this.action = action;
         this.modifiers = modifiers;
     }
 
-    void endKeyEvent() {
+    public void endKeyEvent() {
         modifiers = -1;
     }
 
-    void movePointer(int x, int y) {
+    public void movePointer(int x, int y) {
         pointerX = x;
         pointerY = y;
     }
 
-    void reset() {
+    public void reset() {
         pointerX = -1;
         pointerY = -1;
         modifiers = -1;

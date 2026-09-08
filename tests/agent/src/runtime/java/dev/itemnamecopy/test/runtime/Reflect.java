@@ -9,17 +9,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-final class Reflect {
+public final class Reflect {
     private static ClassLoader loader;
 
     private Reflect() {
     }
 
-    static void initialize(ClassLoader classLoader) {
+    public static void initialize(ClassLoader classLoader) {
         loader = classLoader;
     }
 
-    static Class<?> type(String... names) {
+    public static Class<?> type(String... names) {
         for (String name : names) {
             Class<?> type = load(name);
             if (type != null) return type;
@@ -27,7 +27,7 @@ final class Reflect {
         throw new IllegalStateException("Class missing: " + Arrays.toString(names));
     }
 
-    static Object get(Object owner, String... names) {
+    public static Object get(Object owner, String... names) {
         Class<?> ownerType = ReflectionMembers.ownerType(owner);
         Field field = ReflectionMembers.findField(ownerType, names);
         if (field == null) {
@@ -41,7 +41,7 @@ final class Reflect {
         }
     }
 
-    static Object optionalGet(Object owner, String... names) {
+    public static Object optionalGet(Object owner, String... names) {
         if (owner == null) return null;
         try {
             return get(owner, names);
@@ -50,7 +50,7 @@ final class Reflect {
         }
     }
 
-    static void set(Object owner, Object value, String... names) {
+    public static void set(Object owner, Object value, String... names) {
         Class<?> ownerType = ReflectionMembers.ownerType(owner);
         Field field = ReflectionMembers.findField(ownerType, names);
         if (field == null) {
@@ -64,7 +64,7 @@ final class Reflect {
         }
     }
 
-    static Object call(Object owner, String names, Object... arguments) {
+    public static Object call(Object owner, String names, Object... arguments) {
         Class<?> ownerType = ReflectionMembers.ownerType(owner);
         Method method = ReflectionMembers.findMethod(ownerType, names, arguments, owner instanceof Class);
         if (method == null) {
@@ -79,11 +79,11 @@ final class Reflect {
         }
     }
 
-    static boolean has(Object owner, String names, int arity) {
+    public static boolean has(Object owner, String names, int arity) {
         return owner != null && ReflectionMembers.hasMethod(ReflectionMembers.ownerType(owner), names, arity);
     }
 
-    static Object make(Class<?> type, Object... arguments) {
+    public static Object make(Class<?> type, Object... arguments) {
         Constructor<?> constructor = ReflectionMembers.findConstructor(type, arguments);
         if (constructor == null) {
             throw new IllegalStateException("Constructor missing: " + type.getName() + "(" + arguments.length + ")");
@@ -96,7 +96,7 @@ final class Reflect {
         }
     }
 
-    static List<Object> values(Object owner) {
+    public static List<Object> values(Object owner) {
         List<Object> values = new ArrayList<Object>();
         for (Field field : ReflectionMembers.instanceFields(owner.getClass())) {
             try {

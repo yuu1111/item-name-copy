@@ -20,7 +20,8 @@ docker compose -f tests/e2e/compose.yaml run --rm client
   - Minecraft内のアイテムコピーを検証するシナリオとは分ける
 - 依存JarはComposeの名前付きボリュームへ保存する
 - 結果、操作と応答、画面画像、描画環境は`build/docker-e2e/<実行ID>/`へ保存する
-  - `run.json`へ終了コードと所要時間を保存し、過去の実行結果へ上書きしない
+  - `run.json`へ終了コード、所要時間、cgroup v2で取得できるピークメモリ量を保存する
+  - 過去の実行結果へ上書きしない
 - 受入条件を満たさない場合は終了コードを非0にする
 - ソース変更後はイメージを再ビルドする ホストのビルド出力やGradleキャッシュは持ち込まない
 - GitHub Actionsの`E2E runtime`でも同じComposeコマンドを手動実行できる
@@ -66,3 +67,6 @@ docker compose -f tests/e2e/compose.yaml run --rm client
 - MinecraftのJavaテスト基盤との接続は、基盤の分割作業後に追加する
 - キャッシュの識別にはアプリの実行内容に加え、OS、Java、ドライバー、シナリオ、イメージの識別情報を含める
 - 全対象への展開前にMinecraft代表版で描画負荷と入力の成立を確認する
+- Java 25とLWJGL 3.3.3の組合せではnative access、Unsafe、JNIバージョンの警告が出る
+  - 入力検証の成功を、この組合せ全体の互換性保証として扱わない
+  - Minecraftを実行するアダプターでは、各版が要求するJavaを選択する
