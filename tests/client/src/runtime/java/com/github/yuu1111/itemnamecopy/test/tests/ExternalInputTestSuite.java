@@ -29,15 +29,15 @@ public final class ExternalInputTestSuite implements TestSuite {
         }
         TestAssertions.require(tests.size() == 1, "World settings test is missing");
         tests.add(new TestCase("external-copy-and-item-unchanged",
-            () -> client.inventory(false),
+            () -> client.openInventoryWithRegularItem(),
             () -> client.seedClipboard("external-copy-sentinel"),
             () -> hover(36), this::await,
             this::verifyHover,
             () -> send("hotkey", ",\"keys\":\"ctrl+c\""), this::await,
             () -> {
-                TestAssertions.equal("オークの原木", client.clipboard());
+                TestAssertions.equal("オークの原木", client.clipboardText());
                 TestAssertions.require((Boolean) Reflect.call(itemBefore.getClass(), "matches|areItemStacksEqual",
-                    itemBefore, client.item(slot)), "The copied item changed");
+                    itemBefore, client.itemInSlot(slot)), "The copied item changed");
                 verifyReleasedKeys();
             },
             () -> send("clipboard", ",\"expected\":" + FileDriver.quote("オークの原木")), this::await,
@@ -47,11 +47,11 @@ public final class ExternalInputTestSuite implements TestSuite {
             () -> hover(9), this::await,
             () -> {
                 verifyHover();
-                TestAssertions.require((Boolean) Reflect.call(client.item(slot), "isEmpty"), "Expected an empty slot");
+                TestAssertions.require((Boolean) Reflect.call(client.itemInSlot(slot), "isEmpty"), "Expected an empty slot");
             },
             () -> send("hotkey", ",\"keys\":\"ctrl+c\""), this::await,
             () -> {
-                TestAssertions.equal("external-empty-sentinel", client.clipboard());
+                TestAssertions.equal("external-empty-sentinel", client.clipboardText());
                 verifyReleasedKeys();
             },
             () -> send("clipboard", ",\"expected\":" + FileDriver.quote("external-empty-sentinel")), this::await));
@@ -60,7 +60,7 @@ public final class ExternalInputTestSuite implements TestSuite {
 
     private void hover(int index) {
         slot = client.slots().get(index);
-        itemBefore = Reflect.call(client.item(slot), "copy");
+        itemBefore = Reflect.call(client.itemInSlot(slot), "copy");
         Object screen = client.testScreen();
         int x = ((Number) Reflect.get(screen, "leftPos", "guiLeft")).intValue()
             + ((Number) Reflect.get(slot, "x", "xPos")).intValue() + 8;

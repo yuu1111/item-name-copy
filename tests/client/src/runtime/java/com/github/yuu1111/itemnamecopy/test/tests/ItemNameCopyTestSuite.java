@@ -73,83 +73,83 @@ public final class ItemNameCopyTestSuite implements TestSuite {
 
     private void survivalCopy() {
         test("survival-copy-and-item-unchanged",
-                () -> client.inventory(false), () -> client.seedClipboard("survival-sentinel"),
+                () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("survival-sentinel"),
                 () -> {
-                    client.hover(36);
-                    itemBeforeCopy = Reflect.call(client.item(client.testSlot()), "copy");
+                    client.hoverSlot(36);
+                    itemBeforeCopy = Reflect.call(client.itemInSlot(client.testSlot()), "copy");
                 },
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
                 () -> {
-                    TestAssertions.equal("オークの原木", client.clipboard());
-                    TestAssertions.equal(String.valueOf(itemBeforeCopy), String.valueOf(client.item(client.testSlot())));
+                    TestAssertions.equal("オークの原木", client.clipboardText());
+                    TestAssertions.equal(String.valueOf(itemBeforeCopy), String.valueOf(client.itemInSlot(client.testSlot())));
                 });
     }
 
     private void notificationsAndEdgeCases() {
         test("localized-success-notification",
-                () -> client.inventory(false), () -> client.seedClipboard("notification-sentinel"), () -> client.hover(36),
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
+                () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("notification-sentinel"), () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
                 () -> TestAssertions.equal("コピーしました: オークの原木", client.overlayText()));
         test("empty-slot-preserves-clipboard",
-                () -> client.inventory(false), () -> client.seedClipboard("empty-sentinel"), () -> client.hover(37),
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
-                () -> TestAssertions.equal("empty-sentinel", client.clipboard()));
+                () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("empty-sentinel"), () -> client.hoverSlot(37),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("empty-sentinel", client.clipboardText()));
         test("custom-name-exact-text",
-                () -> client.inventory(true), () -> client.seedClipboard("custom-sentinel"), () -> client.hover(36),
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
-                () -> TestAssertions.equal("  名付けた剣 ✨  ", client.clipboard()));
+                () -> client.openInventoryWithCustomNamedItem(), () -> client.seedClipboard("custom-sentinel"), () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("  名付けた剣 ✨  ", client.clipboardText()));
         test("held-key-does-not-repeat",
-                () -> client.inventory(false), () -> client.seedClipboard("held-sentinel"), () -> client.hover(36),
-                () -> client.copy(1, 2), () -> TestAssertions.equal("オークの原木", client.clipboard()),
-                () -> client.seedClipboard("repeat-sentinel"), () -> client.copy(2, 2),
-                () -> TestAssertions.equal("repeat-sentinel", client.clipboard()),
-                () -> client.copy(0, 2), () -> client.copy(1, 2), () -> client.copy(0, 2),
-                () -> TestAssertions.equal("オークの原木", client.clipboard()));
+                () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("held-sentinel"), () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 2), () -> TestAssertions.equal("オークの原木", client.clipboardText()),
+                () -> client.seedClipboard("repeat-sentinel"), () -> client.sendCopyKeyEvent(2, 2),
+                () -> TestAssertions.equal("repeat-sentinel", client.clipboardText()),
+                () -> client.sendCopyKeyEvent(0, 2), () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("オークの原木", client.clipboardText()));
     }
 
     private void modifierHandling() {
         for (final int flags : new int[]{0, 3, 6, 10}) {
             test("ignored-modifiers-" + flags,
-                    () -> client.inventory(false), () -> client.seedClipboard("modifier-sentinel"), () -> client.hover(36),
-                    () -> client.copy(1, flags), () -> client.copy(0, flags),
-                    () -> TestAssertions.equal("modifier-sentinel", client.clipboard()));
+                    () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("modifier-sentinel"), () -> client.hoverSlot(36),
+                    () -> client.sendCopyKeyEvent(1, flags), () -> client.sendCopyKeyEvent(0, flags),
+                    () -> TestAssertions.equal("modifier-sentinel", client.clipboardText()));
         }
     }
 
     private void recipeSearch() {
         test("recipe-search-priority-and-return-to-copy",
-                () -> client.inventory(false), () -> client.selectRecipeSearch("recipe-copy-test"),
-                () -> client.seedClipboard("recipe-sentinel"), () -> client.hover(36),
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
-                () -> TestAssertions.equal("recipe-copy-test", client.clipboard()),
-                () -> client.toggleRecipe(), () -> client.hover(36),
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
-                () -> TestAssertions.equal("オークの原木", client.clipboard()));
+                () -> client.openInventoryWithRegularItem(), () -> client.selectRecipeSearch("recipe-copy-test"),
+                () -> client.seedClipboard("recipe-sentinel"), () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("recipe-copy-test", client.clipboardText()),
+                () -> client.toggleRecipe(), () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("オークの原木", client.clipboardText()));
     }
 
     private void creativeInventory() {
         test("creative-copy",
                 () -> {
-                    client.show(null);
-                    client.command("gamemode creative");
+                    client.showScreen(null);
+                    client.sendCommand("gamemode creative");
                 },
                 () -> {
-                    if (!client.creative()) throw new Pending();
-                    client.openCreative();
+                    if (!client.isCreative()) throw new Pending();
+                    client.openCreativeInventory();
                 },
                 () -> client.seedClipboard("creative-sentinel"),
                 () -> {
-                    client.hover(client.firstOccupiedSlot());
-                    expectedClipboard = client.text(Reflect.call(client.item(client.testSlot()), "getHoverName|getDisplayName"));
+                    client.hoverSlot(client.firstOccupiedSlot());
+                    expectedClipboard = client.text(Reflect.call(client.itemInSlot(client.testSlot()), "getHoverName|getDisplayName"));
                 },
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
-                () -> TestAssertions.equal(expectedClipboard, client.clipboard()));
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal(expectedClipboard, client.clipboardText()));
         test("creative-search-priority",
-                () -> client.openCreative(), () -> client.selectCreativeSearch(),
+                () -> client.openCreativeInventory(), () -> client.selectCreativeSearch("トウヒ"),
                 () -> client.seedClipboard("creative-search-sentinel"),
-                () -> client.hover(client.firstOccupiedSlot()),
-                () -> client.copy(1, 2), () -> client.copy(0, 2),
-                () -> TestAssertions.equal("トウヒ", client.clipboard()));
+                () -> client.hoverSlot(client.firstOccupiedSlot()),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("トウヒ", client.clipboardText()));
     }
 
     private void test(String name, TestStep... steps) {

@@ -70,11 +70,11 @@ public final class ItemNameCopyClientDriver {
     }
 
     private void openInventory(boolean custom) {
-        show(null);
+        showScreen(null);
         Object stack = createTestStack(custom);
         putInFirstHotbarSlot(stack);
         testScreen = createInventoryScreen();
-        show(testScreen);
+        showScreen(testScreen);
         if ((Boolean) Reflect.call(recipeBook(), "isVisible")) toggleRecipe();
     }
 
@@ -122,7 +122,7 @@ public final class ItemNameCopyClientDriver {
         if (Reflect.has(level, "enabledFeatures", 0)) {
             testScreen = Reflect.make(type, player(), Reflect.call(level, "enabledFeatures"), true);
         } else testScreen = Reflect.make(type, player());
-        show(testScreen);
+        showScreen(testScreen);
     }
 
     public Object recipeBook() {

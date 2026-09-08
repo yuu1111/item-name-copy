@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = KeyboardHandler.class)
+@Mixin(value = KeyboardHandler.class, remap = MappingPolicy.REMAP)
 abstract class KeyboardInputMixin {
     //? if >=1.21.9 {
     /*@Inject(method = "keyPress", at = @At("HEAD"))
