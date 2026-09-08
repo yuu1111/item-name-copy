@@ -13,8 +13,8 @@ val runtime = sourceSets.create("runtime")
 val runtimeBundle = configurations.create("runtimeBundle")
 dependencies {
     add(transformer.implementationConfigurationName, "org.ow2.asm:asm:9.9.1")
-    add(runtime.implementationConfigurationName, "com.github.yuu1111:minecraft-client-testkit")
-    add(runtimeBundle.name, "com.github.yuu1111:minecraft-client-testkit")
+    add(runtime.implementationConfigurationName, project(":minecraft-client-testkit"))
+    add(runtimeBundle.name, project(":minecraft-client-testkit"))
 }
 
 tasks.jar {
@@ -31,7 +31,7 @@ val transformerJar = tasks.register<Jar>("transformerJar") {
 val runtimeJar = tasks.register<Jar>("runtimeJar") {
     archiveFileName = "client-test-runtime.jar"
     from(runtime.output)
-    from(runtimeBundle.map { files -> files.map(::zipTree) })
+    from(runtimeBundle.map(::zipTree))
     exclude("META-INF/MANIFEST.MF")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

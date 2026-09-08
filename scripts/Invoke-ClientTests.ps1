@@ -43,11 +43,11 @@ try {
     }
 
     $buildLog = Join-Path $logDirectory 'harness-build.log'
-    & $launcher @wrapperArguments -p tests/client assemble --console=plain *> $buildLog
+    & $launcher @wrapperArguments :client-tests:assemble --console=plain *> $buildLog
     $buildExit = $LASTEXITCODE
     if ($buildExit -ne 0) {
         Get-Content -LiteralPath $buildLog -Tail 40
-        throw "Test agent build failed ($buildExit)"
+        throw "Client test bootstrap build failed ($buildExit)"
     }
 
     $failed = 0

@@ -43,7 +43,7 @@ jobs:
           name: client-test-${{ matrix.node }}
           path: |
             build/runtime-verification/
-            versions/${{ matrix.node }}/build/reports/client-agent/
-            versions/${{ matrix.node }}/build/client-agent/run/logs/
-            versions/${{ matrix.node }}/build/client-agent/run/crash-reports/
+            versions/${{ matrix.node }}/build/reports/client-test/
+            versions/${{ matrix.node }}/build/client-test/run/logs/
+            versions/${{ matrix.node }}/build/client-test/run/crash-reports/
             /tmp/itemnamecopy-client-tests-*/*.log

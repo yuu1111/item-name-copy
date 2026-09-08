@@ -17,8 +17,8 @@ plugins {
 }
 
 rootProject.name = "ItemNameCopy"
-include("core")
-includeBuild("tests/client")
+include("core", "minecraft-client-testkit", "client-tests")
+project(":client-tests").projectDir = file("tests/client")
 
 val vcsNode = "1.21.1-fabric"
 val selectedTargets = providers.gradleProperty("target").orNull?.split(',')?.map { it.trim() }?.toSet()
