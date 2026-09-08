@@ -1,4 +1,10 @@
-package dev.itemnamecopy.test.runtime;
+package dev.itemnamecopy.test.support;
+
+import dev.itemnamecopy.test.runtime.Pending;
+import dev.itemnamecopy.test.runtime.Reflect;
+import dev.itemnamecopy.test.runtime.RuntimeConfig;
+import dev.itemnamecopy.test.runtime.SyntheticInput;
+import dev.itemnamecopy.test.runtime.TestAssertions;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,35 +13,35 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-final class MinecraftClientDriver {
+public final class MinecraftClientDriver {
     private final SyntheticInput input;
     private Object minecraft;
     private Object testScreen;
     private Object testSlot;
     private Future<?> reload;
 
-    MinecraftClientDriver(SyntheticInput input) {
+    public MinecraftClientDriver(SyntheticInput input) {
         this.input = input;
     }
 
-    void initialize(Object client) {
+    public void initialize(Object client) {
         minecraft = client;
         Reflect.initialize(client.getClass().getClassLoader());
     }
 
-    Object minecraft() {
+    public Object minecraft() {
         return minecraft;
     }
 
-    Object testScreen() {
+    public Object testScreen() {
         return testScreen;
     }
 
-    Object testSlot() {
+    public Object testSlot() {
         return testSlot;
     }
 
-    void inventory(boolean custom) {
+    public void inventory(boolean custom) {
         show(null);
         Object stack;
         Class<?> itemStack = Reflect.type("net.minecraft.world.item.ItemStack", "net.minecraft.item.ItemStack");
@@ -67,7 +73,7 @@ final class MinecraftClientDriver {
         if ((Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
     }
 
-    void openCreative() {
+    public void openCreative() {
         Object level = Reflect.get(minecraft, "level", "world");
         Class<?> type = Reflect.type("net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen",
                 "net.minecraft.client.gui.screen.inventory.CreativeScreen", "net.minecraft.client.gui.inventory.GuiContainerCreative");
@@ -77,14 +83,14 @@ final class MinecraftClientDriver {
         show(testScreen);
     }
 
-    Object recipeBook() {
+    public Object recipeBook() {
         if (!RuntimeConfig.LEGACY) {
             return Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "recipeBook", testScreen);
         }
         return Reflect.get(testScreen, "recipeBookGui");
     }
 
-    void toggleRecipe() {
+    public void toggleRecipe() {
         for (Object widget : widgets(testScreen)) {
             String name = widget.getClass().getSimpleName();
             if (name.equals("ImageButton") || name.equals("GuiButtonImage")) {
@@ -95,7 +101,7 @@ final class MinecraftClientDriver {
         throw new IllegalStateException("Recipe button missing: " + describeScreen());
     }
 
-    void selectRecipeSearch(String value) {
+    public void selectRecipeSearch(String value) {
         Object book = recipeBook();
         if (!(Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
         Object search = Reflect.get(book, "searchBox", "searchBar", "searchField");
@@ -103,7 +109,7 @@ final class MinecraftClientDriver {
         select(search, value);
     }
 
-    void selectCreativeSearch() {
+    public void selectCreativeSearch() {
         Class<?> tabs = Reflect.type("net.minecraft.world.item.CreativeModeTabs", "net.minecraft.world.item.CreativeModeTab",
                 "net.minecraft.item.ItemGroup", "net.minecraft.creativetab.CreativeTabs");
         Object tab = Reflect.has(tabs, "searchTab", 0)
@@ -112,7 +118,7 @@ final class MinecraftClientDriver {
         select(Reflect.get(testScreen, "searchBox", "searchField"), "トウヒ");
     }
 
-    int firstOccupiedSlot() {
+    public int firstOccupiedSlot() {
         List<?> slots = slots();
         for (int i = 0; i < slots.size(); i++) {
             if ((Boolean) Reflect.call(slots.get(i), "hasItem|getHasStack")) return i;
@@ -120,18 +126,18 @@ final class MinecraftClientDriver {
         throw new AssertionError("No occupied slot");
     }
 
-    List<?> slots() {
+    public List<?> slots() {
         Object menu = Reflect.has(testScreen, "getMenu|getContainer", 0)
                 ? Reflect.call(testScreen, "getMenu|getContainer")
                 : Reflect.get(testScreen, "menu", "container", "inventorySlots");
         return (List<?>) Reflect.get(menu, "slots", "inventorySlots");
     }
 
-    Object item(Object slot) {
+    public Object item(Object slot) {
         return Reflect.call(slot, "getItem|getStack");
     }
 
-    void hover(int index) {
+    public void hover(int index) {
         testSlot = slots().get(index);
         int x = ((Number) Reflect.get(testScreen, "leftPos", "guiLeft")).intValue()
                 + ((Number) Reflect.get(testSlot, "x", "xPos")).intValue() + 8;
@@ -153,7 +159,7 @@ final class MinecraftClientDriver {
         }
     }
 
-    void copy(int action, int flags) {
+    public void copy(int action, int flags) {
         if (action != 0) {
             Object hovered = RuntimeConfig.LEGACY ? Reflect.get(testScreen, "hoveredSlot")
                     : Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "hoveredSlot", testScreen);
@@ -184,17 +190,17 @@ final class MinecraftClientDriver {
         }
     }
 
-    void command(String value) {
+    public void command(String value) {
         Object connection = Reflect.optionalGet(player(), "connection");
         if (Reflect.has(connection, "sendCommand", 1)) Reflect.call(connection, "sendCommand", value);
         else Reflect.call(player(), "chat|sendChatMessage", "/" + value);
     }
 
-    void gameRuleCommand(String legacy, String modern) {
+    public void gameRuleCommand(String legacy, String modern) {
         command("gamerule " + (modernGameRules() ? "minecraft:" + modern : legacy) + " false");
     }
 
-    void verifyGameRules(Object server) {
+    public void verifyGameRules(Object server) {
         Object rules;
         if (Reflect.has(server, "getGameRules", 0)) rules = Reflect.call(server, "getGameRules");
         else {
@@ -219,7 +225,7 @@ final class MinecraftClientDriver {
         }
     }
 
-    boolean creative() {
+    public boolean creative() {
         Object controller = Reflect.get(minecraft, "gameMode", "playerController");
         if (Reflect.has(controller, "getPlayerMode|getCurrentGameType", 0)) {
             Object mode = Reflect.call(controller, "getPlayerMode|getCurrentGameType");
@@ -228,11 +234,11 @@ final class MinecraftClientDriver {
         return (Boolean) Reflect.call(controller, "hasInfiniteItems|isInCreativeMode");
     }
 
-    Object player() {
+    public Object player() {
         return Reflect.optionalGet(minecraft, "player");
     }
 
-    Object screen() {
+    public Object screen() {
         if (RuntimeConfig.LEGACY) return Reflect.optionalGet(minecraft, "currentScreen");
         try {
             return Reflect.get(minecraft, "screen", "currentScreen");
@@ -241,13 +247,13 @@ final class MinecraftClientDriver {
         }
     }
 
-    void show(Object screen) {
+    public void show(Object screen) {
         if (Reflect.has(minecraft, "setScreen|displayGuiScreen", 1)) {
             Reflect.call(minecraft, "setScreen|displayGuiScreen", screen);
         } else Reflect.call(Reflect.get(minecraft, "gui"), "setScreen", screen);
     }
 
-    String clipboard() {
+    public String clipboard() {
         if (RuntimeConfig.LEGACY) {
             return (String) Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "getClipboardString");
         }
@@ -255,7 +261,7 @@ final class MinecraftClientDriver {
                 "getClipboard|getClipboardString");
     }
 
-    void seedClipboard(String value) {
+    public void seedClipboard(String value) {
         if (RuntimeConfig.LEGACY) {
             Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "setClipboardString", value);
         } else {
@@ -270,7 +276,7 @@ final class MinecraftClientDriver {
         TestAssertions.equal(value, clipboard());
     }
 
-    void restoreClipboard(String value) {
+    public void restoreClipboard(String value) {
         if (RuntimeConfig.LEGACY) {
             java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
                     new java.awt.datatransfer.StringSelection(value), null);
@@ -281,7 +287,7 @@ final class MinecraftClientDriver {
         }
     }
 
-    String overlayText() {
+    public String overlayText() {
         Object gui = Reflect.get(minecraft, "gui", "ingameGUI");
         Object hud = Reflect.optionalGet(gui, "hud");
         if (hud != null) gui = hud;
@@ -293,7 +299,7 @@ final class MinecraftClientDriver {
         return text(message);
     }
 
-    void language(String code) {
+    public void language(String code) {
         Object options = Reflect.get(minecraft, "options", "gameSettings");
         Reflect.set(options, code, "languageCode", "language");
         Object manager = Reflect.call(minecraft, "getLanguageManager");
@@ -307,7 +313,7 @@ final class MinecraftClientDriver {
         reload = result instanceof Future ? (Future<?>) result : null;
     }
 
-    void waitForReload() {
+    public void waitForReload() {
         if (reload == null) return;
         if (!reload.isDone()) throw new Pending();
         try {
@@ -317,7 +323,7 @@ final class MinecraftClientDriver {
         }
     }
 
-    Object firstInput(Object owner) {
+    public Object firstInput(Object owner) {
         for (Object value : widgets(owner)) {
             if (Boolean.FALSE.equals(Reflect.optionalGet(value, "visible"))) continue;
             if (isTextInput(value)) return value;
@@ -328,30 +334,30 @@ final class MinecraftClientDriver {
         throw new IllegalStateException("No text field: " + describeScreen());
     }
 
-    void setText(Object textInput, String value) {
+    public void setText(Object textInput, String value) {
         Reflect.call(textInput, "setValue|setText", value);
     }
 
-    List<Object> widgets(Object owner) {
+    public List<Object> widgets(Object owner) {
         List<Object> found = new ArrayList<Object>();
         Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>());
         collectWidgets(owner, found, seen, 0);
         return found;
     }
 
-    String label(Object widget) {
+    public String label(Object widget) {
         if (Reflect.has(widget, "getMessage", 0)) return text(Reflect.call(widget, "getMessage"));
         Object value = Reflect.optionalGet(widget, "displayString");
         return value == null ? "" : String.valueOf(value);
     }
 
-    String text(Object value) {
+    public String text(Object value) {
         if (value == null) return "";
         if (value instanceof String) return (String) value;
         return String.valueOf(Reflect.call(value, "getString|getUnformattedText"));
     }
 
-    Object optionalButton(String text, boolean prefix) {
+    public Object optionalButton(String text, boolean prefix) {
         List<Object> widgets = widgets(screen());
         for (int i = 0; i < widgets.size(); i++) {
             Object widget = widgets.get(i);
@@ -372,13 +378,13 @@ final class MinecraftClientDriver {
         return null;
     }
 
-    Object findButton(String label, boolean prefix) {
+    public Object findButton(String label, boolean prefix) {
         Object button = optionalButton(label, prefix);
         if (button == null) throw new IllegalStateException("Button missing: " + label + "; " + describeScreen());
         return button;
     }
 
-    void press(Object button) {
+    public void press(Object button) {
         RuntimeConfig.log("press " + label(button));
         if (button.getClass().getSimpleName().equals("TabButton")) {
             Reflect.call(Reflect.get(button, "tabManager"), "setCurrentTab", Reflect.call(button, "tab"), true);
@@ -400,7 +406,7 @@ final class MinecraftClientDriver {
         } else Reflect.call(screen(), "actionPerformed", button);
     }
 
-    String describeScreen() {
+    public String describeScreen() {
         Object screen = screen();
         if (screen == null) return "no screen";
         List<String> labels = new ArrayList<String>();
@@ -411,7 +417,7 @@ final class MinecraftClientDriver {
         return screen.getClass().getName() + " " + labels;
     }
 
-    void stop() {
+    public void stop() {
         Reflect.call(minecraft, "stop|shutdown");
     }
 

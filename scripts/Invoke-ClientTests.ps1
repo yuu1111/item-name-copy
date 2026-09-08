@@ -23,7 +23,7 @@ $wrapperArguments = if ($IsWindows -or $env:OS -eq 'Windows_NT') { @() } else { 
 Push-Location $repository
 try {
     $sourceFiles = @(git ls-files --cached --others --exclude-standard | Sort-Object -Unique | Where-Object {
-        $_ -match '^(src/|core/src/|gradle/|gradle\.properties$|versions/.+/gradle.properties$|build.+\.gradle\.kts$|settings\.gradle\.kts$|stonecutter\.gradle\.kts$|tests/agent/|tests/client-test.init.gradle$)'
+        $_ -match '^(src/|core/src/|gradle/|gradle\.properties$|versions/.+/gradle.properties$|build.+\.gradle\.kts$|settings\.gradle\.kts$|stonecutter\.gradle\.kts$|tests/agent/)'
     })
     if ($LASTEXITCODE -ne 0) { throw 'Could not enumerate test inputs' }
     $digest = [System.Security.Cryptography.IncrementalHash]::CreateHash([System.Security.Cryptography.HashAlgorithmName]::SHA256)
@@ -61,7 +61,7 @@ try {
         if (Test-Path -LiteralPath $reportPath) { Remove-Item -LiteralPath $reportPath }
         $timer = [System.Diagnostics.Stopwatch]::StartNew()
         Write-Output "$($node.node): starting client verification"
-        & $launcher @wrapperArguments "-Ptarget=$($node.node)" "-PclientTestSource=$sourceHash" -I tests/client-test.init.gradle ":$($node.node):runClient" --console=plain *> $logPath
+        & $launcher @wrapperArguments "-Ptarget=$($node.node)" "-PclientTestSource=$sourceHash" ":$($node.node):runClient" --console=plain *> $logPath
         $runExit = $LASTEXITCODE
         $timer.Stop()
         $result = if (Test-Path -LiteralPath $reportPath) { Get-Content -Raw -LiteralPath $reportPath | ConvertFrom-Json } else { $null }

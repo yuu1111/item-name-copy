@@ -7,6 +7,8 @@ plugins {
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.3" apply false
 }
 
+apply(from = rootProject.file("gradle/client-test.gradle.kts"))
+
 stonecutter active "1.21.1-fabric"
 
 stonecutter parameters {
