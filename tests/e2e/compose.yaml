@@ -1,0 +1,15 @@
+services:
+  client:
+    build:
+      context: ../..
+      dockerfile: tests/e2e/Dockerfile
+    image: item-name-copy-e2e:local
+    cpus: 2
+    mem_limit: 6g
+    shm_size: 256m
+    volumes:
+      - gradle-cache:/cache/gradle
+      - ../../build/docker-e2e:/artifacts
+
+volumes:
+  gradle-cache:
