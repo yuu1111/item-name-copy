@@ -1,13 +1,22 @@
-package dev.itemnamecopy.test.runtime;
+package dev.itemnamecopy.test.tests;
+
+import dev.itemnamecopy.test.runtime.ClientTestRunner;
+import dev.itemnamecopy.test.runtime.SyntheticInput;
+import dev.itemnamecopy.test.support.MinecraftClientDriver;
+import dev.itemnamecopy.test.support.MinecraftTestLifecycle;
 
 /**
  * Entry points invoked by the instrumented Minecraft and LWJGL classes.
  */
-public final class ClientTestRuntime {
+public final class ItemNameCopyTestRuntime {
     private static final SyntheticInput INPUT = new SyntheticInput();
-    private static final ClientTestController CONTROLLER = new ClientTestController(INPUT);
+    private static final MinecraftClientDriver CLIENT = new MinecraftClientDriver(INPUT);
+    private static final ClientTestRunner RUNNER = new ClientTestRunner(
+        INPUT,
+        new MinecraftTestLifecycle(CLIENT),
+        new ItemNameCopyTestSuite(CLIENT));
 
-    private ClientTestRuntime() {
+    private ItemNameCopyTestRuntime() {
     }
 
     public static int controlState() {
@@ -43,6 +52,6 @@ public final class ClientTestRuntime {
     }
 
     public static void tick(Object client) {
-        CONTROLLER.tick(client);
+        RUNNER.tick(client);
     }
 }

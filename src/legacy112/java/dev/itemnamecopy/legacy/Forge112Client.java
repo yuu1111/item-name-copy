@@ -28,9 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 
-@Mod(modid = "itemnamecopy", name = "ItemNameCopy",
-        clientSideOnly = true, acceptableRemoteVersions = "*", useMetadata = true,
-        acceptedMinecraftVersions = "[1.12.2]")
+@Mod(modid = "itemnamecopy", name = "ItemNameCopy", clientSideOnly = true, acceptableRemoteVersions = "*", useMetadata = true, acceptedMinecraftVersions = "[1.12.2]")
 @Mod.EventBusSubscriber(modid = "itemnamecopy", value = Side.CLIENT)
 public final class Forge112Client {
     private static final CopyShortcutHandler HANDLER = new CopyShortcutHandler();
@@ -41,9 +39,7 @@ public final class Forge112Client {
             List<Field> fields = new ArrayList<>();
             for (Class<?> current = type; current != null; current = current.getSuperclass()) {
                 for (Field field : current.getDeclaredFields()) {
-                    if (!Modifier.isStatic(field.getModifiers())
-                            && (GuiTextField.class.isAssignableFrom(field.getType())
-                            || GuiRecipeBook.class.isAssignableFrom(field.getType()))) {
+                    if (!Modifier.isStatic(field.getModifiers()) && (GuiTextField.class.isAssignableFrom(field.getType()) || GuiRecipeBook.class.isAssignableFrom(field.getType()))) {
                         field.setAccessible(true);
                         fields.add(field);
                     }
@@ -63,11 +59,8 @@ public final class Forge112Client {
         if (!Keyboard.isRepeatEvent()) HANDLER.releaseC();
         GuiScreen screen = event.getGui();
         boolean control = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
-        boolean other = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)
-                || Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU)
-                || Keyboard.isKeyDown(Keyboard.KEY_LMETA) || Keyboard.isKeyDown(Keyboard.KEY_RMETA);
-        if (HANDLER.pressC(control, other, Keyboard.isRepeatEvent(), event.isCanceled(),
-                screen instanceof GuiContainer ? new Target((GuiContainer) screen) : null)) {
+        boolean other = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU) || Keyboard.isKeyDown(Keyboard.KEY_LMETA) || Keyboard.isKeyDown(Keyboard.KEY_RMETA);
+        if (HANDLER.pressC(control, other, Keyboard.isRepeatEvent(), event.isCanceled(), screen instanceof GuiContainer ? new Target((GuiContainer) screen) : null)) {
             event.setCanceled(true);
         }
     }
@@ -77,8 +70,8 @@ public final class Forge112Client {
             for (Field field : INPUT_FIELDS.get(owner.getClass())) {
                 Object value = field.get(owner);
                 if (value instanceof GuiTextField && ((GuiTextField) value).isFocused()) return true;
-                if (value instanceof GuiRecipeBook && ((GuiRecipeBook) value).isVisible()
-                        && focusedRecipeInput((GuiRecipeBook) value)) return true;
+                if (value instanceof GuiRecipeBook && ((GuiRecipeBook) value).isVisible() && focusedRecipeInput((GuiRecipeBook) value))
+                    return true;
             }
             return false;
         } catch (ReflectiveOperationException | RuntimeException exception) {
@@ -129,8 +122,7 @@ public final class Forge112Client {
         @Override
         public void showFeedback(String name) {
             if (Minecraft.getMinecraft().player != null) {
-                Minecraft.getMinecraft().player.sendStatusMessage(
-                        new TextComponentTranslation("itemnamecopy.copied", name), true);
+                Minecraft.getMinecraft().player.sendStatusMessage(new TextComponentTranslation("itemnamecopy.copied", name), true);
             }
         }
     }

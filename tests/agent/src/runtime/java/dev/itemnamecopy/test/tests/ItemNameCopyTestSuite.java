@@ -1,19 +1,29 @@
-package dev.itemnamecopy.test.runtime;
+package dev.itemnamecopy.test.tests;
+
+import dev.itemnamecopy.test.runtime.Pending;
+import dev.itemnamecopy.test.runtime.Reflect;
+import dev.itemnamecopy.test.runtime.RuntimeConfig;
+import dev.itemnamecopy.test.runtime.TestAssertions;
+import dev.itemnamecopy.test.runtime.TestCase;
+import dev.itemnamecopy.test.runtime.TestStep;
+import dev.itemnamecopy.test.runtime.TestSuite;
+import dev.itemnamecopy.test.support.MinecraftClientDriver;
 
 import java.util.ArrayList;
 import java.util.List;
 
-final class ClientTestSuite {
+public final class ItemNameCopyTestSuite implements TestSuite {
     private final MinecraftClientDriver client;
     private final List<TestCase> tests = new ArrayList<TestCase>();
     private Object itemBeforeCopy;
     private String expectedClipboard;
 
-    ClientTestSuite(MinecraftClientDriver client) {
+    public ItemNameCopyTestSuite(MinecraftClientDriver client) {
         this.client = client;
     }
 
-    List<TestCase> define() {
+    @Override
+    public List<TestCase> defineTests() {
         worldSettings();
         survivalCopy();
         notificationsAndEdgeCases();
