@@ -1,5 +1,11 @@
+import groovy.json.JsonSlurper
+import org.gradle.api.GradleException
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.tasks.JavaExec
+
 gradle.projectsEvaluated {
-    gradle.rootProject.allprojects { project ->
+    gradle.rootProject.allprojects { Project project ->
         def runDirectory = project.layout.buildDirectory.dir('client-agent/run').get().asFile
         def loom = project.extensions.findByName('loom')
         if (loom != null) loom.runs.configureEach { runDir('build/client-agent/run') }
@@ -10,7 +16,7 @@ gradle.projectsEvaluated {
         if (project.plugins.hasPlugin('net.minecraftforge.gradle')) {
             project.extensions.getByName('minecraft').runs.configureEach { workingDir.set(runDirectory) }
         }
-        project.tasks.matching { it.name == 'runClient' }.configureEach { task ->
+        project.tasks.matching { Task task -> task.name == 'runClient' }.configureEach { Task task ->
             if (!(task instanceof JavaExec)) {
                 throw new GradleException("Unsupported client run task: ${task.path} (${task.class.name})")
             }
@@ -32,7 +38,7 @@ gradle.projectsEvaluated {
             }
             task.doLast {
                 if (!report.isFile()) throw new GradleException("Client did not produce a report: $report")
-                def result = new groovy.json.JsonSlurper().parse(report)
+                def result = new JsonSlurper().parse(report)
                 if (result.failed != 0 || result.passed == 0 || result.passed != result.expectedTests) {
                     throw new GradleException("Client verification failed: $report")
                 }

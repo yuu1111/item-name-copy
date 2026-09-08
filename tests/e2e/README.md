@@ -19,7 +19,8 @@ docker compose -f tests/e2e/compose.yaml run --rm client
   - マウスの座標、Ctrl+Cの修飾値、キー解放、日本語を含むクリップボードを検証する
   - Minecraft内のアイテムコピーを検証するシナリオとは分ける
 - 依存JarはComposeの名前付きボリュームへ保存する
-- 結果、操作と応答、画面画像、描画環境は`build/docker-e2e/`へ保存する
+- 結果、操作と応答、画面画像、描画環境は`build/docker-e2e/<実行ID>/`へ保存する
+  - `run.json`へ終了コードと所要時間を保存し、過去の実行結果へ上書きしない
 - 受入条件を満たさない場合は終了コードを非0にする
 - ソース変更後はイメージを再ビルドする ホストのビルド出力やGradleキャッシュは持ち込まない
 
@@ -53,6 +54,7 @@ docker compose -f tests/e2e/compose.yaml run --rm client
 - 応答は`id`、`exitCode`、`message`を持つ
 - 各操作は15秒でタイムアウトし、Java側の応答待機は20秒で失敗する
 - 実行コマンド全体の制限は600秒で、`E2E_TIMEOUT_SECONDS`で変更できる
+- 仮想画面、ウィンドウマネージャー、ドライバーが先に終了した場合も実行を失敗にする
 - キー操作は`--window`によるSendEvent配送を使わず、専用画面内で対象を前景にして送る
 - Java用の`submit`と`poll`は非同期の進行に使う 検証用の`call`は待機中もGLFWのイベント処理を進める
 

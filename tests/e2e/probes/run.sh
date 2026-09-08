@@ -11,7 +11,7 @@ case "$(uname -m)" in
     aarch64) native=natives-linux-arm64 ;;
     *) echo 'Unsupported probe architecture' >&2; exit 1 ;;
 esac
-for module in lwjgl lwjgl-glfw; do
+for module in lwjgl lwjgl-glfw lwjgl-opengl; do
     for suffix in '' "-$native"; do
         jar="$module-$version$suffix.jar"
         if [[ ! -f "$cache/$jar" ]]; then
@@ -28,3 +28,8 @@ java -cp "$classpath" GlfwInputProbe >"$E2E_ARTIFACTS/probe.log" 2>&1 || {
     exit 1
 }
 tail -n 1 "$E2E_ARTIFACTS/probe.log"
+if bash /opt/e2e/x11-driver.sh '{"id":999,"pid":2147483647,"action":"hotkey","keys":"ctrl+c"}' >"$E2E_ARTIFACTS/missing-target.log" 2>&1; then
+    echo 'Missing target was incorrectly accepted' >&2
+    exit 1
+fi
+echo 'PASS missing target rejected'
