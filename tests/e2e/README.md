@@ -26,6 +26,20 @@ docker compose -f tests/e2e/compose.yaml run --rm client
 - ソース変更後はイメージを再ビルドする ホストのビルド出力やGradleキャッシュは持ち込まない
 - GitHub Actionsの`E2E runtime`でも同じComposeコマンドを手動実行できる
 
+### Minecraftの外部入力
+
+```sh
+docker compose -f tests/e2e/compose.yaml run --rm -e E2E_TIMEOUT_SECONDS=1800 client bash tests/e2e/minecraft/run.sh 1.21.1-fabric
+```
+
+- 初回はGradle、Java toolchain、Minecraftの依存ファイルを取得するため、コンテナ全体に30分の制限を設定する
+- `tests/client`の準備処理でワールドとインベントリを用意し、操作はX11ドライバーへ送る
+- このモードでは入力状態を差し替える計装を無効にし、Minecraftのtickにテストの進行処理だけを追加する
+- ワールド設定、原木のコピーとアイテム不変、空スロットでコピーしないことの3件を検証する
+- ホバーは画面が実際に保持するスロット、コピーはMinecraftとxclipの両方から読んだクリップボードで判定する
+- クライアントログとJSON・JUnitレポートも実行ディレクトリへ保存する
+- LWJGL 2の対象は未対応として失敗させる
+
 ## アプリとの接続
 
 - `runtime/session.sh`は画面とドライバーを起動し、指定されたコマンドの終了コードを返す
@@ -64,7 +78,7 @@ docker compose -f tests/e2e/compose.yaml run --rm client
 
 - Linuxの入力経路を検証し、Windowsの入力経路の成功として再利用しない
 - GLFWの検証はアプリのコピー処理を代用しない
-- MinecraftのJavaテスト基盤との接続は、基盤の分割作業後に追加する
+- Minecraftの外部入力スイートと従来のコールバック入力スイートは、レポートの`mode`を分ける
 - キャッシュの識別にはアプリの実行内容に加え、OS、Java、ドライバー、シナリオ、イメージの識別情報を含める
 - 全対象への展開前にMinecraft代表版で描画負荷と入力の成立を確認する
 - Java 25とLWJGL 3.3.3の組合せではnative access、Unsafe、JNIバージョンの警告が出る

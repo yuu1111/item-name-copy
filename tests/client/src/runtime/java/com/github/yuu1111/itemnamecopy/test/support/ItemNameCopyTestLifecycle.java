@@ -1,7 +1,12 @@
 package com.github.yuu1111.itemnamecopy.test.support;
 
-import com.github.yuu1111.minecraft.clienttest.*;
+import com.github.yuu1111.minecraft.clienttest.ClientTestLifecycle;
+import com.github.yuu1111.minecraft.clienttest.ClientTestOptions;
+import com.github.yuu1111.minecraft.clienttest.Pending;
+import com.github.yuu1111.minecraft.clienttest.Reflect;
+import com.github.yuu1111.minecraft.clienttest.TestAssertions;
 
+import java.util.Locale;
 import java.util.UUID;
 
 public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
@@ -10,7 +15,7 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     private String originalClipboard;
     private String worldName;
     private String bootScreen;
-    private int stage;
+    private PreparationStage stage = PreparationStage.WAIT_FOR_MAIN_MENU;
     private int cycleCount;
 
     public ItemNameCopyTestLifecycle(ItemNameCopyClientDriver client, ClientTestOptions options) {
@@ -27,28 +32,30 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     public boolean prepare() {
         Object screen = client.screen();
         String screenName = screen == null ? "" : screen.getClass().getSimpleName();
-        if (stage == 0) prepareMainMenu(screenName);
-        else if (stage == 1) openWorldSelection();
-        else if (stage == 2) openWorldCreation(screenName);
-        else if (stage == 3) nameWorld(screenName, screen);
-        else if (stage == 4) selectCreativeMode();
-        else if (stage == 5) openWorldOptions();
-        else if (stage == 6) selectSuperflat();
-        else if (stage == 7) configureWorld(screen);
-        else if (stage == 8) createWorld();
-        else if (stage == 9) enterWorld(screenName);
-        else if (stage == 10) setGameRule("doMobSpawning", "spawn_mobs");
-        else if (stage == 11) setGameRule("doDaylightCycle", "advance_time");
-        else if (stage == 12) setGameRule("doWeatherCycle", "advance_weather");
-        else if (stage == 13) switchToSurvival();
-        else if (stage == 14) switchToJapanese();
-        else if (stage == 15) return finishPreparation();
-        return false;
+        switch (stage) {
+            case WAIT_FOR_MAIN_MENU: prepareMainMenu(screenName); return false;
+            case OPEN_WORLD_SELECTION: openWorldSelection(); return false;
+            case OPEN_WORLD_CREATION: openWorldCreation(screenName); return false;
+            case NAME_WORLD: nameWorld(screenName, screen); return false;
+            case SELECT_CREATIVE_MODE: selectCreativeMode(); return false;
+            case OPEN_WORLD_OPTIONS: openWorldOptions(); return false;
+            case SELECT_SUPERFLAT: selectSuperflat(); return false;
+            case CONFIGURE_WORLD: configureWorld(screen); return false;
+            case CREATE_WORLD: createWorld(); return false;
+            case ENTER_WORLD: enterWorld(screenName); return false;
+            case DISABLE_MOB_SPAWNING: disableGameRule("doMobSpawning", "spawn_mobs"); return false;
+            case DISABLE_DAYLIGHT_CYCLE: disableGameRule("doDaylightCycle", "advance_time"); return false;
+            case DISABLE_WEATHER_CYCLE: disableGameRule("doWeatherCycle", "advance_weather"); return false;
+            case SWITCH_TO_SURVIVAL: switchToSurvival(); return false;
+            case SWITCH_TO_JAPANESE: switchToJapanese(); return false;
+            case FINISH: return finishPreparation();
+            default: throw new AssertionError("Unhandled preparation stage: " + stage);
+        }
     }
 
     @Override
     public String describeState() {
-        return "preparation stage " + stage + ": " + client.describeScreen();
+        return "preparation stage " + stage.description + ": " + client.describeScreen();
     }
 
     @Override
@@ -67,7 +74,7 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
             options.log("startup-screen " + client.describeScreen());
         }
         if (screenName.contains("AccessibilityOnboarding")) {
-            client.press(client.findButton("Continue", false));
+            client.press(client.requireButton("Continue"));
             return;
         }
         if (!screenName.equals("TitleScreen") && !screenName.equals("MainMenuScreen")
@@ -76,40 +83,40 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
         Object overlay = Reflect.has(minecraft, "getOverlay", 0)
                 ? Reflect.call(minecraft, "getOverlay") : Reflect.optionalGet(minecraft, "overlay", "loadingGui");
         if (overlay != null) throw new Pending();
-        originalClipboard = client.clipboard();
+        originalClipboard = client.clipboardText();
         Reflect.set(Reflect.get(minecraft, "options", "gameSettings"), false, "pauseOnLostFocus");
-        client.language("en_us");
-        nextStage();
+        client.selectLanguage("en_us");
+        advance();
     }
 
     private void openWorldSelection() {
         client.waitForReload();
-        client.press(client.findButton("Singleplayer", false));
-        nextStage();
+        client.press(client.requireButton("Singleplayer"));
+        advance();
     }
 
     private void openWorldCreation(String screenName) {
         if (screenName.contains("CreateWorld")) {
-            nextStage();
+            advance();
             return;
         }
-        client.press(client.findButton("Create New World", false));
-        nextStage();
+        client.press(client.requireButton("Create New World"));
+        advance();
     }
 
     private void nameWorld(String screenName, Object screen) {
         if (!screenName.contains("CreateWorld")) throw new Pending();
         worldName = "ItemNameCopy Test " + UUID.randomUUID().toString().substring(0, 8);
-        client.setText(client.firstInput(screen), worldName);
-        nextStage();
+        client.setText(client.firstTextInput(screen), worldName);
+        advance();
     }
 
     private void selectCreativeMode() {
-        Object mode = client.findButton("Game Mode", true);
+        Object mode = client.requireButtonStartingWith("Game Mode");
         String label = client.label(mode);
-        if (label.toLowerCase(java.util.Locale.ROOT).contains("creative")) {
+        if (label.toLowerCase(Locale.ROOT).contains("creative")) {
             cycleCount = 0;
-            nextStage();
+            advance();
             return;
         }
         if (++cycleCount > 4) throw new AssertionError("Could not select Creative: " + label);
@@ -117,18 +124,18 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     }
 
     private void openWorldOptions() {
-        Object worldTab = client.optionalButton("World", false);
-        if (worldTab == null) worldTab = client.optionalButton("More World Options", true);
+        Object worldTab = client.findButton("World");
+        if (worldTab == null) worldTab = client.findButtonStartingWith("More World Options");
         if (worldTab != null) client.press(worldTab);
-        nextStage();
+        advance();
     }
 
     private void selectSuperflat() {
-        Object type = client.findButton("World Type", true);
+        Object type = client.requireButtonStartingWith("World Type");
         String label = client.label(type);
-        if (label.toLowerCase(java.util.Locale.ROOT).contains("superflat")) {
+        if (label.toLowerCase(Locale.ROOT).contains("superflat")) {
             cycleCount = 0;
-            nextStage();
+            advance();
             return;
         }
         if (++cycleCount > 12) throw new AssertionError("Could not select Superflat: " + label);
@@ -136,49 +143,49 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     }
 
     private void configureWorld(Object screen) {
-        client.setText(client.firstInput(screen), "1");
-        Object structures = client.optionalButton("Generate Structures", true);
-        if (structures == null) structures = client.optionalButton("Map Features", true);
-        if (structures != null && !client.label(structures).toLowerCase(java.util.Locale.ROOT).contains("off")) {
+        client.setText(client.firstTextInput(screen), "1");
+        Object structures = client.findButtonStartingWith("Generate Structures");
+        if (structures == null) structures = client.findButtonStartingWith("Map Features");
+        if (structures != null && !client.label(structures).toLowerCase(Locale.ROOT).contains("off")) {
             client.press(structures);
         }
-        Object done = client.optionalButton("Done", false);
+        Object done = client.findButton("Done");
         if (done != null) client.press(done);
-        nextStage();
+        advance();
     }
 
     private void createWorld() {
-        client.press(client.findButton("Create New World", false));
-        nextStage();
+        client.press(client.requireButton("Create New World"));
+        advance();
     }
 
     private void enterWorld(String screenName) {
         if (screenName.equals("ConfirmScreen")) {
-            client.press(client.findButton("Yes", false));
+            client.press(client.requireButton("Yes"));
             return;
         }
         if (client.player() == null || client.screen() != null) throw new Pending();
         TestAssertions.require(Reflect.call(client.minecraft(),
                         "getSingleplayerServer|getIntegratedServer|integratedServer") != null,
                 "Expected a local integrated server");
-        client.command("difficulty peaceful");
-        nextStage();
+        client.sendCommand("difficulty peaceful");
+        advance();
     }
 
-    private void setGameRule(String legacyName, String modernName) {
-        client.gameRuleCommand(legacyName, modernName);
-        nextStage();
+    private void disableGameRule(String legacyName, String modernName) {
+        client.disableGameRule(legacyName, modernName);
+        advance();
     }
 
     private void switchToSurvival() {
-        client.command("gamemode survival");
-        nextStage();
+        client.sendCommand("gamemode survival");
+        advance();
     }
 
     private void switchToJapanese() {
-        if (client.creative()) throw new Pending();
-        client.language("ja_jp");
-        nextStage();
+        if (client.isCreative()) throw new Pending();
+        client.selectLanguage("ja_jp");
+        advance();
     }
 
     private boolean finishPreparation() {
@@ -187,8 +194,40 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
         return true;
     }
 
-    private void nextStage() {
-        stage++;
-        options.log("stage " + stage);
+    private void advance() {
+        stage = stage.next();
+        options.log("stage " + stage.description);
+    }
+
+    private enum PreparationStage {
+        WAIT_FOR_MAIN_MENU("wait-for-main-menu"),
+        OPEN_WORLD_SELECTION("open-world-selection"),
+        OPEN_WORLD_CREATION("open-world-creation"),
+        NAME_WORLD("name-world"),
+        SELECT_CREATIVE_MODE("select-creative-mode"),
+        OPEN_WORLD_OPTIONS("open-world-options"),
+        SELECT_SUPERFLAT("select-superflat"),
+        CONFIGURE_WORLD("configure-world"),
+        CREATE_WORLD("create-world"),
+        ENTER_WORLD("enter-world"),
+        DISABLE_MOB_SPAWNING("disable-mob-spawning"),
+        DISABLE_DAYLIGHT_CYCLE("disable-daylight-cycle"),
+        DISABLE_WEATHER_CYCLE("disable-weather-cycle"),
+        SWITCH_TO_SURVIVAL("switch-to-survival"),
+        SWITCH_TO_JAPANESE("switch-to-japanese"),
+        FINISH("finish");
+
+        private final String description;
+
+        PreparationStage(String description) {
+            this.description = description;
+        }
+
+        private PreparationStage next() {
+            PreparationStage[] stages = values();
+            int next = ordinal() + 1;
+            if (next >= stages.length) throw new IllegalStateException("Already at final preparation stage");
+            return stages[next];
+        }
     }
 }

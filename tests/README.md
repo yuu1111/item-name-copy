@@ -34,6 +34,7 @@
 
 ## 検証範囲
 
-- OSからの物理キー入力、左右Ctrlの区別、画面の見た目は別途Computer Useまたは手動で確認する
+- [Dockerの外部入力検証](e2e/README.md)では、別スイートでX11経由のホバーとCtrl+Cを確認する
+- Windowsの物理キー入力、左右Ctrlの区別、画面の見た目は別途Computer Useまたは手動で確認する
 - チェスト・かまど・金床、他Modの画面、マルチプレイはこのテストの対象外
 - [Client tests workflow](../.github/workflows/client-test.yml)は手動起動でき、ログとレポートを保存する

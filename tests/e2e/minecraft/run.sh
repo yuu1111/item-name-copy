@@ -6,8 +6,12 @@ if [[ ! "$target" =~ ^[0-9][0-9A-Za-z.-]*$ || ! -f "versions/$target/gradle.prop
     echo "Unknown Minecraft target: $target" >&2
     exit 1
 fi
-source_hash=$(find src core/src gradle minecraft-client-testkit tests/client tests/e2e -type f \
-    -not -path '*/build/*' -not -path '*/.gradle/*' -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+source_hash=$({
+    find src core/src gradle minecraft-client-testkit tests/client tests/e2e -type f \
+        -not -path '*/build/*' -not -path '*/.gradle/*' -print0
+    find . -maxdepth 1 -type f \( -name '*.gradle.kts' -o -name 'gradle.properties' \) -print0
+    printf '%s\0' "versions/$target/gradle.properties"
+} | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
 report="versions/$target/build/reports/client-test"
 collect() {
     if [[ -d "$report" ]]; then cp -a "$report" "$E2E_ARTIFACTS/client-report"; fi

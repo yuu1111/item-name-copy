@@ -61,7 +61,15 @@ public final class ItemNameCopyClientDriver {
         return legacy;
     }
 
-    public void inventory(boolean custom) {
+    public void openInventoryWithRegularItem() {
+        openInventory(false);
+    }
+
+    public void openInventoryWithCustomNamedItem() {
+        openInventory(true);
+    }
+
+    private void openInventory(boolean custom) {
         show(null);
         Object stack = createTestStack(custom);
         putInFirstHotbarSlot(stack);
@@ -107,7 +115,7 @@ public final class ItemNameCopyClientDriver {
                 "net.minecraft.client.gui.screen.inventory.InventoryScreen", "net.minecraft.client.gui.inventory.GuiInventory"), player());
     }
 
-    public void openCreative() {
+    public void openCreativeInventory() {
         Class<?> type = Reflect.type("net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen",
                 "net.minecraft.client.gui.screen.inventory.CreativeScreen", "net.minecraft.client.gui.inventory.GuiContainerCreative");
         Object level = level();
@@ -144,13 +152,13 @@ public final class ItemNameCopyClientDriver {
         select(search, value);
     }
 
-    public void selectCreativeSearch() {
+    public void selectCreativeSearch(String value) {
         Class<?> tabs = Reflect.type("net.minecraft.world.item.CreativeModeTabs", "net.minecraft.world.item.CreativeModeTab",
                 "net.minecraft.item.ItemGroup", "net.minecraft.creativetab.CreativeTabs");
         Object tab = Reflect.has(tabs, "searchTab", 0)
                 ? Reflect.call(tabs, "searchTab") : Reflect.get(tabs, "TAB_SEARCH", "SEARCH");
         Reflect.call(testScreen, "selectTab|setCurrentCreativeTab", tab);
-        select(Reflect.get(testScreen, "searchBox", "searchField"), "トウヒ");
+        select(Reflect.get(testScreen, "searchBox", "searchField"), value);
     }
 
     public int firstOccupiedSlot() {
@@ -168,11 +176,11 @@ public final class ItemNameCopyClientDriver {
         return (List<?>) Reflect.get(menu, "slots", "inventorySlots");
     }
 
-    public Object item(Object slot) {
+    public Object itemInSlot(Object slot) {
         return Reflect.call(slot, "getItem|getStack");
     }
 
-    public void hover(int index) {
+    public void hoverSlot(int index) {
         testSlot = slots().get(index);
         int x = coordinate(testScreen, "leftPos", "guiLeft") + coordinate(testSlot, "x", "xPos") + 8;
         int y = coordinate(testScreen, "topPos", "guiTop") + coordinate(testSlot, "y", "yPos") + 8;
@@ -192,7 +200,7 @@ public final class ItemNameCopyClientDriver {
         }
     }
 
-    public void copy(int action, int flags) {
+    public void sendCopyKeyEvent(int action, int flags) {
         if (action != 0) ensureTestSlotIsHovered();
         input.beginKeyEvent(action, flags);
         try {
@@ -202,14 +210,14 @@ public final class ItemNameCopyClientDriver {
         }
     }
 
-    public void command(String value) {
+    public void sendCommand(String value) {
         Object connection = Reflect.optionalGet(player(), "connection");
         if (Reflect.has(connection, "sendCommand", 1)) Reflect.call(connection, "sendCommand", value);
         else Reflect.call(player(), "chat|sendChatMessage", "/" + value);
     }
 
-    public void gameRuleCommand(String legacy, String modern) {
-        command("gamerule " + (modernGameRules() ? "minecraft:" + modern : legacy) + " false");
+    public void disableGameRule(String legacy, String modern) {
+        sendCommand("gamerule " + (modernGameRules() ? "minecraft:" + modern : legacy) + " false");
     }
 
     public void verifyGameRules(Object server) {
@@ -220,7 +228,7 @@ public final class ItemNameCopyClientDriver {
         }
     }
 
-    public boolean creative() {
+    public boolean isCreative() {
         Object controller = Reflect.get(minecraft, "gameMode", "playerController");
         if (Reflect.has(controller, "getPlayerMode|getCurrentGameType", 0)) {
             Object mode = Reflect.call(controller, "getPlayerMode|getCurrentGameType");
@@ -242,13 +250,13 @@ public final class ItemNameCopyClientDriver {
         }
     }
 
-    public void show(Object screen) {
+    public void showScreen(Object screen) {
         if (Reflect.has(minecraft, "setScreen|displayGuiScreen", 1)) {
             Reflect.call(minecraft, "setScreen|displayGuiScreen", screen);
         } else Reflect.call(Reflect.get(minecraft, "gui"), "setScreen", screen);
     }
 
-    public String clipboard() {
+    public String clipboardText() {
         if (legacy) {
             return (String) Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "getClipboardString");
         }
@@ -266,7 +274,7 @@ public final class ItemNameCopyClientDriver {
         } catch (InterruptedException error) {
             throw new IllegalStateException(error);
         }
-        TestAssertions.equal(value, clipboard());
+        TestAssertions.equal(value, clipboardText());
     }
 
     public void restoreClipboard(String value) {
@@ -293,7 +301,7 @@ public final class ItemNameCopyClientDriver {
         return text(message);
     }
 
-    public void language(String code) {
+    public void selectLanguage(String code) {
         Object options = Reflect.get(minecraft, "options", "gameSettings");
         Reflect.set(options, code, "languageCode", "language");
         Object manager = Reflect.call(minecraft, "getLanguageManager");
@@ -317,7 +325,7 @@ public final class ItemNameCopyClientDriver {
         }
     }
 
-    public Object firstInput(Object owner) {
+    public Object firstTextInput(Object owner) {
         for (Object value : widgets(owner)) {
             if (Boolean.FALSE.equals(Reflect.optionalGet(value, "visible"))) continue;
             if (isTextInput(value)) return value;
@@ -351,7 +359,15 @@ public final class ItemNameCopyClientDriver {
         return String.valueOf(Reflect.call(value, "getString|getUnformattedText"));
     }
 
-    public Object optionalButton(String text, boolean prefix) {
+    public Object findButton(String text) {
+        return findButton(text, false);
+    }
+
+    public Object findButtonStartingWith(String text) {
+        return findButton(text, true);
+    }
+
+    private Object findButton(String text, boolean prefix) {
         List<Object> widgets = widgets(screen());
         for (int i = 0; i < widgets.size(); i++) {
             Object widget = widgets.get(i);
@@ -372,8 +388,16 @@ public final class ItemNameCopyClientDriver {
         return null;
     }
 
-    public Object findButton(String label, boolean prefix) {
-        Object button = optionalButton(label, prefix);
+    public Object requireButton(String label) {
+        return requireButton(label, false);
+    }
+
+    public Object requireButtonStartingWith(String label) {
+        return requireButton(label, true);
+    }
+
+    private Object requireButton(String label, boolean prefix) {
+        Object button = findButton(label, prefix);
         if (button == null) throw new IllegalStateException("Button missing: " + label + "; " + describeScreen());
         return button;
     }
@@ -453,7 +477,7 @@ public final class ItemNameCopyClientDriver {
                 : Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
                 "hoveredSlot", testScreen);
         if (hovered == testSlot) return;
-        hover(slots().indexOf(testSlot));
+        hoverSlot(slots().indexOf(testSlot));
         throw new Pending();
     }
 

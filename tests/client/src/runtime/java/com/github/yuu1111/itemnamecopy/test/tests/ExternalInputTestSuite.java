@@ -14,7 +14,7 @@ public final class ExternalInputTestSuite implements TestSuite {
     private final ItemNameCopyClientDriver client;
     private final FileDriver driver = new FileDriver();
     private Object slot;
-    private String itemBefore;
+    private Object itemBefore;
 
     public ExternalInputTestSuite(ItemNameCopyClientDriver client) {
         this.client = client;
@@ -36,7 +36,8 @@ public final class ExternalInputTestSuite implements TestSuite {
             () -> send("hotkey", ",\"keys\":\"ctrl+c\""), this::await,
             () -> {
                 TestAssertions.equal("オークの原木", client.clipboard());
-                TestAssertions.equal(itemBefore, String.valueOf(client.item(slot)));
+                TestAssertions.require((Boolean) Reflect.call(itemBefore.getClass(), "matches|areItemStacksEqual",
+                    itemBefore, client.item(slot)), "The copied item changed");
                 verifyReleasedKeys();
             },
             () -> send("clipboard", ",\"expected\":" + FileDriver.quote("オークの原木")), this::await,
@@ -59,7 +60,7 @@ public final class ExternalInputTestSuite implements TestSuite {
 
     private void hover(int index) {
         slot = client.slots().get(index);
-        itemBefore = String.valueOf(client.item(slot));
+        itemBefore = Reflect.call(client.item(slot), "copy");
         Object screen = client.testScreen();
         int x = ((Number) Reflect.get(screen, "leftPos", "guiLeft")).intValue()
             + ((Number) Reflect.get(slot, "x", "xPos")).intValue() + 8;
@@ -74,6 +75,7 @@ public final class ExternalInputTestSuite implements TestSuite {
     }
 
     private void verifyHover() {
+        TestAssertions.require(client.screen() == client.testScreen(), "The inventory screen changed");
         Object hovered = Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
             "hoveredSlot", client.testScreen());
         TestAssertions.require(hovered == slot, "External pointer did not hover the requested slot");
