@@ -1,7 +1,10 @@
 .git
 .gradle
+**/.gradle
 **/build
 **/run
 versions/**/src
 .idea
 *.iml
+**/hs_err_pid*.log
+**/*.hprof

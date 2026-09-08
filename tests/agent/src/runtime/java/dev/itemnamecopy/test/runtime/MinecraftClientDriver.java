@@ -20,7 +20,7 @@ final class MinecraftClientDriver {
 
     void initialize(Object client) {
         minecraft = client;
-        Reflect.loader = client.getClass().getClassLoader();
+        Reflect.initialize(client.getClass().getClassLoader());
     }
 
     Object minecraft() {

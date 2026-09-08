@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25-jdk-noble
+FROM eclipse-temurin:25-jdk-noble@sha256:534968c051301957beae735e7ba1db54d99ddecf08746d3b9d4f318cc132dbc3
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

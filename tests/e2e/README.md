@@ -23,6 +23,7 @@ docker compose -f tests/e2e/compose.yaml run --rm client
   - `run.json`へ終了コードと所要時間を保存し、過去の実行結果へ上書きしない
 - 受入条件を満たさない場合は終了コードを非0にする
 - ソース変更後はイメージを再ビルドする ホストのビルド出力やGradleキャッシュは持ち込まない
+- GitHub Actionsの`E2E runtime`でも同じComposeコマンドを手動実行できる
 
 ## アプリとの接続
 

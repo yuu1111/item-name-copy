@@ -1,0 +1,21 @@
+name: E2E runtime
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  input:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - run: docker compose -f tests/e2e/compose.yaml build
+      - run: docker compose -f tests/e2e/compose.yaml run --rm client
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: always()
+        with:
+          name: e2e-runtime
+          path: build/docker-e2e/

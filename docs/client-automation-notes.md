@@ -168,13 +168,14 @@
 - 目的はLLM非依存の自動E2Eテスト
   - シナリオ、待機条件、合否判定はコードで固定し、推論サービスや画像を見たLLMの判断を必要としない
   - `tests/agent`のagentはJavaの計測機構を指し、AIエージェントを指さない
-- ドライバーの第一候補はCua Driverとし、採用確定にはMinecraftでの適合検証を必要とする
-  - CLIとSDKから使え、操作先と背景配送を明示できる
-  - 同じWindowsデスクトップ上で背景操作を先に検証し、仮想マシンの導入を前提にしない
-  - ホスト上の背景操作だけでCtrl+Cを再現できるとは判定しない
+- 標準実行環境はLinuxコンテナと専用X11画面にし、最初の入力ドライバーはxdotoolとする
+  - WindowsではWSL2上のDocker、LinuxではDockerから同じ構成を実行する
+  - ドライバーの操作要求をアプリの状態取得から分離し、別のドライバーへ交換できる境界を保つ
+  - Linuxの入力経路の成功をWindowsの入力経路の成功として扱わない
 
 | 候補 | 今回の適合性 | 選定上の制約 |
 | --- | --- | --- |
+| xdotool | Linuxコンテナで採用 | 専用X11画面内でXTEST入力を使う Minecraft固有の状態判定はアダプターに残す |
 | Cua Driver | 背景操作は採用保留 | 0.23.2とLWJGL 3.3.3の検証でCtrl+Cの修飾値が欠落 |
 | Microsoft WinApp CLI | 隔離環境内の代替候補 | hoverやdragはSendInputを使うため、同じデスクトップの入力分離には使えない |
 | CursorTouch Windows-MCP | 隔離環境内の代替候補 | 画面座標のマウス操作とWindowsクリップボードを扱い、ホストからの分離機構は確認できない |
@@ -191,7 +192,7 @@
   - [Windows-MCPのツール](https://github.com/CursorTouch/Windows-MCP/tree/08ddee78c26182b103d62c1c84c1fbec82a280b2)
   - [UFOのPiP開発状況](https://github.com/microsoft/UFO/blob/364eb7969d392e857299ceaf14bd6057e5b00078/ufo/README.md)
   - [pywinautoのリモート実行制約](https://pywinauto.readthedocs.io/en/latest/remote_execution.html)
-- 外部ドライバーと隔離環境は別に選定し、隔離環境の導入は保留する
+- 外部ドライバーと隔離環境は別に選定し、Windows VMの導入は保留する
   - CuaのWindows sandboxによるMinecraft実行例はあるが、公式のローカル例はLinux KVMまたはIntel Macを前提にしている
   - Windows Sandboxはホストとのクリップボード転送を無効化できるが、Windows Homeは対応対象外
   - 隔離方式を再検討する場合は、Windows VMのOpenGL対応、起動時間、キャッシュの永続化、ゲストのクリップボード分離を検証する
@@ -221,3 +222,13 @@
   - 起動中のMinecraftへの初回呼び出しも`unverifiable`で、アイテムのコピー成功は未確認
   - 独立したGLFW検証は、Minecraft内のホバー、コピー、クリップボードまで通したE2E成功を意味しない
   - 修飾値をテスト側で補正すると実入力の検証にならないため、この構成を全版のE2Eへ採用しない
+
+## Dockerランタイム
+
+- [Dockerによる外部入力検証](../tests/e2e/README.md)を共通環境の入口とする
+- 仮想画面、入力配送、操作記録、タイムアウト、プロセスの後処理をアプリ用アダプターから分離する
+- Javaとの接続もファイル経由の要求・応答とし、ゲームのtickを止めずに待機できるようにする
+- ホストのX11ソケットやクリップボードをコンテナへ接続しない
+- イメージへホストのビルド出力やネストしたGradleキャッシュを含めない
+  - `.dockerignore`の`.gradle`だけではネストしたキャッシュが残るため、`**/.gradle`も除外する
+- 入力基盤のGLFW検証と、Minecraft内のアイテムコピーを通す検証は別の結果として管理する
