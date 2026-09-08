@@ -78,7 +78,7 @@ public final class ExternalInputTestSuite implements TestSuite {
             + ((Number) Reflect.get(slot, "x", "xPos")).intValue() + 8;
         int y = ((Number) Reflect.get(screen, "topPos", "guiTop")).intValue()
             + ((Number) Reflect.get(slot, "y", "yPos")).intValue() + 8;
-        Object window = client.isLegacy() ? Reflect.type("org.lwjgl.opengl.Display") : window();
+        Object window = client.isLegacy() ? Reflect.type("org.lwjgl.opengl.Display") : client.window();
         int width = ((Number) Reflect.call(window, "getScreenWidth|getWidth")).intValue();
         int height = ((Number) Reflect.call(window, "getScreenHeight|getHeight")).intValue();
         x = x * width / ((Number) Reflect.get(screen, "width")).intValue();
@@ -100,10 +100,6 @@ public final class ExternalInputTestSuite implements TestSuite {
         }
     }
 
-    private Object window() {
-        return Reflect.call(client.minecraft(), "getWindow|getMainWindow");
-    }
-
     private void verifyReleasedKeys() {
         if (client.isLegacy()) {
             Class<?> keyboard = Reflect.type("org.lwjgl.input.Keyboard");
@@ -113,7 +109,7 @@ public final class ExternalInputTestSuite implements TestSuite {
             }
             return;
         }
-        long handle = ((Number) Reflect.call(window(), "getWindow|getHandle")).longValue();
+        long handle = client.windowHandle();
         Class<?> glfw = Reflect.type("org.lwjgl.glfw.GLFW");
         for (int key : new int[] { 67, 341, 345 }) {
             TestAssertions.equal(0, ((Number) Reflect.call(glfw, "glfwGetKey", handle, key)).intValue());

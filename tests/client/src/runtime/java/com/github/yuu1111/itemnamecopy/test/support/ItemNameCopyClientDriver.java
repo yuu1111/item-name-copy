@@ -195,7 +195,7 @@ public final class ItemNameCopyClientDriver {
             int width = ((Number) Reflect.call(window, "getScreenWidth|getWidth")).intValue();
             int height = ((Number) Reflect.call(window, "getScreenHeight|getHeight")).intValue();
             Object mouse = Reflect.get(minecraft, "mouseHandler", "mouseHelper");
-            Reflect.call(mouse, "onMove|cursorPosCallback", handle(),
+            Reflect.call(mouse, "onMove|cursorPosCallback", windowHandle(),
                     (double) x * width / guiWidth, (double) y * height / guiHeight);
         }
     }
@@ -492,11 +492,11 @@ public final class ItemNameCopyClientDriver {
         }
         Object keyboard = keyboard();
         if (Reflect.has(keyboard, "keyPress|onKeyEvent", 5)) {
-            Reflect.call(keyboard, "keyPress|onKeyEvent", handle(), 67, 0, action, flags);
+            Reflect.call(keyboard, "keyPress|onKeyEvent", windowHandle(), 67, 0, action, flags);
             return;
         }
         Object event = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), 67, 0, flags);
-        Reflect.call(keyboard, "keyPress", handle(), action, event);
+        Reflect.call(keyboard, "keyPress", windowHandle(), action, event);
     }
 
     private int coordinate(Object owner, String... names) {
@@ -511,12 +511,12 @@ public final class ItemNameCopyClientDriver {
         return Reflect.get(minecraft, "keyboardHandler", "keyboardListener");
     }
 
-    private Object window() {
+    public Object window() {
         return Reflect.has(minecraft, "getWindow|getMainWindow", 0)
                 ? Reflect.call(minecraft, "getWindow|getMainWindow") : Reflect.get(minecraft, "window", "mainWindow");
     }
 
-    private long handle() {
+    public long windowHandle() {
         return ((Number) Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
                 "windowHandle")).longValue();
     }
