@@ -12,12 +12,13 @@ import org.objectweb.asm.Opcodes;
 
 public final class Transformer implements ClassFileTransformer, Opcodes {
     private static final String RUNTIME = "com/github/yuu1111/itemnamecopy/test/bootstrap/ItemNameCopyTestRuntime";
+    private final boolean external = Boolean.getBoolean("itemnamecopy.test.external");
 
     @Override
     public byte[] transform(ClassLoader loader, final String name, Class<?> redefining,
                             ProtectionDomain domain, byte[] bytes) {
         final boolean minecraft = "net/minecraft/client/Minecraft".equals(name);
-        if (Boolean.getBoolean("itemnamecopy.test.external") && !minecraft) return null;
+        if (external && !minecraft) return null;
         final boolean screen = "net/minecraft/client/gui/screens/Screen".equals(name)
                 || "net/minecraft/client/gui/screen/Screen".equals(name)
                 || "net/minecraft/client/gui/GuiScreen".equals(name);

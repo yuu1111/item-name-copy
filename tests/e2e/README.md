@@ -38,7 +38,24 @@ docker compose -f tests/e2e/compose.yaml run --rm -e E2E_TIMEOUT_SECONDS=1800 cl
 - ワールド設定、原木のコピーとアイテム不変、空スロットでコピーしないことの3件を検証する
 - ホバーは画面が実際に保持するスロット、コピーはMinecraftとxclipの両方から読んだクリップボードで判定する
 - クライアントログとJSON・JUnitレポートも実行ディレクトリへ保存する
-- LWJGL 2の対象は未対応として失敗させる
+- LWJGL 2ではDisplayから画面サイズ、Keyboardからキー解放を取得する
+- `1.21.1-fabric`で3件の成功を確認した 他のLoaderと版はこの外部入力スイートでは未検証
+
+### 全対象の手動実行
+
+PowerShell 7から実行する WindowsとLinuxで同じコマンドを使う
+
+```powershell
+pwsh -File scripts/Invoke-DockerClientTests.ps1
+```
+
+- 全対象を列挙し、各対象で既存13項目と外部入力3項目を別コンテナで順番に実行する
+- イメージを最初にビルドし、失敗した対象があっても次へ進む 全体の失敗は終了コード1で返す
+- `build/docker-e2e/matrix.json`へ集計し、各実行の詳細は個別の実行ディレクトリへ保存する
+- `-Resume`で同じイメージの成功済み対象を省略する イメージが変わった場合は再検証する
+- `-Target 1.12.2-forge -Suite external`で対象とスイートを限定する
+- `-List`で実行予定だけを表示する Dockerの起動とテストは行わない
+- 全対象の完了確認は集計レポートで行う 代表版の成功だけでは他の版を成功扱いにしない
 
 ## アプリとの接続
 
@@ -80,7 +97,7 @@ docker compose -f tests/e2e/compose.yaml run --rm -e E2E_TIMEOUT_SECONDS=1800 cl
 - GLFWの検証はアプリのコピー処理を代用しない
 - Minecraftの外部入力スイートと従来のコールバック入力スイートは、レポートの`mode`を分ける
 - キャッシュの識別にはアプリの実行内容に加え、OS、Java、ドライバー、シナリオ、イメージの識別情報を含める
-- 全対象への展開前にMinecraft代表版で描画負荷と入力の成立を確認する
+- 他の版へ展開する際も描画負荷と入力の成立を確認する
 - Java 25とLWJGL 3.3.3の組合せではnative access、Unsafe、JNIバージョンの警告が出る
   - 入力検証の成功を、この組合せ全体の互換性保証として扱わない
   - Minecraftを実行するアダプターでは、各版が要求するJavaを選択する

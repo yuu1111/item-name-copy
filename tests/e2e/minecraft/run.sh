@@ -2,6 +2,12 @@
 set -euo pipefail
 
 target=${1:-1.21.1-fabric}
+input=${2:-external}
+case "$input" in
+    external) expected=3; mode='real client, external X11 input, OS clipboard' ;;
+    synthetic) expected=13; mode='real client, synthetic input callbacks, OS clipboard' ;;
+    *) echo "Unknown input suite: $input" >&2; exit 1 ;;
+esac
 if [[ ! "$target" =~ ^[0-9][0-9A-Za-z.-]*$ || ! -f "versions/$target/gradle.properties" ]]; then
     echo "Unknown Minecraft target: $target" >&2
     exit 1
@@ -21,7 +27,7 @@ collect() {
 }
 trap collect EXIT
 set +e
-bash gradlew "-Ptarget=$target" "-PclientTestSource=$source_hash" -PclientTestInput=external \
+bash gradlew "-Ptarget=$target" "-PclientTestSource=$source_hash" "-PclientTestInput=$input" \
     '-Dorg.gradle.jvmargs=-Xmx2G' --max-workers=2 --no-daemon ":$target:runClient" --console=plain \
     >"$E2E_ARTIFACTS/minecraft.log" 2>&1
 status=$?
@@ -30,7 +36,7 @@ if ((status != 0)); then
     tail -n 60 "$E2E_ARTIFACTS/minecraft.log"
     exit "$status"
 fi
-jq -e --arg target "$target" --arg source "$source_hash" \
-    '.target == $target and .source == $source and .mode == "real client, external X11 input, OS clipboard" and .failed == 0 and .passed == 3 and .expectedTests == 3' \
+jq -e --arg target "$target" --arg source "$source_hash" --arg mode "$mode" --argjson expected "$expected" \
+    '.target == $target and .source == $source and .mode == $mode and .failed == 0 and .passed == $expected and .expectedTests == $expected' \
     "$report/results.json" >/dev/null
-echo "PASS $target: 3 tests with external X11 input"
+echo "PASS $target: $expected tests ($input)"
