@@ -118,6 +118,21 @@
 
 ## 汎用ライブラリへ分離する責務
 
+- OS操作には保守されている外部ドライバーを使う
+  - Cua Driverなどを交換可能なアダプターとして扱い、マウス捕捉、フォーカス制御、ウィンドウ探索、画面取得の独自実装を増やさない
+  - LLMへの依存は持たず、CLIまたはSDKから決められたシナリオを実行する
+  - Minecraft固有の画面識別、座標の取得、状態検証はゲーム側のアダプターに残す
+  - ドライバーの操作成功だけで判定せず、ゲーム側の状態で結果を確認する
+  - 背景操作に対応しない場合は停止し、ユーザーのマウスを使う前景操作へ自動で切り替えない
+- 実行OSは検証結果の識別情報に含める
+  - マウス捕捉、キーの修飾判定、クリップボード、ウィンドウのフォーカスにはOS差がある
+  - Linuxの成功をWindowsの成功として再利用しない
+  - Windows上の背景操作を優先して適合確認し、隔離したLinux環境だけでWindowsの操作干渉が解決したと判定しない
+  - 同一デスクトップの背景操作と、別OS環境への隔離は別の方式として扱う
+- 外部ドライバーの採否は対象ゲームで確認する
+  - [Cua Driverの対応範囲](https://cua.ai/docs/reference/cua-driver/platform-support)はアプリと操作の種類ごとに異なり、Windows対応という記載だけでMinecraftの背景入力を保証しない
+  - [Windows sandboxでMinecraftを動かす公式例](https://cua.ai/docs/how-to-guides/sandbox/minecraft)は存在するが、同じWindowsデスクトップ上での背景入力を証明する例ではない
+  - 採用前にカーソル、フォーカス、クリップボードへの干渉と、ゲーム側で入力が受理されたことを確認する
 - 起動アダプター
   - Loaderのrun設定、Java選択、専用ディレクトリ、agent注入、ログ回収を担当する
 - 実行環境と機能の検出
@@ -134,6 +149,12 @@
 
 ## 追加設計が必要な点
 
+- 再実行の判定を対象ごとの実行内容へ変更する
+  - 現状は広いソース範囲を一つのハッシュへまとめるため、旧テストの削除などでも全対象が無効になる
+  - 対象のクラス、リソース、解決済み依存関係、Java・OS・入力ドライバー、テストシナリオを識別する
+  - 実行内容が変わらなければ、文書、旧方式、無関係な対象の変更で成功結果を破棄しない
+  - テスト基盤の変更による再確認と製品の変更による再確認を区別し、無効化理由を表示する
+  - 根拠の足りない旧レポートを、新方式で成功した結果として書き換えない
 - Reflectionの複数名フォールバックは、メソッド不存在と呼び出し先内部の失敗を区別する
 - 起動時にフックが実際に適用されたことを確認し、差し替え失敗を最初の操作まで持ち越さない
 - ビルド中や検証中にソースが変更された場合の結果を無効化する
@@ -141,3 +162,62 @@
 - 強制終了に備えたクリップボード復元と、クライアントプロセスの所有権を管理する
 - 配布Jarによる起動検証を、開発クラスパスによる検証と別モードで提供する
 - 新しい境界版の対応を追加したら、既存の代表版でフォーカスや入力動作の回帰を確認する
+
+## 外部ドライバーの比較と選定
+
+- 目的はLLM非依存の自動E2Eテスト
+  - シナリオ、待機条件、合否判定はコードで固定し、推論サービスや画像を見たLLMの判断を必要としない
+  - `tests/agent`のagentはJavaの計測機構を指し、AIエージェントを指さない
+- ドライバーの第一候補はCua Driverとし、採用確定にはMinecraftでの適合検証を必要とする
+  - CLIとSDKから使え、操作先と背景配送を明示できる
+  - 同じWindowsデスクトップ上で背景操作を先に検証し、仮想マシンの導入を前提にしない
+  - ホスト上の背景操作だけでCtrl+Cを再現できるとは判定しない
+
+| 候補 | 今回の適合性 | 選定上の制約 |
+| --- | --- | --- |
+| Cua Driver | 背景操作は採用保留 | 0.23.2とLWJGL 3.3.3の検証でCtrl+Cの修飾値が欠落 |
+| Microsoft WinApp CLI | 隔離環境内の代替候補 | hoverやdragはSendInputを使うため、同じデスクトップの入力分離には使えない |
+| CursorTouch Windows-MCP | 隔離環境内の代替候補 | 画面座標のマウス操作とWindowsクリップボードを扱い、ホストからの分離機構は確認できない |
+| Microsoft UFO | 今回は除外 | AIエージェント基盤としての範囲が広く、READMEのPiP機能は開発中 |
+| pywinauto | 補助候補 | 実マウス操作はアクティブなデスクトップが必要で、背景のコントロール操作もアプリ依存 |
+
+- Ctrl+Cの制約には実装上の根拠がある
+  - [GLFWのWindows実装](https://github.com/glfw/glfw/blob/master/src/win32_window.c)の`getKeyMods`は`GetKeyState`を読む
+  - [Cua Driverのキー入力実装](https://github.com/trycua/cua/blob/e686ee9ad32996bdfba9891852cf50a1269693ae/libs/cua-driver/rust/crates/platform-windows/src/input/keyboard.rs)は、PostMessageではその修飾状態を更新できず、SendInput経路では前景切替が必要になる理由を説明している
+  - インストール済み0.23.2の`describe hotkey`にもこの制約が記載されている
+  - 背景でキーを送れたという返り値だけで、Ctrl+Cの成功や非干渉を判定しない
+- 比較資料
+  - [WinApp CLIの入力方式](https://learn.microsoft.com/en-us/windows/apps/dev-tools/winapp-cli/ui-automation)
+  - [Windows-MCPのツール](https://github.com/CursorTouch/Windows-MCP/tree/08ddee78c26182b103d62c1c84c1fbec82a280b2)
+  - [UFOのPiP開発状況](https://github.com/microsoft/UFO/blob/364eb7969d392e857299ceaf14bd6057e5b00078/ufo/README.md)
+  - [pywinautoのリモート実行制約](https://pywinauto.readthedocs.io/en/latest/remote_execution.html)
+- 外部ドライバーと隔離環境は別に選定し、隔離環境の導入は保留する
+  - CuaのWindows sandboxによるMinecraft実行例はあるが、公式のローカル例はLinux KVMまたはIntel Macを前提にしている
+  - Windows Sandboxはホストとのクリップボード転送を無効化できるが、Windows Homeは対応対象外
+  - 隔離方式を再検討する場合は、Windows VMのOpenGL対応、起動時間、キャッシュの永続化、ゲストのクリップボード分離を検証する
+- 最小適合検証では、通常UIAアプリの成功をMinecraftの成功として代用しない
+  - 起動からワールド終了までホストの前景ウィンドウを変えず、ユーザーのマウス操作を妨げない
+  - 原木をホバーしてCtrl+Cし、日本語名をクリップボードから確認する
+  - 検索欄優先とキー解放を確認する 同一デスクトップではOSのクリップボードを共有する
+  - 旧LWJGL 2と新しいGLFWの境界で成功してから、全対象の実行方式を置き換える
+
+## Cua Driverの背景入力検証
+
+- 再現には`tests/probes/Invoke-GlfwBackgroundProbe.ps1`を使う
+  - Windows、Javaとjavac、Cua Driverの起動済みdaemon、Gradleキャッシュ内のLWJGL 3.3.3とWindows用native Jarが必要
+  - `-Driver`、`-GradleCache`、`-LwjglVersion`で配置や対象を指定できる
+  - GLFWのウィンドウをフォーカスなしで表示し、30秒間キー、修飾値、ポインターイベント、フォーカス取得を記録する
+  - 外部入力はCua DriverのCLIから送り、前景操作への切替やゲーム側の入力状態の書換えは行わない
+  - `build/driver-probe/<LWJGL版>/`へGLFWログとドライバーの応答を保存し、受入条件を満たさなければ失敗で終了する
+- Windows 11 build 26200、Cua Driver 0.23.2、LWJGL 3.3.3の結果
+  - GLFW自身のバージョン文字列は`3.4.0 Win32 WGL Null EGL OSMesa VisualC DLL`
+  - `hotkey`へ対象ウィンドウと`delivery_mode: background`を指定すると、応答は`effect: unverifiable`、`delivery.mode: unknown`
+  - Ctrl押下、C押下、C解放、Ctrl解放の4イベントは受信したが、全イベントの`mods`は0
+  - C押下中の`glfwGetKey(LEFT_CONTROL)`は1でも、Modが利用するイベントの`GLFW_MOD_CONTROL`ビットは立たない
+  - フォーカス取得は0回、Ctrl+Cとして受信したイベントは0件
+  - `move_cursor`のwindow targetは`invalid_action_target`となり、ホバー入力は確認できない
+  - 実マウスはユーザーも動かせるため、前後の座標差だけでドライバーの干渉を断定しない
+- この結果はGLFW入力経路の不適合を示す
+  - 起動中のMinecraftへの初回呼び出しも`unverifiable`で、アイテムのコピー成功は未確認
+  - 独立したGLFW検証は、Minecraft内のホバー、コピー、クリップボードまで通したE2E成功を意味しない
+  - 修飾値をテスト側で補正すると実入力の検証にならないため、この構成を全版のE2Eへ採用しない
