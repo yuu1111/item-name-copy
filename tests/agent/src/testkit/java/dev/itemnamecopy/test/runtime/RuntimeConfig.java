@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 public final class RuntimeConfig {
     public static final String TARGET = System.getProperty("itemnamecopy.test.target", "unknown");
     public static final Path REPORT = Paths.get(System.getProperty("itemnamecopy.test.report", "client-test-results.json"));
-    public static final boolean LEGACY = TARGET.startsWith("1.12.2-");
 
     private RuntimeConfig() {
     }

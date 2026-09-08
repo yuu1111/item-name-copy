@@ -2,7 +2,9 @@ package dev.itemnamecopy.client;
 
 import com.mojang.blaze3d.platform.ClipboardManager;
 import dev.itemnamecopy.core.CopyShortcutHandler;
+
 import java.util.Optional;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
@@ -21,16 +23,18 @@ import org.apache.logging.log4j.LogManager;
 *///?}
 
 public final class ItemNameCopyClient {
+
     //? if >=1.17 {
     private static final Logger LOGGER = LoggerFactory.getLogger("itemnamecopy");
     //?} else {
     /*private static final Logger LOGGER = LogManager.getLogger("itemnamecopy");
-    *///?}
+     *///?}
     private static final CopyShortcutHandler HANDLER = new CopyShortcutHandler();
     private static final ClipboardManager CLIPBOARD = new ClipboardManager();
     private static int currentAction;
 
-    private ItemNameCopyClient() {}
+    private ItemNameCopyClient() {
+    }
 
     public static void beginKey(int key, int action) {
         currentAction = action;

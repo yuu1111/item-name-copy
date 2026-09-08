@@ -2,7 +2,6 @@ package dev.itemnamecopy.test.tests;
 
 import dev.itemnamecopy.test.runtime.Pending;
 import dev.itemnamecopy.test.runtime.Reflect;
-import dev.itemnamecopy.test.runtime.RuntimeConfig;
 import dev.itemnamecopy.test.runtime.TestAssertions;
 import dev.itemnamecopy.test.runtime.TestCase;
 import dev.itemnamecopy.test.runtime.TestStep;
@@ -45,7 +44,7 @@ public final class ItemNameCopyTestSuite implements TestSuite {
                 data = Reflect.call(server, "getWorldData");
             } else {
                 Object serverLevel;
-                if (RuntimeConfig.LEGACY) {
+                if (client.isLegacy()) {
                     serverLevel = Reflect.call(server, "getWorld", 0);
                 } else {
                     Object dimension = Reflect.get(Reflect.type("net.minecraft.world.level.dimension.DimensionType",

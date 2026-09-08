@@ -9,7 +9,10 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 val transformer = sourceSets.create("transformer")
+val testkit = sourceSets.create("testkit")
 val runtime = sourceSets.create("runtime")
+runtime.compileClasspath += testkit.output
+runtime.runtimeClasspath += testkit.output
 dependencies { add(transformer.implementationConfigurationName, "org.ow2.asm:asm:9.9.1") }
 
 tasks.jar {
@@ -25,6 +28,7 @@ val transformerJar = tasks.register<Jar>("transformerJar") {
 }
 val runtimeJar = tasks.register<Jar>("runtimeJar") {
     archiveFileName = "client-test-runtime.jar"
+    from(testkit.output)
     from(runtime.output)
 }
 tasks.assemble { dependsOn(transformerJar, runtimeJar) }

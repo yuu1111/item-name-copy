@@ -2,16 +2,19 @@ package dev.itemnamecopy.client;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 final class BundledFeedback {
+
     private static final String ENGLISH = load("en_us");
     private static final String JAPANESE = load("ja_jp");
 
-    private BundledFeedback() {}
+    private BundledFeedback() {
+    }
 
     static String copied(String language, String name) {
         return String.format(Locale.ROOT, "ja_jp".equals(language) ? JAPANESE : ENGLISH, name);

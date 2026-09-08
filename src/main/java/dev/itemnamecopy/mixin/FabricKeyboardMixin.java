@@ -6,10 +6,10 @@ import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
 //? if <1.17 {
 /*import net.minecraft.client.gui.components.events.ContainerEventHandler;
-*///?}
+ *///?}
 //? if >=1.21.9 {
 /*import net.minecraft.client.input.KeyEvent;
-*///?}
+ *///?}
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -44,9 +44,9 @@ abstract class FabricKeyboardMixin {
     private static
     //?} else {
     /*private
-    *///?}
+     *///?}
     void itemnamecopy$beforeScreen(int action, Screen screen, boolean[] handled,
-                                                int key, int scanCode, int modifiers, CallbackInfo ci) {
+                                   int key, int scanCode, int modifiers, CallbackInfo ci) {
         if (ItemNameCopyClient.tryCopy(screen, key, modifiers, action, handled[0])) {
             handled[0] = true;
             ci.cancel();

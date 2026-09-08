@@ -12,10 +12,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 //? if <1.18.2 {
 /*import net.minecraftforge.fml.ModLoadingContext;
-*///?}
+ *///?}
 //? if >=1.17 && <1.18.2 {
 /*import net.minecraftforge.fml.IExtensionPoint;
-*///?}
+ *///?}
 //? if <1.17 {
 /*import net.minecraftforge.fml.ExtensionPoint;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,10 +24,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import net.minecraftforge.client.event.ScreenEvent;
 //?} else {
 /*import net.minecraftforge.client.event.GuiScreenEvent;
-*///?}
+ *///?}
 
 @Mod("itemnamecopy")
 public final class ForgeClient {
+
     //? if <1.18.2 {
     /*public ForgeClient() {
         //? if >=1.17 {
@@ -51,16 +52,16 @@ public final class ForgeClient {
         @SubscribeEvent(priority = EventPriority.LOWEST)
         //? if >=1.19 {
         public static void beforeKey(ScreenEvent.KeyPressed.Pre event) {
-        //?} elif >=1.18 {
-        /*public static void beforeKey(ScreenEvent.KeyboardKeyPressedEvent.Pre event) {
-        *///?} else {
-        /*public static void beforeKey(GuiScreenEvent.KeyboardKeyPressedEvent.Pre event) {
-        *///?}
+            //?} elif >=1.18 {
+            /*public static void beforeKey(ScreenEvent.KeyboardKeyPressedEvent.Pre event) {
+             *///?} else {
+            /*public static void beforeKey(GuiScreenEvent.KeyboardKeyPressedEvent.Pre event) {
+             *///?}
             //? if >=1.18 {
             Screen screen = event.getScreen();
             //?} else {
             /*Screen screen = event.getGui();
-            *///?}
+             *///?}
             if (ItemNameCopyClient.tryCopy(screen, event.getKeyCode(), event.getModifiers(),
                     ItemNameCopyClient.currentAction(), event.isCanceled())) {
                 event.setCanceled(true);

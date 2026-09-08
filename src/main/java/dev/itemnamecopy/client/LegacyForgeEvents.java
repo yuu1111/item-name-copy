@@ -10,9 +10,11 @@ import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = "itemnamecopy", value = Dist.CLIENT)
 public final class LegacyForgeEvents {
+
     private static boolean cDown;
 
-    private LegacyForgeEvents() {}
+    private LegacyForgeEvents() {
+    }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public static void beforeScreenKey(GuiScreenEvent.KeyboardKeyPressedEvent.Pre event) {
