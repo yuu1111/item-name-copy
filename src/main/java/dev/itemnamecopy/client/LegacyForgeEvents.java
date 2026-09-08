@@ -10,30 +10,37 @@ import org.lwjgl.glfw.GLFW;
 
 @Mod.EventBusSubscriber(modid = "itemnamecopy", value = Dist.CLIENT)
 public final class LegacyForgeEvents {
-
-    private static boolean cDown;
+    private static boolean copyKeyDown;
 
     private LegacyForgeEvents() {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public static void beforeScreenKey(GuiScreenEvent.KeyboardKeyPressedEvent.Pre event) {
-        if (event.getKeyCode() != GLFW.GLFW_KEY_C) return;
-        ItemNameCopyClient.beginKey(GLFW.GLFW_KEY_C, cDown ? GLFW.GLFW_REPEAT : GLFW.GLFW_PRESS);
-        cDown = true;
+        if (!isCopyKey(event.getKeyCode())) return;
+
+        int action = copyKeyDown ? GLFW.GLFW_REPEAT : GLFW.GLFW_PRESS;
+        updateCopyKey(action);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public static void beforeScreenRelease(GuiScreenEvent.KeyboardKeyReleasedEvent.Pre event) {
-        if (event.getKeyCode() != GLFW.GLFW_KEY_C) return;
-        cDown = false;
-        ItemNameCopyClient.beginKey(GLFW.GLFW_KEY_C, GLFW.GLFW_RELEASE);
+        if (!isCopyKey(event.getKeyCode())) return;
+        updateCopyKey(GLFW.GLFW_RELEASE);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void afterRawKey(InputEvent.KeyInputEvent event) {
-        if (event.getKey() != GLFW.GLFW_KEY_C) return;
-        cDown = event.getAction() != GLFW.GLFW_RELEASE;
-        ItemNameCopyClient.beginKey(event.getKey(), event.getAction());
+        if (!isCopyKey(event.getKey())) return;
+        updateCopyKey(event.getAction());
+    }
+
+    private static boolean isCopyKey(int key) {
+        return key == GLFW.GLFW_KEY_C;
+    }
+
+    private static void updateCopyKey(int action) {
+        copyKeyDown = action != GLFW.GLFW_RELEASE;
+        ItemNameCopyClient.beginKey(GLFW.GLFW_KEY_C, action);
     }
 }

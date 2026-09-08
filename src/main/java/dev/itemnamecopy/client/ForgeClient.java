@@ -29,7 +29,6 @@ import net.minecraftforge.client.event.ScreenEvent;
 
 @Mod("itemnamecopy")
 public final class ForgeClient {
-
     //? if <1.18.2 {
     /*public ForgeClient() {
         //? if >=1.17 {
@@ -46,8 +45,13 @@ public final class ForgeClient {
         //? if >=1.21.6 {
         /*@SubscribeEvent(priority = Priority.LOWEST)
         public static boolean beforeKey(ScreenEvent.KeyPressed.Pre event) {
-            return ItemNameCopyClient.tryCopy(event.getScreen(), event.getKeyCode(), event.getModifiers(),
-                    ItemNameCopyClient.currentAction(), false);
+            return ItemNameCopyClient.tryCopy(
+                    event.getScreen(),
+                    event.getKeyCode(),
+                    event.getModifiers(),
+                    ItemNameCopyClient.currentAction(),
+                    false
+            );
         }
         *///?} else {
         @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -63,8 +67,14 @@ public final class ForgeClient {
             //?} else {
             /*Screen screen = event.getGui();
              *///?}
-            if (ItemNameCopyClient.tryCopy(screen, event.getKeyCode(), event.getModifiers(),
-                    ItemNameCopyClient.currentAction(), event.isCanceled())) {
+            boolean copied = ItemNameCopyClient.tryCopy(
+                    screen,
+                    event.getKeyCode(),
+                    event.getModifiers(),
+                    ItemNameCopyClient.currentAction(),
+                    event.isCanceled()
+            );
+            if (copied) {
                 event.setCanceled(true);
             }
         }

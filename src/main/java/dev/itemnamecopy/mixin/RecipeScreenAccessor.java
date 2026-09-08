@@ -12,5 +12,6 @@ public interface RecipeScreenAccessor {
     RecipeBookComponent<?> itemnamecopy$getRecipeBook();
 }
 *///?} else {
-public interface RecipeScreenAccessor {}
+public interface RecipeScreenAccessor {
+}
 //?}

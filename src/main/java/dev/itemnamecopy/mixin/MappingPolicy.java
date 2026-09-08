@@ -7,5 +7,6 @@ public final class MappingPolicy {
     public static final boolean REMAP = true;
     //?}
 
-    private MappingPolicy() {}
+    private MappingPolicy() {
+    }
 }

@@ -15,7 +15,6 @@ import net.neoforged.neoforge.common.NeoForge;
 /*@Mod("itemnamecopy")
  *///?}
 public final class NeoForgeClient {
-
     public NeoForgeClient() {
         //? if <1.20.6 {
         /*if (FMLEnvironment.dist != Dist.CLIENT) return;
@@ -29,8 +28,14 @@ public final class NeoForgeClient {
         }
 
         private static void beforeKey(ScreenEvent.KeyPressed.Pre event) {
-            if (ItemNameCopyClient.tryCopy(event.getScreen(), event.getKeyCode(), event.getModifiers(),
-                    ItemNameCopyClient.currentAction(), event.isCanceled())) {
+            boolean copied = ItemNameCopyClient.tryCopy(
+                    event.getScreen(),
+                    event.getKeyCode(),
+                    event.getModifiers(),
+                    ItemNameCopyClient.currentAction(),
+                    event.isCanceled()
+            );
+            if (copied) {
                 event.setCanceled(true);
             }
         }

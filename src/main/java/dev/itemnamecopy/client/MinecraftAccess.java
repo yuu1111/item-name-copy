@@ -22,7 +22,6 @@ import net.minecraft.world.inventory.Slot;
  *///?}
 
 public final class MinecraftAccess {
-
     private MinecraftAccess() {
     }
 
@@ -50,11 +49,15 @@ public final class MinecraftAccess {
 
     public static RecipeBookComponent recipeBook(Screen screen) {
         //? if >=1.21.2 {
-        /*return screen instanceof RecipeScreenAccessor
-                ? ((RecipeScreenAccessor) screen).itemnamecopy$getRecipeBook() : null;
+        /*if (screen instanceof RecipeScreenAccessor) {
+            return ((RecipeScreenAccessor) screen).itemnamecopy$getRecipeBook();
+        }
+        return null;
         *///?} else {
-        return screen instanceof RecipeUpdateListener
-                ? ((RecipeUpdateListener) screen).getRecipeBookComponent() : null;
+        if (screen instanceof RecipeUpdateListener) {
+            return ((RecipeUpdateListener) screen).getRecipeBookComponent();
+        }
+        return null;
         //?}
     }
 
@@ -67,12 +70,14 @@ public final class MinecraftAccess {
     }
 
     public static boolean isRecipeSearchFocused(RecipeBookComponent recipeBook) {
+        if (!recipeBook.isVisible()) return false;
+
         //? if forge_without_mixins {
         /*EditBox search = recipeBook.searchBox;
          *///?} else {
         EditBox search = ((RecipeBookAccessor) recipeBook).itemnamecopy$getSearchBox();
         //?}
-        return recipeBook.isVisible() && search != null && search.isFocused();
+        return search != null && search.isFocused();
     }
 
     public static void writeClipboard(ClipboardManager clipboard, String name) {
