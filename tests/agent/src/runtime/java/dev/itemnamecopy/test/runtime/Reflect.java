@@ -14,8 +14,10 @@ final class Reflect {
 
     static Class<?> type(String... names) {
         for (String name : names) {
-            try { return Class.forName(name, true, loader); }
-            catch (ClassNotFoundException ignored) { }
+            try {
+                return Class.forName(name, true, loader);
+            } catch (ClassNotFoundException ignored) {
+            }
         }
         throw new IllegalStateException("Class missing: " + Arrays.toString(names));
     }
@@ -29,7 +31,9 @@ final class Reflect {
                     field.setAccessible(true);
                     return field.get(owner instanceof Class ? null : owner);
                 } catch (NoSuchFieldException ignored) {
-                } catch (ReflectiveOperationException error) { throw failure(error); }
+                } catch (ReflectiveOperationException error) {
+                    throw failure(error);
+                }
             }
         }
         throw new IllegalStateException("Field missing: " + start.getName() + " " + Arrays.toString(names));
@@ -37,8 +41,11 @@ final class Reflect {
 
     static Object optionalGet(Object owner, String... names) {
         if (owner == null) return null;
-        try { return get(owner, names); }
-        catch (IllegalStateException missing) { return null; }
+        try {
+            return get(owner, names);
+        } catch (IllegalStateException missing) {
+            return null;
+        }
     }
 
     static void set(Object owner, Object value, String... names) {
@@ -51,7 +58,9 @@ final class Reflect {
                     field.set(owner instanceof Class ? null : owner, value);
                     return;
                 } catch (NoSuchFieldException ignored) {
-                } catch (ReflectiveOperationException error) { throw failure(error); }
+                } catch (ReflectiveOperationException error) {
+                    throw failure(error);
+                }
             }
         }
         throw new IllegalStateException("Field missing: " + start.getName() + " " + Arrays.toString(names));
@@ -67,14 +76,20 @@ final class Reflect {
                     try {
                         method.setAccessible(true);
                         return method.invoke(owner instanceof Class ? null : owner, arguments);
-                    } catch (ReflectiveOperationException error) { throw failure(error); }
+                    } catch (ReflectiveOperationException error) {
+                        throw failure(error);
+                    }
                 }
             }
         }
         for (Method method : start.getMethods()) {
-            if (!Arrays.asList(names.split("\\|")).contains(method.getName()) || !accepts(method.getParameterTypes(), arguments)) continue;
-            try { return method.invoke(owner instanceof Class ? null : owner, arguments); }
-            catch (ReflectiveOperationException error) { throw failure(error); }
+            if (!Arrays.asList(names.split("\\|")).contains(method.getName()) || !accepts(method.getParameterTypes(), arguments))
+                continue;
+            try {
+                return method.invoke(owner instanceof Class ? null : owner, arguments);
+            } catch (ReflectiveOperationException error) {
+                throw failure(error);
+            }
         }
         throw new IllegalStateException("Method missing: " + start.getName() + "." + names + "(" + arguments.length + ")");
     }
@@ -84,7 +99,8 @@ final class Reflect {
         Class<?> start = owner instanceof Class ? (Class<?>) owner : owner.getClass();
         for (Class<?> type = start; type != null; type = type.getSuperclass()) {
             for (Method method : type.getDeclaredMethods()) {
-                if (method.getParameterCount() == arity && Arrays.asList(names.split("\\|")).contains(method.getName())) return true;
+                if (method.getParameterCount() == arity && Arrays.asList(names.split("\\|")).contains(method.getName()))
+                    return true;
             }
         }
         return false;
@@ -96,7 +112,9 @@ final class Reflect {
             try {
                 constructor.setAccessible(true);
                 return constructor.newInstance(arguments);
-            } catch (ReflectiveOperationException error) { throw failure(error); }
+            } catch (ReflectiveOperationException error) {
+                throw failure(error);
+            }
         }
         throw new IllegalStateException("Constructor missing: " + type.getName() + "(" + arguments.length + ")");
     }
@@ -111,7 +129,9 @@ final class Reflect {
                     field.setAccessible(true);
                     Object value = field.get(owner);
                     if (value != null) values.add(value);
-                } catch (ReflectiveOperationException error) { throw failure(error); }
+                } catch (ReflectiveOperationException error) {
+                    throw failure(error);
+                }
             }
         }
         return values;

@@ -10,9 +10,9 @@ version = property("mod.version") as String
 group = "dev.itemnamecopy"
 base.archivesName = "item-name-copy"
 val obfuscatedRuntime = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
-    org.gradle.util.GradleVersion.version("1.20.5")
+        org.gradle.util.GradleVersion.version("1.20.5")
 val mixinRuntime = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) >=
-    org.gradle.util.GradleVersion.version("1.15.2")
+        org.gradle.util.GradleVersion.version("1.15.2")
 if (obfuscatedRuntime) apply(plugin = "net.minecraftforge.renamer")
 
 minecraft {
@@ -26,8 +26,10 @@ minecraft {
         accessTransformers.from(accessFile)
     }
     if (project.property("minecraft_version").toString().substringBefore('.').toInt() < 26) {
-        mappings(project.findProperty("mappings_channel")?.toString() ?: "official",
-            project.findProperty("mappings_version")?.toString() ?: project.property("minecraft_version").toString())
+        mappings(
+            project.findProperty("mappings_channel")?.toString() ?: "official",
+            project.findProperty("mappings_version")?.toString() ?: project.property("minecraft_version").toString()
+        )
     }
     runs {
         configureEach {
@@ -46,11 +48,16 @@ repositories {
 }
 
 dependencies {
-    implementation(minecraft.dependency(project.name,
-        "net.minecraftforge:forge:${property("minecraft_version")}-${property("loader_version")}"))
+    implementation(
+        minecraft.dependency(
+            project.name,
+            "net.minecraftforge:forge:${property("minecraft_version")}-${property("loader_version")}"
+        )
+    )
     if (mixinRuntime) annotationProcessor("org.spongepowered:mixin:0.8.7:processor")
     if (org.gradle.util.GradleVersion.version(project.property("minecraft_version").toString()) <
-        org.gradle.util.GradleVersion.version("1.17")) {
+        org.gradle.util.GradleVersion.version("1.17")
+    ) {
         compileOnly("org.lwjgl:lwjgl-glfw:3.2.2")
     }
 }
@@ -89,8 +96,11 @@ if (obfuscatedRuntime) {
     renamer.mappings(minecraft.getDependency(project.name).toSrg)
     val reobfuscatedJar = renamer.classes(tasks.jar) {
         if (mixinRuntime) mappings(renamer.mixin.generatedMappings)
-        output.set(layout.buildDirectory.file(
-            "libs/item-name-copy-${project.version}+forge-mc${project.property("minecraft_version")}.jar"))
+        output.set(
+            layout.buildDirectory.file(
+                "libs/item-name-copy-${project.version}+forge-mc${project.property("minecraft_version")}.jar"
+            )
+        )
     }
     tasks.assemble { dependsOn(reobfuscatedJar) }
 }
@@ -99,9 +109,11 @@ tasks.withType<Jar>().configureEach { from(rootProject.file("LICENSE")) }
 tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
 
 tasks.processResources {
-    val values = mapOf("version" to project.version, "minecraft" to project.property("minecraft_version"),
+    val values = mapOf(
+        "version" to project.version, "minecraft" to project.property("minecraft_version"),
         "java" to project.property("java_version"), "loader" to project.property("loader_version"),
-        "fml" to project.property("loader_version").toString().substringBefore('.'))
+        "fml" to project.property("loader_version").toString().substringBefore('.')
+    )
     inputs.properties(values)
     filesMatching("META-INF/mods.toml") { expand(values) }
     exclude("fabric.mod.json", "META-INF/neoforge.mods.toml")

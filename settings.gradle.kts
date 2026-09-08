@@ -32,7 +32,8 @@ stonecutter {
             if (selectedTargets != null && directory.name != vcsNode && directory.name !in selectedTargets) continue
             val properties = Properties().apply { directory.resolve("gradle.properties").inputStream().use(::load) }
             val minecraft = properties.getProperty("minecraft_version")
-            val script = checkNotNull(properties.getProperty("build_script")) { "Missing build_script in ${directory.name}" }
+            val script =
+                checkNotNull(properties.getProperty("build_script")) { "Missing build_script in ${directory.name}" }
             check(directory.name.substringBefore('-') == minecraft) { "Node/version mismatch: ${directory.name}" }
             version(directory.name, minecraft).buildscript(script)
         }

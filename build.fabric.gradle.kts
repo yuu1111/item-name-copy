@@ -11,7 +11,7 @@ repositories {
 }
 
 val legacyMappings = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
-    org.gradle.util.GradleVersion.version("1.14.4")
+        org.gradle.util.GradleVersion.version("1.14.4")
 if (legacyMappings) apply(from = rootProject.file("gradle/legacy-fabric-mappings.gradle.kts"))
 
 dependencies {
@@ -40,8 +40,10 @@ tasks.withType<Jar>().configureEach {
 }
 
 tasks.processResources {
-    val values = mapOf("version" to project.version, "minecraft" to project.property("minecraft_version"),
-        "java" to project.property("java_version"), "loader" to project.property("loader_version"))
+    val values = mapOf(
+        "version" to project.version, "minecraft" to project.property("minecraft_version"),
+        "java" to project.property("java_version"), "loader" to project.property("loader_version")
+    )
     inputs.properties(values)
     filesMatching("fabric.mod.json") { expand(values) }
     exclude("META-INF/**")

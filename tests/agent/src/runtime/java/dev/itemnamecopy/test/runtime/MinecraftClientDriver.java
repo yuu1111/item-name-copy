@@ -23,9 +23,17 @@ final class MinecraftClientDriver {
         Reflect.loader = client.getClass().getClassLoader();
     }
 
-    Object minecraft() { return minecraft; }
-    Object testScreen() { return testScreen; }
-    Object testSlot() { return testSlot; }
+    Object minecraft() {
+        return minecraft;
+    }
+
+    Object testScreen() {
+        return testScreen;
+    }
+
+    Object testSlot() {
+        return testSlot;
+    }
 
     void inventory(boolean custom) {
         show(null);
@@ -36,7 +44,7 @@ final class MinecraftClientDriver {
             stack = Reflect.make(itemStack, block, 3);
         } else {
             Object item = Reflect.get(Reflect.type("net.minecraft.world.item.Items", "net.minecraft.item.Items"),
-                custom ? "DIAMOND_SWORD" : "OAK_LOG");
+                    custom ? "DIAMOND_SWORD" : "OAK_LOG");
             stack = Reflect.make(itemStack, item, 3);
         }
         if (custom) {
@@ -50,10 +58,10 @@ final class MinecraftClientDriver {
             }
         }
         Object inventory = Reflect.has(player(), "getInventory", 0)
-            ? Reflect.call(player(), "getInventory") : Reflect.get(player(), "inventory");
+                ? Reflect.call(player(), "getInventory") : Reflect.get(player(), "inventory");
         Reflect.call(inventory, "setItem|setInventorySlotContents", 0, stack);
         testScreen = Reflect.make(Reflect.type("net.minecraft.client.gui.screens.inventory.InventoryScreen",
-            "net.minecraft.client.gui.screen.inventory.InventoryScreen", "net.minecraft.client.gui.inventory.GuiInventory"), player());
+                "net.minecraft.client.gui.screen.inventory.InventoryScreen", "net.minecraft.client.gui.inventory.GuiInventory"), player());
         show(testScreen);
         Object book = recipeBook();
         if ((Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
@@ -62,7 +70,7 @@ final class MinecraftClientDriver {
     void openCreative() {
         Object level = Reflect.get(minecraft, "level", "world");
         Class<?> type = Reflect.type("net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen",
-            "net.minecraft.client.gui.screen.inventory.CreativeScreen", "net.minecraft.client.gui.inventory.GuiContainerCreative");
+                "net.minecraft.client.gui.screen.inventory.CreativeScreen", "net.minecraft.client.gui.inventory.GuiContainerCreative");
         if (Reflect.has(level, "enabledFeatures", 0)) {
             testScreen = Reflect.make(type, player(), Reflect.call(level, "enabledFeatures"), true);
         } else testScreen = Reflect.make(type, player());
@@ -97,9 +105,9 @@ final class MinecraftClientDriver {
 
     void selectCreativeSearch() {
         Class<?> tabs = Reflect.type("net.minecraft.world.item.CreativeModeTabs", "net.minecraft.world.item.CreativeModeTab",
-            "net.minecraft.item.ItemGroup", "net.minecraft.creativetab.CreativeTabs");
+                "net.minecraft.item.ItemGroup", "net.minecraft.creativetab.CreativeTabs");
         Object tab = Reflect.has(tabs, "searchTab", 0)
-            ? Reflect.call(tabs, "searchTab") : Reflect.get(tabs, "TAB_SEARCH", "SEARCH");
+                ? Reflect.call(tabs, "searchTab") : Reflect.get(tabs, "TAB_SEARCH", "SEARCH");
         Reflect.call(testScreen, "selectTab|setCurrentCreativeTab", tab);
         select(Reflect.get(testScreen, "searchBox", "searchField"), "トウヒ");
     }
@@ -114,8 +122,8 @@ final class MinecraftClientDriver {
 
     List<?> slots() {
         Object menu = Reflect.has(testScreen, "getMenu|getContainer", 0)
-            ? Reflect.call(testScreen, "getMenu|getContainer")
-            : Reflect.get(testScreen, "menu", "container", "inventorySlots");
+                ? Reflect.call(testScreen, "getMenu|getContainer")
+                : Reflect.get(testScreen, "menu", "container", "inventorySlots");
         return (List<?>) Reflect.get(menu, "slots", "inventorySlots");
     }
 
@@ -126,9 +134,9 @@ final class MinecraftClientDriver {
     void hover(int index) {
         testSlot = slots().get(index);
         int x = ((Number) Reflect.get(testScreen, "leftPos", "guiLeft")).intValue()
-            + ((Number) Reflect.get(testSlot, "x", "xPos")).intValue() + 8;
+                + ((Number) Reflect.get(testSlot, "x", "xPos")).intValue() + 8;
         int y = ((Number) Reflect.get(testScreen, "topPos", "guiTop")).intValue()
-            + ((Number) Reflect.get(testSlot, "y", "yPos")).intValue() + 8;
+                + ((Number) Reflect.get(testSlot, "y", "yPos")).intValue() + 8;
         int guiWidth = ((Number) Reflect.get(testScreen, "width")).intValue();
         int guiHeight = ((Number) Reflect.get(testScreen, "height")).intValue();
         if (RuntimeConfig.LEGACY) {
@@ -141,14 +149,14 @@ final class MinecraftClientDriver {
             int height = ((Number) Reflect.call(window, "getScreenHeight|getHeight")).intValue();
             Object mouse = Reflect.get(minecraft, "mouseHandler", "mouseHelper");
             Reflect.call(mouse, "onMove|cursorPosCallback", handle(),
-                (double) x * width / guiWidth, (double) y * height / guiHeight);
+                    (double) x * width / guiWidth, (double) y * height / guiHeight);
         }
     }
 
     void copy(int action, int flags) {
         if (action != 0) {
             Object hovered = RuntimeConfig.LEGACY ? Reflect.get(testScreen, "hoveredSlot")
-                : Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "hoveredSlot", testScreen);
+                    : Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "hoveredSlot", testScreen);
             if (hovered != testSlot) {
                 hover(slots().indexOf(testSlot));
                 throw new Pending();
@@ -194,16 +202,16 @@ final class MinecraftClientDriver {
             if (RuntimeConfig.LEGACY) level = Reflect.call(server, "getWorld", 0);
             else if (Reflect.has(server, "overworld", 0)) level = Reflect.call(server, "overworld");
             else level = Reflect.call(server, "getLevel|getWorld", Reflect.get(Reflect.type(
-                "net.minecraft.world.level.dimension.DimensionType", "net.minecraft.world.dimension.DimensionType"), "OVERWORLD"));
+                        "net.minecraft.world.level.dimension.DimensionType", "net.minecraft.world.dimension.DimensionType"), "OVERWORLD"));
             rules = Reflect.call(level, "getGameRules");
         }
-        String[] oldNames = { "doMobSpawning", "doDaylightCycle", "doWeatherCycle" };
-        String[] newNames = { "SPAWN_MOBS", "ADVANCE_TIME", "ADVANCE_WEATHER" };
-        String[] keyNames = { "RULE_DOMOBSPAWNING", "RULE_DAYLIGHT", "RULE_WEATHER_CYCLE" };
+        String[] oldNames = {"doMobSpawning", "doDaylightCycle", "doWeatherCycle"};
+        String[] newNames = {"SPAWN_MOBS", "ADVANCE_TIME", "ADVANCE_WEATHER"};
+        String[] keyNames = {"RULE_DOMOBSPAWNING", "RULE_DAYLIGHT", "RULE_WEATHER_CYCLE"};
         for (int i = 0; i < oldNames.length; i++) {
             Object value;
             if (modernGameRules()) value = Reflect.call(rules, "get", Reflect.get(
-                Reflect.type("net.minecraft.world.level.gamerules.GameRules"), newNames[i]));
+                    Reflect.type("net.minecraft.world.level.gamerules.GameRules"), newNames[i]));
             else if (Reflect.optionalGet(rules.getClass(), keyNames[i]) != null) {
                 value = Reflect.call(rules, "getBoolean", Reflect.get(rules.getClass(), keyNames[i]));
             } else value = Reflect.call(rules, "getBoolean|func_82766_b|method_8355", oldNames[i]);
@@ -244,7 +252,7 @@ final class MinecraftClientDriver {
             return (String) Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "getClipboardString");
         }
         return (String) Reflect.call(Reflect.get(minecraft, "keyboardHandler", "keyboardListener"),
-            "getClipboard|getClipboardString");
+                "getClipboard|getClipboardString");
     }
 
     void seedClipboard(String value) {
@@ -252,7 +260,7 @@ final class MinecraftClientDriver {
             Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "setClipboardString", value);
         } else {
             Reflect.call(Reflect.get(minecraft, "keyboardHandler", "keyboardListener"),
-                "setClipboard|setClipboardString", value);
+                    "setClipboard|setClipboardString", value);
         }
         try {
             Thread.sleep(150L);
@@ -265,10 +273,10 @@ final class MinecraftClientDriver {
     void restoreClipboard(String value) {
         if (RuntimeConfig.LEGACY) {
             java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
-                new java.awt.datatransfer.StringSelection(value), null);
+                    new java.awt.datatransfer.StringSelection(value), null);
         } else {
             Object clipboard = Reflect.make(Reflect.type(
-                "com.mojang.blaze3d.platform.ClipboardManager", "net.minecraft.client.ClipboardHelper"));
+                    "com.mojang.blaze3d.platform.ClipboardManager", "net.minecraft.client.ClipboardHelper"));
             Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "writeClipboard", clipboard, value);
         }
     }
@@ -280,7 +288,7 @@ final class MinecraftClientDriver {
         Object message = Reflect.get(gui, "overlayMessageString", "overlayMessage", "recordPlaying");
         if (RuntimeConfig.LEGACY) {
             return (String) Reflect.call(Reflect.type("net.minecraft.util.text.TextFormatting"),
-                "getTextWithoutFormattingCodes", text(message));
+                    "getTextWithoutFormattingCodes", text(message));
         }
         return text(message);
     }
@@ -351,13 +359,14 @@ final class MinecraftClientDriver {
             if (Boolean.FALSE.equals(visible)) continue;
             String label = label(widget);
             boolean matches = prefix
-                ? label.toLowerCase(java.util.Locale.ROOT).startsWith(text.toLowerCase(java.util.Locale.ROOT))
-                : label.equalsIgnoreCase(text);
+                    ? label.toLowerCase(java.util.Locale.ROOT).startsWith(text.toLowerCase(java.util.Locale.ROOT))
+                    : label.equalsIgnoreCase(text);
             if (!matches) continue;
             if (isButton(widget)) return widget;
             for (int j = i + 1; j < widgets.size() && j < i + 4; j++) {
                 Object adjacent = widgets.get(j);
-                if (isButton(adjacent) && !Boolean.FALSE.equals(Reflect.optionalGet(adjacent, "visible"))) return adjacent;
+                if (isButton(adjacent) && !Boolean.FALSE.equals(Reflect.optionalGet(adjacent, "visible")))
+                    return adjacent;
             }
         }
         return null;
@@ -385,7 +394,7 @@ final class MinecraftClientDriver {
             } else {
                 Object info = Reflect.make(Reflect.type("net.minecraft.client.input.MouseButtonInfo"), 0, 0);
                 Object event = Reflect.make(Reflect.type("net.minecraft.client.input.MouseButtonEvent"),
-                    (double) x + 2, (double) y + 2, info);
+                        (double) x + 2, (double) y + 2, info);
                 Reflect.call(screen(), "mouseClicked", event, false);
             }
         } else Reflect.call(screen(), "actionPerformed", button);
@@ -417,7 +426,7 @@ final class MinecraftClientDriver {
 
     private Object window() {
         return Reflect.has(minecraft, "getWindow|getMainWindow", 0)
-            ? Reflect.call(minecraft, "getWindow|getMainWindow") : Reflect.get(minecraft, "window", "mainWindow");
+                ? Reflect.call(minecraft, "getWindow|getMainWindow") : Reflect.get(minecraft, "window", "mainWindow");
     }
 
     private long handle() {
@@ -428,7 +437,7 @@ final class MinecraftClientDriver {
         Class<?> component = Reflect.type("net.minecraft.network.chat.Component", "net.minecraft.util.text.ITextComponent");
         if (Reflect.has(component, "literal", 1)) return Reflect.call(component, "literal", value);
         return Reflect.make(Reflect.type(
-            "net.minecraft.network.chat.TextComponent", "net.minecraft.util.text.StringTextComponent"), value);
+                "net.minecraft.network.chat.TextComponent", "net.minecraft.util.text.StringTextComponent"), value);
     }
 
     private void select(Object textInput, String value) {
@@ -442,7 +451,7 @@ final class MinecraftClientDriver {
         if (owner == null || !seen.add(owner) || depth > 8) return;
         found.add(owner);
         Object children = Reflect.has(owner, "children|getEventListeners", 0)
-            ? Reflect.call(owner, "children|getEventListeners") : Reflect.optionalGet(owner, "buttonList");
+                ? Reflect.call(owner, "children|getEventListeners") : Reflect.optionalGet(owner, "buttonList");
         if (children instanceof Iterable) {
             for (Object child : (Iterable<?>) children) collectWidgets(child, found, seen, depth + 1);
         }

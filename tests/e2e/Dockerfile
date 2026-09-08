@@ -2,7 +2,7 @@ FROM eclipse-temurin:25-jdk-noble
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates git jq tini procps \
+        ca-certificates curl git jq tini procps \
         xvfb xauth x11-utils xdotool xclip openbox imagemagick \
         libgl1-mesa-dri libglx-mesa0 mesa-utils libasound2t64 \
         libxtst6 libxi6 libxrandr2 libxcursor1 libxinerama1 libxxf86vm1 \
@@ -19,4 +19,4 @@ COPY . /workspace/
 WORKDIR /workspace
 
 ENTRYPOINT ["/usr/bin/tini", "-g", "--", "bash", "/opt/e2e/session.sh"]
-CMD ["bash", "tests/e2e/minecraft/run.sh", "1.21.1-fabric"]
+CMD ["bash", "tests/e2e/probes/run.sh"]

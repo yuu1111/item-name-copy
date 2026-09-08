@@ -8,7 +8,8 @@ final class RuntimeConfig {
     static final Path REPORT = Paths.get(System.getProperty("itemnamecopy.test.report", "client-test-results.json"));
     static final boolean LEGACY = TARGET.startsWith("1.12.2-");
 
-    private RuntimeConfig() {}
+    private RuntimeConfig() {
+    }
 
     static void log(String value) {
         System.out.println("CLIENT_TEST " + TARGET + " " + value);

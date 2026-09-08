@@ -40,8 +40,10 @@ stonecutter parameters {
             if (named == "children" && current.parsed < "1.16") return@forEach
             val legacy = memberNames.getProperty(named)
             if (named == "screen") {
-                replace("(?<=\\.)$named\\b(?!\\s*\\()", legacy,
-                    "(?<=\\.)$legacy\\b(?!\\s*\\()", named)
+                replace(
+                    "(?<=\\.)$named\\b(?!\\s*\\()", legacy,
+                    "(?<=\\.)$legacy\\b(?!\\s*\\()", named
+                )
             } else {
                 replace("\\b$named\\b", legacy, "\\b$legacy\\b", named)
             }
@@ -69,8 +71,10 @@ gradle.projectsEvaluated {
                 val minecraft = target.property("minecraft_version")
                 val file = destinationDir.resolve("item-name-copy-${target.version}+$loader-mc$minecraft.jar")
                 val digest = MessageDigest.getInstance("SHA-256").digest(file.readBytes())
-                mapOf("target" to target.name, "file" to file.name,
-                    "sha256" to digest.joinToString("") { "%02x".format(it) }, "runtimeVerification" to "pending")
+                mapOf(
+                    "target" to target.name, "file" to file.name,
+                    "sha256" to digest.joinToString("") { "%02x".format(it) }, "runtimeVerification" to "pending"
+                )
             }
             destinationDir.resolve("verification-manifest.json").writeText(
                 JsonOutput.prettyPrint(JsonOutput.toJson(mapOf("schemaVersion" to 1, "artifacts" to artifacts)))

@@ -31,7 +31,8 @@ final class TestResult {
 }
 
 final class TestAssertions {
-    private TestAssertions() {}
+    private TestAssertions() {
+    }
 
     static void equal(Object expected, Object actual) {
         require(Objects.equals(expected, actual), "Expected <" + expected + "> but was <" + actual + ">");

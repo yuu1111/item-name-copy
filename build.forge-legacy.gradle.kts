@@ -58,9 +58,11 @@ tasks.named<Jar>("reobfJar") {
 tasks.withType<Jar>().configureEach { from(rootProject.file("LICENSE")) }
 
 tasks.processResources {
-    val values = mapOf("version" to project.version, "minecraft" to project.property("minecraft_version"),
+    val values = mapOf(
+        "version" to project.version, "minecraft" to project.property("minecraft_version"),
         "java" to project.property("java_version"), "loader" to project.property("loader_version"),
-        "fml" to project.property("loader_version").toString().substringBefore('.'))
+        "fml" to project.property("loader_version").toString().substringBefore('.')
+    )
     inputs.properties(values)
     filesMatching("META-INF/mods.toml") { expand(values) }
     exclude("fabric.mod.json", "META-INF/neoforge.mods.toml")

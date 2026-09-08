@@ -1,7 +1,7 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import java.util.zip.ZipFile
 import net.minecraftforge.renamer.gradle.RenamerExtension
+import java.util.zip.ZipFile
 
 plugins {
     java
@@ -29,8 +29,12 @@ repositories {
 }
 
 dependencies {
-    implementation(minecraft.dependency(project.name,
-        "net.minecraftforge:forge:${property("minecraft_version")}-${property("loader_version")}"))
+    implementation(
+        minecraft.dependency(
+            project.name,
+            "net.minecraftforge:forge:${property("minecraft_version")}-${property("loader_version")}"
+        )
+    )
 }
 
 java {
@@ -54,21 +58,44 @@ val generateLegacyResources = tasks.register("generateLegacyResources") {
         val output = generatedResources.get().asFile
         output.mkdirs()
         output.resolve("version.properties").writeText("itemnamecopy.version=${project.version}\n")
-        output.resolve("pack.mcmeta").writeText(JsonOutput.toJson(mapOf("pack" to mapOf(
-            "pack_format" to 3, "description" to "ItemNameCopy translations"))))
-        output.resolve("mcmod.info").writeText(JsonOutput.prettyPrint(JsonOutput.toJson(listOf(mapOf(
-            "modid" to "itemnamecopy", "name" to "ItemNameCopy", "version" to project.version.toString(),
-            "mcversion" to project.property("minecraft_version"), "description" to "Copy hovered item names with Ctrl+C",
-            "logoFile" to "assets/itemnamecopy/icon.png", "clientSideOnly" to true,
-            "useDependencyInformation" to true,
-            "dependencies" to listOf("required-after:forge@[${project.property("loader_version")},)"),
-            "authorList" to listOf("yuu1111"))))))
+        output.resolve("pack.mcmeta").writeText(
+            JsonOutput.toJson(
+                mapOf(
+                    "pack" to mapOf(
+                        "pack_format" to 3, "description" to "ItemNameCopy translations"
+                    )
+                )
+            )
+        )
+        output.resolve("mcmod.info").writeText(
+            JsonOutput.prettyPrint(
+                JsonOutput.toJson(
+                    listOf(
+                        mapOf(
+                            "modid" to "itemnamecopy",
+                            "name" to "ItemNameCopy",
+                            "version" to project.version.toString(),
+                            "mcversion" to project.property("minecraft_version"),
+                            "description" to "Copy hovered item names with Ctrl+C",
+                            "logoFile" to "assets/itemnamecopy/icon.png",
+                            "clientSideOnly" to true,
+                            "useDependencyInformation" to true,
+                            "dependencies" to listOf("required-after:forge@[${project.property("loader_version")},)"),
+                            "authorList" to listOf("yuu1111")
+                        )
+                    )
+                )
+            )
+        )
         val assets = output.resolve("assets/itemnamecopy")
         assets.resolve("lang").mkdirs()
         rootProject.file("src/main/resources/assets/itemnamecopy/icon.png").copyTo(assets.resolve("icon.png"), true)
         for (language in listOf("en_us", "ja_jp")) {
-            val translations = JsonSlurper().parse(rootProject.file(
-                "src/main/resources/assets/itemnamecopy/lang/$language.json")) as Map<*, *>
+            val translations = JsonSlurper().parse(
+                rootProject.file(
+                    "src/main/resources/assets/itemnamecopy/lang/$language.json"
+                )
+            ) as Map<*, *>
             assets.resolve("lang/$language.lang").writeText(translations.entries.joinToString("\n", postfix = "\n") {
                 "${it.key}=${it.value}"
             })
@@ -101,7 +128,9 @@ val verifyArtifact = tasks.register("verifyArtifact") {
     inputs.file(layout.buildDirectory.file("libs/$artifactName"))
     doLast {
         ZipFile(layout.buildDirectory.file("libs/$artifactName").get().asFile).use { zip ->
-            fun read(name: String): String = zip.getInputStream(checkNotNull(zip.getEntry(name))).bufferedReader().use { it.readText() }
+            fun read(name: String): String =
+                zip.getInputStream(checkNotNull(zip.getEntry(name))).bufferedReader().use { it.readText() }
+
             val metadata = (JsonSlurper().parseText(read("mcmod.info")) as List<*>).single() as Map<*, *>
             check(metadata["modid"] == "itemnamecopy" && metadata["clientSideOnly"] == true)
             check(metadata["version"] == project.version && metadata["mcversion"] == project.property("minecraft_version"))
@@ -111,7 +140,8 @@ val verifyArtifact = tasks.register("verifyArtifact") {
             check(zip.getEntry("dev/itemnamecopy/legacy/Forge112Client.class") != null)
             check(zip.getEntry("dev/itemnamecopy/core/CopyShortcutHandler.class") != null)
             check(zip.getEntry("itemnamecopy.mixins.json") == null && zip.getEntry("META-INF/mods.toml") == null)
-            val icon = zip.getInputStream(checkNotNull(zip.getEntry("assets/itemnamecopy/icon.png"))).use { javax.imageio.ImageIO.read(it) }
+            val icon = zip.getInputStream(checkNotNull(zip.getEntry("assets/itemnamecopy/icon.png")))
+                .use { javax.imageio.ImageIO.read(it) }
             check(icon.width == 256 && icon.height == 256)
             for (language in listOf("en_us", "ja_jp")) {
                 check(read("assets/itemnamecopy/lang/$language.lang").contains("itemnamecopy.copied="))

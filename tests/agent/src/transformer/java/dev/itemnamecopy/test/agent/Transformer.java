@@ -2,6 +2,7 @@ package dev.itemnamecopy.test.agent;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -17,8 +18,8 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                             ProtectionDomain domain, byte[] bytes) {
         final boolean minecraft = "net/minecraft/client/Minecraft".equals(name);
         final boolean screen = "net/minecraft/client/gui/screens/Screen".equals(name)
-            || "net/minecraft/client/gui/screen/Screen".equals(name)
-            || "net/minecraft/client/gui/GuiScreen".equals(name);
+                || "net/minecraft/client/gui/screen/Screen".equals(name)
+                || "net/minecraft/client/gui/GuiScreen".equals(name);
         final boolean keyboard = "org/lwjgl/input/Keyboard".equals(name);
         final boolean mouse = "org/lwjgl/input/Mouse".equals(name);
         if (!minecraft && !screen && !keyboard && !mouse) return null;
@@ -32,7 +33,7 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                                                  String signature, String[] exceptions) {
                     MethodVisitor original = super.visitMethod(access, method, descriptor, signature, exceptions);
                     if (minecraft && "()V".equals(descriptor)
-                        && ("tick".equals(method) || "runTick".equals(method) || "func_71407_l".equals(method))) {
+                            && ("tick".equals(method) || "runTick".equals(method) || "func_71407_l".equals(method))) {
                         System.out.println("CLIENT_TEST_HOOK " + name + "." + method);
                         return new MethodVisitor(ASM9, original) {
                             @Override
@@ -47,8 +48,9 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                     }
                     String override = null;
                     if (screen && "()Z".equals(descriptor)
-                        && ("hasControlDown".equals(method) || "isControlDown".equals(method)
-                            || "isCtrlKeyDown".equals(method) || "func_146271_m".equals(method))) override = "controlState";
+                            && ("hasControlDown".equals(method) || "isControlDown".equals(method)
+                            || "isCtrlKeyDown".equals(method) || "func_146271_m".equals(method)))
+                        override = "controlState";
                     if (keyboard && "getEventKey".equals(method)) override = "eventKey";
                     if (keyboard && "getEventCharacter".equals(method)) override = "eventCharacter";
                     if (keyboard && "getEventKeyState".equals(method)) override = "eventKeyState";
@@ -70,7 +72,7 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                             visitJumpInsn(IFLT, fallback);
                             visitInsn(IRETURN);
                             visitLabel(fallback);
-                            if (stackMapFrames) visitFrame(F_SAME1, 0, null, 1, new Object[] { INTEGER });
+                            if (stackMapFrames) visitFrame(F_SAME1, 0, null, 1, new Object[]{INTEGER});
                             visitInsn(POP);
                         }
                     };
