@@ -2,7 +2,7 @@ package dev.itemnamecopy.test.support;
 
 import dev.itemnamecopy.test.runtime.Pending;
 import dev.itemnamecopy.test.runtime.Reflect;
-import dev.itemnamecopy.test.runtime.RuntimeConfig;
+import dev.itemnamecopy.test.runtime.ClientTestOptions;
 import dev.itemnamecopy.test.runtime.SyntheticInput;
 import dev.itemnamecopy.test.runtime.TestAssertions;
 
@@ -14,16 +14,18 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 public final class ItemNameCopyClientDriver {
-    private static final boolean LEGACY = RuntimeConfig.TARGET.startsWith("1.12.2-");
-
     private final SyntheticInput input;
+    private final ClientTestOptions options;
+    private final boolean legacy;
     private Object minecraft;
     private Object testScreen;
     private Object testSlot;
     private Future<?> reload;
 
-    public ItemNameCopyClientDriver(SyntheticInput input) {
+    public ItemNameCopyClientDriver(SyntheticInput input, ClientTestOptions options) {
         this.input = input;
+        this.options = options;
+        legacy = options.target().startsWith("1.12.2-");
     }
 
     public void initialize(Object client) {
@@ -44,14 +46,14 @@ public final class ItemNameCopyClientDriver {
     }
 
     public boolean isLegacy() {
-        return LEGACY;
+        return legacy;
     }
 
     public void inventory(boolean custom) {
         show(null);
         Object stack;
         Class<?> itemStack = Reflect.type("net.minecraft.world.item.ItemStack", "net.minecraft.item.ItemStack");
-        if (LEGACY) {
+        if (legacy) {
             Object block = Reflect.get(Reflect.type("net.minecraft.init.Blocks"), "LOG");
             stack = Reflect.make(itemStack, block, 3);
         } else {
@@ -61,7 +63,7 @@ public final class ItemNameCopyClientDriver {
         }
         if (custom) {
             String value = "  名付けた剣 ✨  ";
-            if (LEGACY) Reflect.call(stack, "setStackDisplayName", value);
+            if (legacy) Reflect.call(stack, "setStackDisplayName", value);
             else if (Reflect.has(stack, "setHoverName|setDisplayName", 1)) {
                 Reflect.call(stack, "setHoverName|setDisplayName", literal(value));
             } else {
@@ -90,7 +92,7 @@ public final class ItemNameCopyClientDriver {
     }
 
     public Object recipeBook() {
-        if (!LEGACY) {
+        if (!legacy) {
             return Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "recipeBook", testScreen);
         }
         return Reflect.get(testScreen, "recipeBookGui");
@@ -111,7 +113,7 @@ public final class ItemNameCopyClientDriver {
         Object book = recipeBook();
         if (!(Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
         Object search = Reflect.get(book, "searchBox", "searchBar", "searchField");
-        if (!LEGACY) Reflect.call(testScreen, "setFocused", book);
+        if (!legacy) Reflect.call(testScreen, "setFocused", book);
         select(search, value);
     }
 
@@ -151,7 +153,7 @@ public final class ItemNameCopyClientDriver {
                 + ((Number) Reflect.get(testSlot, "y", "yPos")).intValue() + 8;
         int guiWidth = ((Number) Reflect.get(testScreen, "width")).intValue();
         int guiHeight = ((Number) Reflect.get(testScreen, "height")).intValue();
-        if (LEGACY) {
+        if (legacy) {
             int width = ((Number) Reflect.get(minecraft, "displayWidth")).intValue();
             int height = ((Number) Reflect.get(minecraft, "displayHeight")).intValue();
             input.movePointer(x * width / guiWidth, height - y * height / guiHeight - 1);
@@ -167,7 +169,7 @@ public final class ItemNameCopyClientDriver {
 
     public void copy(int action, int flags) {
         if (action != 0) {
-            Object hovered = LEGACY ? Reflect.get(testScreen, "hoveredSlot")
+            Object hovered = legacy ? Reflect.get(testScreen, "hoveredSlot")
                     : Reflect.call(Reflect.type("dev.itemnamecopy.client.MinecraftAccess"), "hoveredSlot", testScreen);
             if (hovered != testSlot) {
                 hover(slots().indexOf(testSlot));
@@ -176,7 +178,7 @@ public final class ItemNameCopyClientDriver {
         }
         input.beginKeyEvent(action, flags);
         try {
-            if (LEGACY) {
+            if (legacy) {
                 Class<?> eventType = Reflect.type("net.minecraftforge.client.event.GuiScreenEvent$KeyboardInputEvent$Pre");
                 Object event = Reflect.make(eventType, testScreen);
                 Object bus = Reflect.get(Reflect.type("net.minecraftforge.common.MinecraftForge"), "EVENT_BUS");
@@ -211,7 +213,7 @@ public final class ItemNameCopyClientDriver {
         if (Reflect.has(server, "getGameRules", 0)) rules = Reflect.call(server, "getGameRules");
         else {
             Object level;
-            if (LEGACY) level = Reflect.call(server, "getWorld", 0);
+            if (legacy) level = Reflect.call(server, "getWorld", 0);
             else if (Reflect.has(server, "overworld", 0)) level = Reflect.call(server, "overworld");
             else level = Reflect.call(server, "getLevel|getWorld", Reflect.get(Reflect.type(
                         "net.minecraft.world.level.dimension.DimensionType", "net.minecraft.world.dimension.DimensionType"), "OVERWORLD"));
@@ -245,7 +247,7 @@ public final class ItemNameCopyClientDriver {
     }
 
     public Object screen() {
-        if (LEGACY) return Reflect.optionalGet(minecraft, "currentScreen");
+        if (legacy) return Reflect.optionalGet(minecraft, "currentScreen");
         try {
             return Reflect.get(minecraft, "screen", "currentScreen");
         } catch (IllegalStateException missing) {
@@ -260,7 +262,7 @@ public final class ItemNameCopyClientDriver {
     }
 
     public String clipboard() {
-        if (LEGACY) {
+        if (legacy) {
             return (String) Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "getClipboardString");
         }
         return (String) Reflect.call(Reflect.get(minecraft, "keyboardHandler", "keyboardListener"),
@@ -268,7 +270,7 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void seedClipboard(String value) {
-        if (LEGACY) {
+        if (legacy) {
             Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "setClipboardString", value);
         } else {
             Reflect.call(Reflect.get(minecraft, "keyboardHandler", "keyboardListener"),
@@ -283,7 +285,7 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void restoreClipboard(String value) {
-        if (LEGACY) {
+        if (legacy) {
             java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(
                     new java.awt.datatransfer.StringSelection(value), null);
         } else {
@@ -298,7 +300,7 @@ public final class ItemNameCopyClientDriver {
         Object hud = Reflect.optionalGet(gui, "hud");
         if (hud != null) gui = hud;
         Object message = Reflect.get(gui, "overlayMessageString", "overlayMessage", "recordPlaying");
-        if (LEGACY) {
+        if (legacy) {
             return (String) Reflect.call(Reflect.type("net.minecraft.util.text.TextFormatting"),
                     "getTextWithoutFormattingCodes", text(message));
         }
@@ -391,14 +393,14 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void press(Object button) {
-        RuntimeConfig.log("press " + label(button));
+        options.log("press " + label(button));
         if (button.getClass().getSimpleName().equals("TabButton")) {
             Reflect.call(Reflect.get(button, "tabManager"), "setCurrentTab", Reflect.call(button, "tab"), true);
         } else if (Reflect.has(button, "onPress", 0)) Reflect.call(button, "onPress");
         else if (Reflect.has(button, "onPress", 1)) {
             Object key = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), 257, 0, 0);
             Reflect.call(button, "onPress", key);
-        } else if (!LEGACY) {
+        } else if (!legacy) {
             int x = ((Number) Reflect.call(button, "getX")).intValue();
             int y = ((Number) Reflect.call(button, "getY")).intValue();
             if (Reflect.has(screen(), "mouseClicked", 3)) {

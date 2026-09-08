@@ -1,23 +1,25 @@
 package dev.itemnamecopy.test.support;
 
 import dev.itemnamecopy.test.runtime.ClientTestLifecycle;
+import dev.itemnamecopy.test.runtime.ClientTestOptions;
 import dev.itemnamecopy.test.runtime.Pending;
 import dev.itemnamecopy.test.runtime.Reflect;
-import dev.itemnamecopy.test.runtime.RuntimeConfig;
 import dev.itemnamecopy.test.runtime.TestAssertions;
 
 import java.util.UUID;
 
 public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     private final ItemNameCopyClientDriver client;
+    private final ClientTestOptions options;
     private String originalClipboard;
     private String worldName;
     private String bootScreen;
     private int stage;
     private int cycleCount;
 
-    public ItemNameCopyTestLifecycle(ItemNameCopyClientDriver client) {
+    public ItemNameCopyTestLifecycle(ItemNameCopyClientDriver client, ClientTestOptions options) {
         this.client = client;
+        this.options = options;
     }
 
     @Override
@@ -66,7 +68,7 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     private void prepareMainMenu(String screenName) {
         if (!screenName.equals(bootScreen)) {
             bootScreen = screenName;
-            RuntimeConfig.log("startup-screen " + client.describeScreen());
+            options.log("startup-screen " + client.describeScreen());
         }
         if (screenName.contains("AccessibilityOnboarding")) {
             client.press(client.findButton("Continue", false));
@@ -185,12 +187,12 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
 
     private boolean finishPreparation() {
         client.waitForReload();
-        RuntimeConfig.log("world-ready " + worldName);
+        options.log("world-ready " + worldName);
         return true;
     }
 
     private void nextStage() {
         stage++;
-        RuntimeConfig.log("stage " + stage);
+        options.log("stage " + stage);
     }
 }

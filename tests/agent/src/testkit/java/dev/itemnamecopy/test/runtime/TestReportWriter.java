@@ -9,16 +9,21 @@ final class TestReportWriter {
     private TestReportWriter() {
     }
 
-    static void write(List<TestResult> results, int expectedTests, String suiteName) throws IOException {
+    static void write(
+        ClientTestOptions options,
+        List<TestResult> results,
+        int expectedTests,
+        String suiteName
+    ) throws IOException {
         int failed = 0;
         for (TestResult result : results) if (result.failure != null) failed++;
-        StringBuilder json = new StringBuilder("{\n  \"target\": ").append(quote(RuntimeConfig.TARGET))
-                .append(",\n  \"source\": ").append(quote(System.getProperty("itemnamecopy.test.source", "unknown")))
-                .append(",\n  \"mode\": \"real client, synthetic input callbacks, OS clipboard\",")
+        StringBuilder json = new StringBuilder("{\n  \"target\": ").append(quote(options.target()))
+            .append(",\n  \"source\": ").append(quote(options.source()))
+            .append(",\n  \"mode\": ").append(quote(options.mode())).append(',')
                 .append("\n  \"passed\": ").append(results.size() - failed).append(",\n  \"failed\": ").append(failed)
                 .append(",\n  \"expectedTests\": ").append(expectedTests).append(",\n  \"tests\": [");
         StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?><testsuite name=\"")
-                .append(RuntimeConfig.TARGET).append("\" tests=\"").append(results.size())
+            .append(options.target()).append("\" tests=\"").append(results.size())
                 .append("\" failures=\"").append(failed).append("\">");
         for (int i = 0; i < results.size(); i++) {
             TestResult result = results.get(i);
@@ -35,10 +40,10 @@ final class TestReportWriter {
         }
         json.append("\n  ]\n}\n");
         xml.append("</testsuite>");
-        Files.createDirectories(RuntimeConfig.REPORT.toAbsolutePath().getParent());
-        Files.write(RuntimeConfig.REPORT, json.toString().getBytes(StandardCharsets.UTF_8));
-        Files.write(RuntimeConfig.REPORT.resolveSibling("TEST-client.xml"), xml.toString().getBytes(StandardCharsets.UTF_8));
-        RuntimeConfig.log("RESULT " + (results.size() - failed) + " passed, " + failed + " failed");
+        Files.createDirectories(options.report().toAbsolutePath().getParent());
+        Files.write(options.report(), json.toString().getBytes(StandardCharsets.UTF_8));
+        Files.write(options.report().resolveSibling("TEST-client.xml"), xml.toString().getBytes(StandardCharsets.UTF_8));
+        options.log("RESULT " + (results.size() - failed) + " passed, " + failed + " failed");
     }
 
     private static String quote(String text) {

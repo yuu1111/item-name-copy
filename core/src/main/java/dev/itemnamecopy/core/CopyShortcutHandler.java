@@ -3,16 +3,6 @@ package dev.itemnamecopy.core;
 import java.util.Optional;
 
 public final class CopyShortcutHandler {
-    public interface Target {
-        boolean isTextInputFocused();
-
-        Optional<String> hoveredItemName();
-
-        boolean writeClipboard(String name);
-
-        void showFeedback(String name);
-    }
-
     private boolean cDown;
 
     public void releaseC() {
@@ -39,6 +29,16 @@ public final class CopyShortcutHandler {
 
         target.showFeedback(name.get());
         return true;
+    }
+
+    public interface Target {
+        boolean isTextInputFocused();
+
+        Optional<String> hoveredItemName();
+
+        boolean writeClipboard(String name);
+
+        void showFeedback(String name);
     }
 }
 

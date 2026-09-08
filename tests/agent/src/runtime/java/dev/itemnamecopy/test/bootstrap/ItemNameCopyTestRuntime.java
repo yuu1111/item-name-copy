@@ -1,6 +1,7 @@
 package dev.itemnamecopy.test.bootstrap;
 
 import dev.itemnamecopy.test.runtime.ClientTestRunner;
+import dev.itemnamecopy.test.runtime.ClientTestOptions;
 import dev.itemnamecopy.test.runtime.SyntheticInput;
 import dev.itemnamecopy.test.support.ItemNameCopyClientDriver;
 import dev.itemnamecopy.test.support.ItemNameCopyTestLifecycle;
@@ -10,12 +11,16 @@ import dev.itemnamecopy.test.tests.ItemNameCopyTestSuite;
  * 計装されたMinecraftとLWJGLから呼び出すItemNameCopyテストの入口
  */
 public final class ItemNameCopyTestRuntime {
+    private static final ClientTestOptions OPTIONS = ClientTestOptions.fromSystemProperties(
+        "itemnamecopy.test",
+        "real client, synthetic input callbacks, OS clipboard");
     private static final SyntheticInput INPUT = new SyntheticInput();
-    private static final ItemNameCopyClientDriver CLIENT = new ItemNameCopyClientDriver(INPUT);
+    private static final ItemNameCopyClientDriver CLIENT = new ItemNameCopyClientDriver(INPUT, OPTIONS);
     private static final ClientTestRunner RUNNER = new ClientTestRunner(
         INPUT,
-        new ItemNameCopyTestLifecycle(CLIENT),
-        new ItemNameCopyTestSuite(CLIENT));
+        new ItemNameCopyTestLifecycle(CLIENT, OPTIONS),
+        new ItemNameCopyTestSuite(CLIENT),
+        OPTIONS);
 
     private ItemNameCopyTestRuntime() {
     }

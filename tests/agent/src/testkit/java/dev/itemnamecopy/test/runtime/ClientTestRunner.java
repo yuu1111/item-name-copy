@@ -8,6 +8,7 @@ public final class ClientTestRunner {
     private final SyntheticInput input;
     private final ClientTestLifecycle lifecycle;
     private final TestSuite suite;
+    private final ClientTestOptions options;
     private final List<TestResult> results = new ArrayList<TestResult>();
     private List<TestCase> tests = Collections.emptyList();
     private int delay;
@@ -19,10 +20,16 @@ public final class ClientTestRunner {
     private boolean busy;
     private volatile boolean finished;
 
-    public ClientTestRunner(SyntheticInput input, ClientTestLifecycle lifecycle, TestSuite suite) {
+    public ClientTestRunner(
+        SyntheticInput input,
+        ClientTestLifecycle lifecycle,
+        TestSuite suite,
+        ClientTestOptions options
+    ) {
         this.input = input;
         this.lifecycle = lifecycle;
         this.suite = suite;
+        this.options = options;
     }
 
     public void tick(Object client) {
@@ -47,17 +54,17 @@ public final class ClientTestRunner {
     private void initialize(Object client) {
         initialized = true;
         lifecycle.initialize(client);
-        deadline = System.currentTimeMillis() + 180_000L;
+        deadline = System.currentTimeMillis() + options.preparationTimeoutMillis();
         startWatchdog();
-        RuntimeConfig.log("starting");
+        options.log("starting");
     }
 
     private void prepare() {
         if (!lifecycle.prepare()) return;
         tests = suite.defineTests();
         ready = true;
-        deadline = System.currentTimeMillis() + 120_000L;
-        RuntimeConfig.log("ready");
+        deadline = System.currentTimeMillis() + options.testTimeoutMillis();
+        options.log("ready");
     }
 
     private void runNextStep() {
@@ -80,7 +87,7 @@ public final class ClientTestRunner {
 
     private void pass(TestCase test) {
         results.add(new TestResult(test.name(), null));
-        RuntimeConfig.log("PASS " + test.name());
+        options.log("PASS " + test.name());
         advanceTest();
     }
 
@@ -98,12 +105,12 @@ public final class ClientTestRunner {
     private void startWatchdog() {
         Thread watchdog = new Thread(() -> {
             try {
-                Thread.sleep(240_000L);
+                Thread.sleep(options.watchdogTimeoutMillis());
             } catch (InterruptedException ignored) {
                 return;
             }
             if (!finished) {
-                System.err.println("CLIENT_TEST TIMEOUT " + RuntimeConfig.TARGET);
+                System.err.println("CLIENT_TEST TIMEOUT " + options.target());
                 Runtime.getRuntime().halt(124);
             }
         }, "client-test-watchdog");
@@ -113,7 +120,7 @@ public final class ClientTestRunner {
 
     private void failure(String name, Throwable error) {
         results.add(new TestResult(name, error.toString()));
-        RuntimeConfig.log("FAIL " + name + ": " + error);
+        options.log("FAIL " + name + ": " + error);
         error.printStackTrace();
     }
 
@@ -127,7 +134,7 @@ public final class ClientTestRunner {
             failure("cleanup", error);
         }
         try {
-            TestReportWriter.write(results, tests.size(), suite.getClass().getName());
+            TestReportWriter.write(options, results, tests.size(), suite.getClass().getName());
         } catch (Throwable error) {
             error.printStackTrace();
         }
