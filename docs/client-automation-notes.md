@@ -104,6 +104,9 @@
 - `pack.mcmeta`はMinecraftごとの形式を使う
   - 新しい版の`min_format`、`max_format`と、旧版の`pack_format`を区別する
   - 値は対象ゲームのメタデータから取得し、生成処理とJar検査を同じ定義へ結び付ける
+- Gradleの入力プロパティ名を、用途の異なる展開処理で共用しない
+  - Mixin用とModメタデータ用に同じ`java`入力を登録すると、一方の値を変更しても他方に上書きされ、`processResources`が更新不要と判定される場合がある
+  - Mixinには`mixin_java`を使い、設定変更で出力が更新されることを確認する
 - NeoForgeのMinecraft版だけからFML世代を推測しない
   - 1.20.3の`20.3.8-beta`はFML 1.0.16で、依存関係に`mandatory`を要求した
   - `type="required"`を出力すると起動前にModファイルとして拒否された

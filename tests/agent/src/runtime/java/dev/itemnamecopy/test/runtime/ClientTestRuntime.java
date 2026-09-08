@@ -169,13 +169,13 @@ public final class ClientTestRuntime {
             command("difficulty peaceful");
             nextStage();
         } else if (stage == 10) {
-            command("gamerule doMobSpawning false");
+            gameRuleCommand("doMobSpawning", "spawn_mobs");
             nextStage();
         } else if (stage == 11) {
-            command("gamerule doDaylightCycle false");
+            gameRuleCommand("doDaylightCycle", "advance_time");
             nextStage();
         } else if (stage == 12) {
-            command("gamerule doWeatherCycle false");
+            gameRuleCommand("doWeatherCycle", "advance_weather");
             nextStage();
         } else if (stage == 13) {
             command("gamemode survival");
@@ -199,6 +199,7 @@ public final class ClientTestRuntime {
                 Object level = Reflect.get(minecraft, "level", "world");
                 equal("PEACEFUL", String.valueOf(Reflect.call(level, "getDifficulty")));
                 Object server = Reflect.call(minecraft, "getSingleplayerServer|getIntegratedServer|integratedServer");
+                verifyGameRules(server);
                 Object data;
                 if (Reflect.has(server, "getWorldData", 0)) data = Reflect.call(server, "getWorldData");
                 else {
@@ -431,6 +432,40 @@ public final class ClientTestRuntime {
         Object connection = Reflect.optionalGet(player(), "connection");
         if (Reflect.has(connection, "sendCommand", 1)) Reflect.call(connection, "sendCommand", value);
         else Reflect.call(player(), "chat|sendChatMessage", "/" + value);
+    }
+
+    private static boolean modernGameRules() {
+        try { Reflect.type("net.minecraft.world.level.gamerules.GameRules"); return true; }
+        catch (IllegalStateException missing) { return false; }
+    }
+
+    private static void gameRuleCommand(String legacy, String modern) {
+        command("gamerule " + (modernGameRules() ? "minecraft:" + modern : legacy) + " false");
+    }
+
+    private static void verifyGameRules(Object server) {
+        Object rules;
+        if (Reflect.has(server, "getGameRules", 0)) rules = Reflect.call(server, "getGameRules");
+        else {
+            Object level;
+            if (LEGACY) level = Reflect.call(server, "getWorld", 0);
+            else if (Reflect.has(server, "overworld", 0)) level = Reflect.call(server, "overworld");
+            else level = Reflect.call(server, "getLevel|getWorld", Reflect.get(Reflect.type(
+                "net.minecraft.world.level.dimension.DimensionType", "net.minecraft.world.dimension.DimensionType"), "OVERWORLD"));
+            rules = Reflect.call(level, "getGameRules");
+        }
+        String[] oldNames = { "doMobSpawning", "doDaylightCycle", "doWeatherCycle" };
+        String[] newNames = { "SPAWN_MOBS", "ADVANCE_TIME", "ADVANCE_WEATHER" };
+        String[] keyNames = { "RULE_DOMOBSPAWNING", "RULE_DAYLIGHT", "RULE_WEATHER_CYCLE" };
+        for (int i = 0; i < oldNames.length; i++) {
+            Object value;
+            if (modernGameRules()) value = Reflect.call(rules, "get", Reflect.get(
+                Reflect.type("net.minecraft.world.level.gamerules.GameRules"), newNames[i]));
+            else if (Reflect.optionalGet(rules.getClass(), keyNames[i]) != null) {
+                value = Reflect.call(rules, "getBoolean", Reflect.get(rules.getClass(), keyNames[i]));
+            } else value = Reflect.call(rules, "getBoolean|func_82766_b|method_8355", oldNames[i]);
+            equal(Boolean.FALSE, value);
+        }
     }
 
     private static boolean creative() {

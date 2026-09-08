@@ -33,7 +33,7 @@ val packMetadata = JsonOutput.toJson(mapOf("pack" to buildMap<String, Any> {
     } else put("pack_format", resourceFormat)
 }))
 tasks.named<ProcessResources>("processResources") {
-    val mixinValues = mapOf("java" to (if (loaderTarget == "forge") minOf(requiredJava, 21) else requiredJava).toString(),
+    val mixinValues = mapOf("mixin_java" to (if (loaderTarget == "forge") minOf(requiredJava, 21) else requiredJava).toString(),
         "keyboard_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyboardMixin\"" else "",
         "recipe_screen_mixin" to if (hasRecipeScreen) ", \"RecipeScreenAccessor\"" else "",
         "refmap" to if (requiresRefmap) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
