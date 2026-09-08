@@ -36,11 +36,11 @@ if (providers.gradleProperty("clientTestSource").isPresent) {
             tasks.matching { it.name == "runClient" }.configureEach {
                 val clientTask = this as? JavaExec
                     ?: throw GradleException("Unsupported client run task: $path (${javaClass.name})")
-                val harness = rootProject.file("tests/client-harness/build/libs/client-test-harness.jar")
+                val bootstrap = rootProject.file("tests/client/build/libs/client-test-bootstrap.jar")
                 val report = layout.buildDirectory.file("reports/client-test/results.json").get().asFile
 
                 clientTask.workingDir(runDirectory)
-                clientTask.jvmArgs("-javaagent:${harness.absolutePath}")
+                clientTask.jvmArgs("-javaagent:${bootstrap.absolutePath}")
                 clientTask.systemProperty("itemnamecopy.test.target", name)
                 clientTask.systemProperty("itemnamecopy.test.report", report.absolutePath)
                 clientTask.systemProperty("itemnamecopy.test.source", findProperty("clientTestSource") ?: "unknown")

@@ -87,7 +87,7 @@ if (!rootExtras.has(cacheKey)) {
     val tinyFile = directory.resolve("mappings.tiny")
     MappingWriter.create(tinyFile.toPath(), MappingFormat.TINY_2_FILE).use { bridge.accept(it) }
     val mappingVersion = "1.14.4-${checksum(tinyFile)}"
-    val artifactDirectory = directory.resolve("repo/dev/itemnamecopy/mappings/legacy-client/$mappingVersion")
+    val artifactDirectory = directory.resolve("repo/com/github/yuu1111/mappings/legacy-client/$mappingVersion")
         .apply { mkdirs() }
     val artifact = artifactDirectory.resolve("legacy-client-$mappingVersion-v2.jar")
     ZipOutputStream(artifact.outputStream()).use { zip ->
@@ -95,11 +95,11 @@ if (!rootExtras.has(cacheKey)) {
         tinyFile.inputStream().use { it.copyTo(zip) }
         zip.closeEntry()
     }
-    rootExtras[cacheKey] = "dev.itemnamecopy.mappings:legacy-client:$mappingVersion:v2"
+    rootExtras[cacheKey] = "com.github.yuu1111.mappings:legacy-client:$mappingVersion:v2"
 }
 repositories.maven {
     url = uri(rootProject.file(".gradle/legacy-fabric-mappings/repo"))
     metadataSources { artifact() }
-    content { includeModule("dev.itemnamecopy.mappings", "legacy-client") }
+    content { includeModule("com.github.yuu1111.mappings", "legacy-client") }
 }
 extensions.extraProperties["legacyFabricMappings"] = rootExtras[cacheKey]

@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.itemnamecopy.mixin",
+  "package": "com.github.yuu1111.itemnamecopy.mixin",
   "compatibilityLevel": "JAVA_${mixin_java}",
   $,
   "client": [

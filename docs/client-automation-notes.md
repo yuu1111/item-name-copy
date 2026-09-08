@@ -3,7 +3,7 @@
 ## 目的と検証境界
 
 - MinecraftのバージョンとLoaderをまたぐ実クライアント検証を、LLMや画像判定なしで再実行できるライブラリへ分離するための設計メモ
-- 汎用ランナーは[`minecraft-client-testkit`](../minecraft-client-testkit)、ItemNameCopy固有の実行基盤は[`tests/client-harness`](../tests/client-harness)に置き、操作と判定の対象は[`tests/README.md`](../tests/README.md)で定義する
+- 汎用ランナーは[`minecraft-client-testkit`](../minecraft-client-testkit)、ItemNameCopyのクライアントテストは[`tests/client`](../tests/client)に置き、操作と判定の対象は[`tests/README.md`](../tests/README.md)で定義する
 - Java agentでクライアントのtickへ処理を追加し、実際の画面、入力コールバック、本体のMixinやイベント、OSのクリップボードを使う
 - 物理キー、左右Ctrl、画面の見た目、マルチプレイまで検証したことにはならない
 - 開発起動の成功と、配布Jarを通常のLauncherで読み込んだ成功は別の証拠として扱う
@@ -167,7 +167,7 @@
 
 - 目的はLLM非依存の自動E2Eテスト
   - シナリオ、待機条件、合否判定はコードで固定し、推論サービスや画像を見たLLMの判断を必要としない
-  - Javaの計装機構はclient harness内部に閉じ、シナリオや汎用ランナーの名前へ露出させない
+  - Javaの計装機構はクライアントテスト内部に閉じ、シナリオや汎用ランナーの名前へ露出させない
 - 標準実行環境はLinuxコンテナと専用X11画面にし、最初の入力ドライバーはxdotoolとする
   - WindowsではWSL2上のDocker、LinuxではDockerから同じ構成を実行する
   - ドライバーの操作要求をアプリの状態取得から分離し、別のドライバーへ交換できる境界を保つ

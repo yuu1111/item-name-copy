@@ -118,7 +118,7 @@ if (plugins.hasPlugin("net.neoforged.moddev.legacyforge") || plugins.hasPlugin("
             val jar = layout.buildDirectory.file(
                 "libs/item-name-copy-${project.version}+$loader-mc${project.property("minecraft_version")}.jar").get().asFile
             ZipFile(jar).use { zip ->
-                val entry = checkNotNull(zip.getEntry("dev/itemnamecopy/client/MinecraftAccess.class"))
+                val entry = checkNotNull(zip.getEntry("com/github/yuu1111/itemnamecopy/client/MinecraftAccess.class"))
                 val adapter = ClassNode()
                 zip.getInputStream(entry).use { ClassReader(it).accept(adapter, ClassReader.SKIP_DEBUG) }
                 val instanceCalls = adapter.methods.asSequence().flatMap { it.instructions.asSequence() }

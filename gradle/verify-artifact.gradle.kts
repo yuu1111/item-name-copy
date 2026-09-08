@@ -78,7 +78,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 check(clientMixins.contains("FabricKeyboardMixin") == (loaderTarget == "fabric"))
                 check(clientMixins.contains("RecipeScreenAccessor") == hasRecipeScreen)
                 clientMixins.forEach {
-                    check(zip.getEntry("dev/itemnamecopy/mixin/$it.class") != null) { "Missing mixin class $it" }
+                    check(zip.getEntry("com/github/yuu1111/itemnamecopy/mixin/$it.class") != null) { "Missing mixin class $it" }
                 }
                 if (requiresRefmap) {
                     check(mixins["refmap"] == "itemnamecopy.refmap.json")
@@ -87,8 +87,8 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 }
             } else {
                 check(zip.getEntry("itemnamecopy.mixins.json") == null)
-                check(zip.entries().asSequence().none { it.name.startsWith("dev/itemnamecopy/mixin/") })
-                check(zip.getEntry("dev/itemnamecopy/client/LegacyForgeEvents.class") != null)
+                check(zip.entries().asSequence().none { it.name.startsWith("com/github/yuu1111/itemnamecopy/mixin/") })
+                check(zip.getEntry("com/github/yuu1111/itemnamecopy/client/LegacyForgeEvents.class") != null)
                 check(read("META-INF/accesstransformer.cfg").trim() == rootProject.file(
                     "src/legacy-forge/resources/META-INF/accesstransformer.cfg").readText().trim())
                 check(!read("META-INF/MANIFEST.MF").contains("MixinConfigs:"))

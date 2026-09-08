@@ -10,7 +10,7 @@ plugins {
 }
 
 version = property("mod.version") as String
-group = "dev.itemnamecopy"
+group = "com.github.yuu1111"
 base.archivesName = "item-name-copy"
 
 minecraft {
@@ -137,8 +137,8 @@ val verifyArtifact = tasks.register("verifyArtifact") {
             check(read("version.properties").trim() == "itemnamecopy.version=${project.version}")
             check(metadata["dependencies"] == listOf("required-after:forge@[${project.property("loader_version")},)"))
             check(read("LICENSE").startsWith("MIT License"))
-            check(zip.getEntry("dev/itemnamecopy/legacy/Forge112Client.class") != null)
-            check(zip.getEntry("dev/itemnamecopy/core/CopyShortcutHandler.class") != null)
+            check(zip.getEntry("com/github/yuu1111/itemnamecopy/legacy/Forge112Client.class") != null)
+            check(zip.getEntry("com/github/yuu1111/itemnamecopy/core/CopyShortcutHandler.class") != null)
             check(zip.getEntry("itemnamecopy.mixins.json") == null && zip.getEntry("META-INF/mods.toml") == null)
             val icon = zip.getInputStream(checkNotNull(zip.getEntry("assets/itemnamecopy/icon.png")))
                 .use { javax.imageio.ImageIO.read(it) }

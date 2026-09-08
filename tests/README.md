@@ -14,7 +14,7 @@
 
 ## 実行と判定
 
-- 汎用ランナーは`minecraft-client-testkit`、ItemNameCopy固有の実行基盤は`tests/client-harness`でビルドし、配布Jarには含めない
+- 汎用ランナーは`minecraft-client-testkit`、ItemNameCopyのクライアントテストは`tests/client`でビルドし、配布Jarには含めない
 - 対象一覧は`Get-BuildMatrix.ps1`から読み、`-Target`で絞り込む
 - `-Resume`はソースとビルド設定のハッシュが一致する成功結果だけを再利用する
 - Fabric APIを追加せず、本体と同じリソース読み込み条件で検証する

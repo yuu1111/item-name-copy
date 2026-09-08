@@ -23,7 +23,7 @@ $wrapperArguments = if ($IsWindows -or $env:OS -eq 'Windows_NT') { @() } else { 
 Push-Location $repository
 try {
     $sourceFiles = @(git ls-files --cached --others --exclude-standard | Sort-Object -Unique | Where-Object {
-        $_ -match '^(src/|core/src/|gradle/|gradle\.properties$|versions/.+/gradle.properties$|build.+\.gradle\.kts$|settings\.gradle\.kts$|stonecutter\.gradle\.kts$|minecraft-client-testkit/|tests/client-harness/)'
+        $_ -match '^(src/|core/src/|gradle/|gradle\.properties$|versions/.+/gradle.properties$|build.+\.gradle\.kts$|settings\.gradle\.kts$|stonecutter\.gradle\.kts$|minecraft-client-testkit/|tests/client/)'
     })
     if ($LASTEXITCODE -ne 0) { throw 'Could not enumerate test inputs' }
     $digest = [System.Security.Cryptography.IncrementalHash]::CreateHash([System.Security.Cryptography.HashAlgorithmName]::SHA256)
@@ -43,7 +43,7 @@ try {
     }
 
     $buildLog = Join-Path $logDirectory 'harness-build.log'
-    & $launcher @wrapperArguments -p tests/client-harness assemble --console=plain *> $buildLog
+    & $launcher @wrapperArguments -p tests/client assemble --console=plain *> $buildLog
     $buildExit = $LASTEXITCODE
     if ($buildExit -ne 0) {
         Get-Content -LiteralPath $buildLog -Tail 40

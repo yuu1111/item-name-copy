@@ -3,7 +3,7 @@ plugins {
 }
 
 version = property("mod.version") as String
-group = "dev.itemnamecopy"
+group = "com.github.yuu1111"
 base.archivesName = "item-name-copy"
 
 repositories {
