@@ -1,16 +1,8 @@
 package com.github.yuu1111.itemnamecopy.test.support;
 
-import com.github.yuu1111.minecraft.clienttest.ClientTestOptions;
-import com.github.yuu1111.minecraft.clienttest.Pending;
-import com.github.yuu1111.minecraft.clienttest.Reflect;
-import com.github.yuu1111.minecraft.clienttest.SyntheticInput;
-import com.github.yuu1111.minecraft.clienttest.TestAssertions;
+import com.github.yuu1111.minecraft.clienttest.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Future;
 
 public final class ItemNameCopyClientDriver {
@@ -94,7 +86,7 @@ public final class ItemNameCopyClientDriver {
     public Object recipeBook() {
         if (!legacy) {
             return Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
-                "recipeBook", testScreen);
+                    "recipeBook", testScreen);
         }
         return Reflect.get(testScreen, "recipeBookGui");
     }
@@ -172,7 +164,7 @@ public final class ItemNameCopyClientDriver {
         if (action != 0) {
             Object hovered = legacy ? Reflect.get(testScreen, "hoveredSlot")
                     : Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
-                        "hoveredSlot", testScreen);
+                    "hoveredSlot", testScreen);
             if (hovered != testSlot) {
                 hover(slots().indexOf(testSlot));
                 throw new Pending();
@@ -294,7 +286,7 @@ public final class ItemNameCopyClientDriver {
             Object clipboard = Reflect.make(Reflect.type(
                     "com.mojang.blaze3d.platform.ClipboardManager", "net.minecraft.client.ClipboardHelper"));
             Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
-                "writeClipboard", clipboard, value);
+                    "writeClipboard", clipboard, value);
         }
     }
 
@@ -350,8 +342,8 @@ public final class ItemNameCopyClientDriver {
     }
 
     public List<Object> widgets(Object owner) {
-        List<Object> found = new ArrayList<Object>();
-        Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>());
+        List<Object> found = new ArrayList<>();
+        Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         collectWidgets(owner, found, seen, 0);
         return found;
     }
@@ -420,7 +412,7 @@ public final class ItemNameCopyClientDriver {
     public String describeScreen() {
         Object screen = screen();
         if (screen == null) return "no screen";
-        List<String> labels = new ArrayList<String>();
+        List<String> labels = new ArrayList<>();
         for (Object widget : widgets(screen)) {
             String text = label(widget);
             if (!text.isEmpty()) labels.add(text);
@@ -448,7 +440,7 @@ public final class ItemNameCopyClientDriver {
 
     private long handle() {
         return ((Number) Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
-            "windowHandle")).longValue();
+                "windowHandle")).longValue();
     }
 
     private Object literal(String value) {

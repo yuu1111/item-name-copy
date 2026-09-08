@@ -7,9 +7,6 @@ import com.github.yuu1111.minecraft.clienttest.ClientTestOptions;
 import com.github.yuu1111.minecraft.clienttest.ClientTestRunner;
 import com.github.yuu1111.minecraft.clienttest.SyntheticInput;
 
-/**
- * 計装されたMinecraftとLWJGLから呼び出すItemNameCopyテストの入口
- */
 public final class ItemNameCopyTestRuntime {
     private static final ClientTestOptions OPTIONS = ClientTestOptions.fromSystemProperties(
         "itemnamecopy.test",

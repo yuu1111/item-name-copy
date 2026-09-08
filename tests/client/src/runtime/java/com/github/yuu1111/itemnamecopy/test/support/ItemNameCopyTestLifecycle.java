@@ -1,10 +1,6 @@
 package com.github.yuu1111.itemnamecopy.test.support;
 
-import com.github.yuu1111.minecraft.clienttest.ClientTestLifecycle;
-import com.github.yuu1111.minecraft.clienttest.ClientTestOptions;
-import com.github.yuu1111.minecraft.clienttest.Pending;
-import com.github.yuu1111.minecraft.clienttest.Reflect;
-import com.github.yuu1111.minecraft.clienttest.TestAssertions;
+import com.github.yuu1111.minecraft.clienttest.*;
 
 import java.util.UUID;
 
@@ -75,10 +71,10 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
             return;
         }
         if (!screenName.equals("TitleScreen") && !screenName.equals("MainMenuScreen")
-            && !screenName.equals("GuiMainMenu")) throw new Pending();
+                && !screenName.equals("GuiMainMenu")) throw new Pending();
         Object minecraft = client.minecraft();
         Object overlay = Reflect.has(minecraft, "getOverlay", 0)
-            ? Reflect.call(minecraft, "getOverlay") : Reflect.optionalGet(minecraft, "overlay", "loadingGui");
+                ? Reflect.call(minecraft, "getOverlay") : Reflect.optionalGet(minecraft, "overlay", "loadingGui");
         if (overlay != null) throw new Pending();
         originalClipboard = client.clipboard();
         Reflect.set(Reflect.get(minecraft, "options", "gameSettings"), false, "pauseOnLostFocus");
@@ -163,8 +159,8 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
         }
         if (client.player() == null || client.screen() != null) throw new Pending();
         TestAssertions.require(Reflect.call(client.minecraft(),
-            "getSingleplayerServer|getIntegratedServer|integratedServer") != null,
-            "Expected a local integrated server");
+                        "getSingleplayerServer|getIntegratedServer|integratedServer") != null,
+                "Expected a local integrated server");
         client.command("difficulty peaceful");
         nextStage();
     }
