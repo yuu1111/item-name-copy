@@ -30,6 +30,7 @@ val transformerJar = tasks.register<Jar>("transformerJar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 val runtimeJar = tasks.register<Jar>("runtimeJar") {
+    dependsOn(runtimeBundle)
     archiveFileName = "client-test-runtime.jar"
     from(runtime.output)
     from(runtimeBundle.map(::zipTree))

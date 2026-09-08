@@ -29,23 +29,23 @@ final class ContainerCopyTarget implements CopyShortcutHandler.Target {
     private static final ClipboardManager CLIPBOARD = new ClipboardManager();
 
     private final Minecraft minecraft;
-    private final Screen screen;
+    private final Screen containerScreen;
 
     ContainerCopyTarget(Screen screen) {
         this.minecraft = Minecraft.getInstance();
-        this.screen = screen;
+        this.containerScreen = screen;
     }
 
     @Override
     public boolean isTextInputFocused() {
-        RecipeBookComponent recipeBook = MinecraftAccess.recipeBook(screen);
+        RecipeBookComponent recipeBook = MinecraftAccess.recipeBook(containerScreen);
         if (recipeBook != null && MinecraftAccess.isRecipeSearchFocused(recipeBook)) return true;
-        return hasFocusedTextInput(screen);
+        return hasFocusedTextInput(containerScreen);
     }
 
     @Override
     public Optional<String> hoveredItemName() {
-        Slot slot = MinecraftAccess.hoveredSlot(screen);
+        Slot slot = MinecraftAccess.hoveredSlot(containerScreen);
         if (slot == null || !slot.hasItem()) return Optional.empty();
         return Optional.of(slot.getItem().getHoverName().getString());
     }

@@ -8,6 +8,9 @@ import com.github.yuu1111.itemnamecopy.mixin.RecipeBookAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+//? if forge_without_mixins {
+/*import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+*///?}
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 //? if <1.21.2 {
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
