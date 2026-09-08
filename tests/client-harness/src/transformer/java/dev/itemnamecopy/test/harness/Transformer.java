@@ -1,4 +1,4 @@
-package dev.itemnamecopy.test.agent;
+package dev.itemnamecopy.test.harness;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;

@@ -11,11 +11,11 @@ fun configureRuns(extension: Any, configure: (Any) -> Unit) {
 if (providers.gradleProperty("clientTestSource").isPresent) {
     gradle.projectsEvaluated {
         rootProject.allprojects {
-            val runDirectory = layout.buildDirectory.dir("client-agent/run").get().asFile
+            val runDirectory = layout.buildDirectory.dir("client-test/run").get().asFile
 
             extensions.findByName("loom")?.let { extension ->
                 configureRuns(extension) { run ->
-                    InvokerHelper.invokeMethod(run, "runDir", "build/client-agent/run")
+                    InvokerHelper.invokeMethod(run, "runDir", "build/client-test/run")
                 }
             }
             for (name in listOf("neoForge", "legacyForge")) {
@@ -36,11 +36,11 @@ if (providers.gradleProperty("clientTestSource").isPresent) {
             tasks.matching { it.name == "runClient" }.configureEach {
                 val clientTask = this as? JavaExec
                     ?: throw GradleException("Unsupported client run task: $path (${javaClass.name})")
-                val agent = rootProject.file("tests/agent/build/libs/client-test-agent.jar")
-                val report = layout.buildDirectory.file("reports/client-agent/results.json").get().asFile
+                val harness = rootProject.file("tests/client-harness/build/libs/client-test-harness.jar")
+                val report = layout.buildDirectory.file("reports/client-test/results.json").get().asFile
 
                 clientTask.workingDir(runDirectory)
-                clientTask.jvmArgs("-javaagent:${agent.absolutePath}")
+                clientTask.jvmArgs("-javaagent:${harness.absolutePath}")
                 clientTask.systemProperty("itemnamecopy.test.target", name)
                 clientTask.systemProperty("itemnamecopy.test.report", report.absolutePath)
                 clientTask.systemProperty("itemnamecopy.test.source", findProperty("clientTestSource") ?: "unknown")

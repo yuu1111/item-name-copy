@@ -14,7 +14,7 @@
 
 ## 実行と判定
 
-- テスト用Java agentは`tests/agent`でビルドし、配布Jarには含めない
+- 汎用ランナーは`minecraft-client-testkit`、ItemNameCopy固有の実行基盤は`tests/client-harness`でビルドし、配布Jarには含めない
 - 対象一覧は`Get-BuildMatrix.ps1`から読み、`-Target`で絞り込む
 - `-Resume`はソースとビルド設定のハッシュが一致する成功結果だけを再利用する
 - Fabric APIを追加せず、本体と同じリソース読み込み条件で検証する
@@ -27,10 +27,10 @@
   - 本体のコピー処理、Mixin、クリップボードへの書き込み、翻訳通知は実装をそのまま使う
 - コピー内容、空スロット、カスタム名、リピート抑止、修飾キー、レシピ検索、クリエイティブ検索、翻訳通知を検証する
 - ワールドの生成方式、難易度、チート許可と3つのゲームルールは、統合サーバーの実値を検証する
-- 個別結果は`versions/<対象>/build/reports/client-agent/`の`results.json`と`TEST-client.xml`へ出力する
+- 個別結果は`versions/<対象>/build/reports/client-test/`の`results.json`と`TEST-client.xml`へ出力する
 - 集計結果は`build/runtime-verification/matrix.json`へ出力し、各対象の実行ログへのパスも保存する
 - 失敗、レポート欠落、テスト0件はGradleタスクの失敗とし、起動を含め5分でタイムアウトする
-- 実行ディレクトリと生成ワールドは`versions/<対象>/build/client-agent/run/`に残る
+- 実行ディレクトリと生成ワールドは`versions/<対象>/build/client-test/run/`に残る
 
 ## 検証範囲
 

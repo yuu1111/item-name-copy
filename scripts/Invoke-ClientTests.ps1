@@ -23,7 +23,7 @@ $wrapperArguments = if ($IsWindows -or $env:OS -eq 'Windows_NT') { @() } else { 
 Push-Location $repository
 try {
     $sourceFiles = @(git ls-files --cached --others --exclude-standard | Sort-Object -Unique | Where-Object {
-        $_ -match '^(src/|core/src/|gradle/|gradle\.properties$|versions/.+/gradle.properties$|build.+\.gradle\.kts$|settings\.gradle\.kts$|stonecutter\.gradle\.kts$|tests/agent/)'
+        $_ -match '^(src/|core/src/|gradle/|gradle\.properties$|versions/.+/gradle.properties$|build.+\.gradle\.kts$|settings\.gradle\.kts$|stonecutter\.gradle\.kts$|minecraft-client-testkit/|tests/client-harness/)'
     })
     if ($LASTEXITCODE -ne 0) { throw 'Could not enumerate test inputs' }
     $digest = [System.Security.Cryptography.IncrementalHash]::CreateHash([System.Security.Cryptography.HashAlgorithmName]::SHA256)
@@ -42,8 +42,8 @@ try {
         }
     }
 
-    $buildLog = Join-Path $logDirectory 'agent-build.log'
-    & $launcher @wrapperArguments -p tests/agent assemble --console=plain *> $buildLog
+    $buildLog = Join-Path $logDirectory 'harness-build.log'
+    & $launcher @wrapperArguments -p tests/client-harness assemble --console=plain *> $buildLog
     $buildExit = $LASTEXITCODE
     if ($buildExit -ne 0) {
         Get-Content -LiteralPath $buildLog -Tail 40
@@ -57,7 +57,7 @@ try {
             continue
         }
         $logPath = Join-Path $logDirectory ($node.node + '.log')
-        $reportPath = Join-Path $repository "versions/$($node.node)/build/reports/client-agent/results.json"
+        $reportPath = Join-Path $repository "versions/$($node.node)/build/reports/client-test/results.json"
         if (Test-Path -LiteralPath $reportPath) { Remove-Item -LiteralPath $reportPath }
         $timer = [System.Diagnostics.Stopwatch]::StartNew()
         Write-Output "$($node.node): starting client verification"

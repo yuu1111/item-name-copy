@@ -18,8 +18,8 @@ dependencies {
 }
 
 tasks.jar {
-    archiveFileName = "client-test-agent.jar"
-    manifest.attributes("Premain-Class" to "dev.itemnamecopy.test.agent.Agent")
+    archiveFileName = "client-test-harness.jar"
+    manifest.attributes("Premain-Class" to "dev.itemnamecopy.test.harness.ClientTestBootstrap")
 }
 val transformerJar = tasks.register<Jar>("transformerJar") {
     archiveFileName = "client-test-transformer.jar"
