@@ -5,7 +5,7 @@ import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(value = AbstractContainerScreen.class, remap = MappingPolicy.REMAP)
+@Mixin(value = AbstractContainerScreen.class)
 public interface ContainerScreenAccessor {
     @Accessor("hoveredSlot")
     Slot itemnamecopy$getHoveredSlot();

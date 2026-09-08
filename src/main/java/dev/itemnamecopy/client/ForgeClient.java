@@ -2,6 +2,8 @@ package dev.itemnamecopy.client;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
+
 //? if >=1.21.6 {
 /*import net.minecraftforge.eventbus.api.listener.Priority;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
@@ -9,7 +11,6 @@ import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 //?}
-import net.minecraftforge.fml.common.Mod;
 //? if <1.18.2 {
 /*import net.minecraftforge.fml.ModLoadingContext;
  *///?}
@@ -50,7 +51,7 @@ public final class ForgeClient {
         }
         *///?} else {
         @SubscribeEvent(priority = EventPriority.LOWEST)
-        //? if >=1.19 {
+                //? if >=1.19 {
         public static void beforeKey(ScreenEvent.KeyPressed.Pre event) {
             //?} elif >=1.18 {
             /*public static void beforeKey(ScreenEvent.KeyboardKeyPressedEvent.Pre event) {

@@ -3,7 +3,13 @@
   "minVersion": "0.8",
   "package": "dev.itemnamecopy.mixin",
   "compatibilityLevel": "JAVA_${mixin_java}",
-  ${refmap}
+  $,
+  "client": [
+    "ContainerScreenAccessor",
+    "FabricKeyboardMixin",
+    "KeyboardInputMixin",
+    "RecipeBookAccessor"
+  ]{refmap}
   "client": ["ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin"${keyboard_mixin}${recipe_screen_mixin}],
   "injectors": { "defaultRequire": 1 }
 }

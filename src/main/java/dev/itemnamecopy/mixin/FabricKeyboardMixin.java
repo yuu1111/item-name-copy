@@ -1,7 +1,6 @@
 package dev.itemnamecopy.mixin;
 
 import dev.itemnamecopy.client.ItemNameCopyClient;
-import dev.itemnamecopy.client.MinecraftAccess;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
 //? if <1.17 {

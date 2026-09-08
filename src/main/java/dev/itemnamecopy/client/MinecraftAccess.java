@@ -4,12 +4,10 @@ import com.mojang.blaze3d.platform.ClipboardManager;
 //? if !forge_without_mixins {
 import dev.itemnamecopy.mixin.ContainerScreenAccessor;
 import dev.itemnamecopy.mixin.RecipeBookAccessor;
-import dev.itemnamecopy.mixin.RecipeScreenAccessor;
 //?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
 //? if <1.21.2 {
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
