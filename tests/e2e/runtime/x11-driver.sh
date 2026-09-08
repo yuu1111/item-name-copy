@@ -23,13 +23,16 @@ case "$action" in
         xdotool key --clearmodifiers --delay 80 "$keys"
         ;;
     clipboard)
-        expected=$(jq -er '.expected | select(type == "string")' <<<"$request")
-        actual=$(timeout 3 xclip -selection clipboard -o)
-        if [[ "$actual" != "$expected" ]]; then
-            printf 'Clipboard mismatch: expected <%s>, actual <%s>\n' "$expected" "$actual" >&2
+        expected_file=$(mktemp)
+        actual_file=$(mktemp)
+        trap 'rm -f -- "$expected_file" "$actual_file"' EXIT
+        jq -je '.expected | select(type == "string")' <<<"$request" >"$expected_file"
+        timeout 3 xclip -selection clipboard -o >"$actual_file"
+        if ! cmp -s "$actual_file" "$expected_file"; then
+            echo 'Clipboard content does not match the expected bytes' >&2
             exit 1
         fi
-        printf '%s\n' "$actual"
+        cat "$actual_file"
         ;;
     screenshot)
         id=$(jq -er '.id | select(type == "number" and . > 0 and floor == .)' <<<"$request")

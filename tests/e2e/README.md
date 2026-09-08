@@ -16,7 +16,7 @@ docker compose -f tests/e2e/compose.yaml run --rm client
 ```
 
 - 標準コマンドはGLFWの入力検証
-  - マウスの座標、Ctrl+Cの修飾値、キー解放、日本語を含むクリップボードを検証する
+  - マウスの座標、Ctrl+Cの修飾値、キー解放、日本語と末尾改行を含むクリップボードを検証する
   - Minecraft内のアイテムコピーを検証するシナリオとは分ける
 - 依存JarはComposeの名前付きボリュームへ保存する
 - 結果、操作と応答、画面画像、描画環境は`build/docker-e2e/<実行ID>/`へ保存する

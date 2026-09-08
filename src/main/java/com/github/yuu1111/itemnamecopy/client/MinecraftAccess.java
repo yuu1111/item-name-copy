@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.ClipboardManager;
 //? if !forge_without_mixins {
 import com.github.yuu1111.itemnamecopy.mixin.ContainerScreenAccessor;
 import com.github.yuu1111.itemnamecopy.mixin.RecipeBookAccessor;
+import com.github.yuu1111.itemnamecopy.mixin.RecipeScreenAccessor;
 //?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;

@@ -1,6 +1,7 @@
 package com.github.yuu1111.itemnamecopy.mixin;
 
 import com.github.yuu1111.itemnamecopy.client.ItemNameCopyClient;
+import com.github.yuu1111.itemnamecopy.client.MinecraftAccess;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.gui.screens.Screen;
 //? if <1.17 {

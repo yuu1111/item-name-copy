@@ -19,7 +19,7 @@ while true; do
     response=$(timeout 15 bash /opt/e2e/x11-driver.sh "$request" 2>&1)
     status=$?
     set -e
-    jq -n --argjson id "$id" --argjson exitCode "$status" --arg message "$response" \
+    jq -cn --argjson id "$id" --argjson exitCode "$status" --arg message "$response" \
         '{id: $id, exitCode: $exitCode, message: $message}' >"$E2E_CONTROL/response.tmp"
     cat "$E2E_CONTROL/response.tmp" >>"$E2E_ARTIFACTS/responses.jsonl"
     mv "$E2E_CONTROL/response.tmp" "$E2E_CONTROL/response.json"

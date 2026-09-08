@@ -13,7 +13,7 @@ public final class GlfwInputProbe {
         long window = GLFW.glfwCreateWindow(480, 240, "External input probe", 0, 0);
         if (window == 0) throw new IllegalStateException("Window creation failed");
         int[] counts = new int[3];
-        String expected = "外部入力テスト: Oak Log";
+        String expected = "外部入力テスト: Oak Log\n";
         try {
             GLFW.glfwMakeContextCurrent(window);
             GL.createCapabilities();
@@ -39,6 +39,14 @@ public final class GlfwInputProbe {
             driver.call("hotkey", ",\"keys\":\"ctrl+c\"", GLFW::glfwPollEvents);
             driver.call("clipboard", ",\"expected\":" + FileDriver.quote(expected), GLFW::glfwPollEvents);
             driver.call("screenshot", "", GLFW::glfwPollEvents);
+            boolean mismatchRejected = false;
+            try {
+                driver.call("clipboard", ",\"expected\":" + FileDriver.quote(expected.trim()), GLFW::glfwPollEvents);
+            } catch (AssertionError error) {
+                if (!error.getMessage().contains("Clipboard content does not match")) throw error;
+                mismatchRejected = true;
+            }
+            if (!mismatchRejected) throw new AssertionError("Clipboard comparison ignored the trailing newline");
             GLFW.glfwPollEvents();
             if (counts[0] != 1 || counts[1] != 1 || counts[2] < 1
                     || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) != GLFW.GLFW_RELEASE
