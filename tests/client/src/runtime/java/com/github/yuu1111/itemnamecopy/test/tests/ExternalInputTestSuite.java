@@ -15,6 +15,7 @@ public final class ExternalInputTestSuite implements TestSuite {
     private final FileDriver driver = new FileDriver();
     private Object slot;
     private Object itemBefore;
+    private long hoverDeadline;
 
     public ExternalInputTestSuite(ItemNameCopyClientDriver client) {
         this.client = client;
@@ -32,6 +33,7 @@ public final class ExternalInputTestSuite implements TestSuite {
             () -> client.openInventoryWithRegularItem(),
             () -> client.seedClipboard("external-copy-sentinel"),
             () -> hover(36), this::await,
+            () -> send("screenshot", ""), this::await,
             this::verifyHover,
             () -> send("hotkey", ",\"keys\":\"ctrl+c\""), this::await,
             () -> {
@@ -59,6 +61,7 @@ public final class ExternalInputTestSuite implements TestSuite {
     }
 
     private void hover(int index) {
+        hoverDeadline = 0;
         slot = client.slots().get(index);
         itemBefore = Reflect.call(client.itemInSlot(slot), "copy");
         Object screen = client.testScreen();
@@ -78,7 +81,13 @@ public final class ExternalInputTestSuite implements TestSuite {
         TestAssertions.require(client.screen() == client.testScreen(), "The inventory screen changed");
         Object hovered = Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
             "hoveredSlot", client.testScreen());
-        TestAssertions.require(hovered == slot, "External pointer did not hover the requested slot");
+        if (hovered != slot) {
+            if (hoverDeadline == 0) hoverDeadline = System.nanoTime() + 5_000_000_000L;
+            TestAssertions.require(System.nanoTime() < hoverDeadline,
+                "External pointer did not hover slot " + client.slots().indexOf(slot)
+                    + "; observed slot " + client.slots().indexOf(hovered));
+            throw new Pending();
+        }
     }
 
     private Object window() {
