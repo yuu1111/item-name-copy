@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-public final class MinecraftClientDriver {
+public final class ItemNameCopyClientDriver {
     private final SyntheticInput input;
     private Object minecraft;
     private Object testScreen;
     private Object testSlot;
     private Future<?> reload;
 
-    public MinecraftClientDriver(SyntheticInput input) {
+    public ItemNameCopyClientDriver(SyntheticInput input) {
         this.input = input;
     }
 

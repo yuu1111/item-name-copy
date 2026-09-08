@@ -7,18 +7,18 @@ import dev.itemnamecopy.test.runtime.TestAssertions;
 import dev.itemnamecopy.test.runtime.TestCase;
 import dev.itemnamecopy.test.runtime.TestStep;
 import dev.itemnamecopy.test.runtime.TestSuite;
-import dev.itemnamecopy.test.support.MinecraftClientDriver;
+import dev.itemnamecopy.test.support.ItemNameCopyClientDriver;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class ItemNameCopyTestSuite implements TestSuite {
-    private final MinecraftClientDriver client;
+    private final ItemNameCopyClientDriver client;
     private final List<TestCase> tests = new ArrayList<TestCase>();
     private Object itemBeforeCopy;
     private String expectedClipboard;
 
-    public ItemNameCopyTestSuite(MinecraftClientDriver client) {
+    public ItemNameCopyTestSuite(ItemNameCopyClientDriver client) {
         this.client = client;
     }
 

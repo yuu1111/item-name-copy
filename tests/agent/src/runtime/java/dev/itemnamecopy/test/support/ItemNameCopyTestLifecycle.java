@@ -8,15 +8,15 @@ import dev.itemnamecopy.test.runtime.TestAssertions;
 
 import java.util.UUID;
 
-public final class MinecraftTestLifecycle implements ClientTestLifecycle {
-    private final MinecraftClientDriver client;
+public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
+    private final ItemNameCopyClientDriver client;
     private String originalClipboard;
     private String worldName;
     private String bootScreen;
     private int stage;
     private int cycleCount;
 
-    public MinecraftTestLifecycle(MinecraftClientDriver client) {
+    public ItemNameCopyTestLifecycle(ItemNameCopyClientDriver client) {
         this.client = client;
     }
 

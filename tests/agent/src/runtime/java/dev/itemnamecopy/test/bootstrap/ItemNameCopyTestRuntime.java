@@ -1,19 +1,20 @@
-package dev.itemnamecopy.test.tests;
+package dev.itemnamecopy.test.bootstrap;
 
 import dev.itemnamecopy.test.runtime.ClientTestRunner;
 import dev.itemnamecopy.test.runtime.SyntheticInput;
-import dev.itemnamecopy.test.support.MinecraftClientDriver;
-import dev.itemnamecopy.test.support.MinecraftTestLifecycle;
+import dev.itemnamecopy.test.support.ItemNameCopyClientDriver;
+import dev.itemnamecopy.test.support.ItemNameCopyTestLifecycle;
+import dev.itemnamecopy.test.tests.ItemNameCopyTestSuite;
 
 /**
- * Entry points invoked by the instrumented Minecraft and LWJGL classes.
+ * 計装されたMinecraftとLWJGLから呼び出すItemNameCopyテストの入口
  */
 public final class ItemNameCopyTestRuntime {
     private static final SyntheticInput INPUT = new SyntheticInput();
-    private static final MinecraftClientDriver CLIENT = new MinecraftClientDriver(INPUT);
+    private static final ItemNameCopyClientDriver CLIENT = new ItemNameCopyClientDriver(INPUT);
     private static final ClientTestRunner RUNNER = new ClientTestRunner(
         INPUT,
-        new MinecraftTestLifecycle(CLIENT),
+        new ItemNameCopyTestLifecycle(CLIENT),
         new ItemNameCopyTestSuite(CLIENT));
 
     private ItemNameCopyTestRuntime() {

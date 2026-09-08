@@ -9,7 +9,7 @@ final class TestReportWriter {
     private TestReportWriter() {
     }
 
-    static void write(List<TestResult> results, int expectedTests) throws IOException {
+    static void write(List<TestResult> results, int expectedTests, String suiteName) throws IOException {
         int failed = 0;
         for (TestResult result : results) if (result.failure != null) failed++;
         StringBuilder json = new StringBuilder("{\n  \"target\": ").append(quote(RuntimeConfig.TARGET))
@@ -27,7 +27,8 @@ final class TestReportWriter {
                     .append(quote(result.failure == null ? "passed" : "failed"));
             if (result.failure != null) json.append(", \"message\": ").append(quote(result.failure));
             json.append('}');
-            xml.append("<testcase classname=\"ClientTestRuntime\" name=\"").append(result.name).append("\">");
+            xml.append("<testcase classname=\"").append(escapeXml(suiteName)).append("\" name=\"")
+                .append(result.name).append("\">");
             if (result.failure != null)
                 xml.append("<failure message=\"").append(escapeXml(result.failure)).append("\"/>");
             xml.append("</testcase>");

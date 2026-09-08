@@ -106,7 +106,7 @@ public final class ClientTestRunner {
                 System.err.println("CLIENT_TEST TIMEOUT " + RuntimeConfig.TARGET);
                 Runtime.getRuntime().halt(124);
             }
-        }, "itemnamecopy-test-watchdog");
+        }, "client-test-watchdog");
         watchdog.setDaemon(true);
         watchdog.start();
     }
@@ -127,7 +127,7 @@ public final class ClientTestRunner {
             failure("cleanup", error);
         }
         try {
-            TestReportWriter.write(results, tests.size());
+            TestReportWriter.write(results, tests.size(), suite.getClass().getName());
         } catch (Throwable error) {
             error.printStackTrace();
         }

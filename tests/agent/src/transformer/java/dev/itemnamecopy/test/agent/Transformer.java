@@ -11,7 +11,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public final class Transformer implements ClassFileTransformer, Opcodes {
-    private static final String RUNTIME = "dev/itemnamecopy/test/tests/ItemNameCopyTestRuntime";
+    private static final String RUNTIME = "dev/itemnamecopy/test/bootstrap/ItemNameCopyTestRuntime";
 
     @Override
     public byte[] transform(ClassLoader loader, final String name, Class<?> redefining,
