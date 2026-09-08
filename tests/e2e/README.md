@@ -39,7 +39,7 @@ docker compose -f tests/e2e/compose.yaml run --rm -e E2E_TIMEOUT_SECONDS=1800 cl
 - ホバーは画面が実際に保持するスロット、コピーはMinecraftとxclipの両方から読んだクリップボードで判定する
 - クライアントログとJSON・JUnitレポートも実行ディレクトリへ保存する
 - LWJGL 2ではDisplayから画面サイズ、Keyboardからキー解放を取得する
-- `1.21.1-fabric`で3件の成功を確認した 他のLoaderと版はこの外部入力スイートでは未検証
+- `1.21.1-fabric`と`1.12.2-forge`で3件の成功を確認した 他のLoaderと版はこの外部入力スイートでは未検証
 
 ### 全対象の手動実行
 
@@ -52,7 +52,8 @@ pwsh -File scripts/Invoke-DockerClientTests.ps1
 - 全対象を列挙し、各対象で既存13項目と外部入力3項目を別コンテナで順番に実行する
 - イメージを最初にビルドし、失敗した対象があっても次へ進む 全体の失敗は終了コード1で返す
 - `build/docker-e2e/matrix.json`へ集計し、各実行の詳細は個別の実行ディレクトリへ保存する
-- `-Resume`で同じイメージの成功済み対象を省略する イメージが変わった場合は再検証する
+- `-Resume`で同じイメージ内容の成功済み対象を省略する ファイル層、起動設定、OS、CPUアーキテクチャが変わった場合は再検証する
+  - ビルド証明情報だけの変更では再実行しない
 - `-Target 1.12.2-forge -Suite external`で対象とスイートを限定する
 - `-List`で実行予定だけを表示する Dockerの起動とテストは行わない
 - 全対象の完了確認は集計レポートで行う 代表版の成功だけでは他の版を成功扱いにしない
@@ -70,7 +71,10 @@ pwsh -File scripts/Invoke-DockerClientTests.ps1
 - `$E2E_CONTROL/request.json`へ一時ファイルからatomic renameで発行する
 - `id`は1以上の単調増加する整数、`pid`はコンテナ内の対象プロセスID
 - 1回に1要求とし、同じ`id`の`response.json`を受け取ってから次の要求を発行する
-- ドライバーは対象PIDの可視ウィンドウがちょうど1つの場合だけ操作する
+- 通常は対象PIDの可視ウィンドウがちょうど1つの場合だけ操作する
+- PID情報を公開しないLWJGL 2では、アプリがネイティブAPIから取得したウィンドウIDを`window`へ渡す
+  - 指定プロセスの存在とウィンドウの可視状態を確認し、PID情報が存在する場合は一致も確認する
+  - PID情報がない場合の対応付けはアプリが取得したIDに依存する 専用コンテナ内で使う
 - 座標は対象ウィンドウのクライアント領域のピクセル値
 
 ```json
@@ -81,6 +85,8 @@ pwsh -File scripts/Invoke-DockerClientTests.ps1
 | --- | --- | --- |
 | hover | x、y | 対象内へマウスを移動 |
 | hotkey | keys | `ctrl+c`などのキーを押下・解放 |
+| keydown | keys | キーを押下し、アプリの応答を待つ間保持 |
+| keyup | keys | 保持したキーを解放 |
 | clipboard | expected | X11クリップボードの文字列を照合 |
 | screenshot | なし | 対象ウィンドウのPNGを保存 |
 
@@ -89,6 +95,7 @@ pwsh -File scripts/Invoke-DockerClientTests.ps1
 - 実行コマンド全体の制限は600秒で、`E2E_TIMEOUT_SECONDS`で変更できる
 - 仮想画面、ウィンドウマネージャー、ドライバーが先に終了した場合も実行を失敗にする
 - キー操作は`--window`によるSendEvent配送を使わず、専用画面内で対象を前景にして送る
+- コピー検証ではアプリがクリップボードを更新するまで最大5秒キーを保持し、成功・期限超過のどちらでも解放してから結果を判定する
 - Java用の`submit`と`poll`は非同期の進行に使う 検証用の`call`は待機中もGLFWのイベント処理を進める
 
 ## 検証範囲

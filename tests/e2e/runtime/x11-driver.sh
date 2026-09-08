@@ -4,12 +4,23 @@ set -euo pipefail
 request=$1
 action=$(jq -er '.action' <<<"$request")
 pid=$(jq -er '.pid | select(type == "number" and . > 0 and floor == .)' <<<"$request")
-mapfile -t windows < <(xdotool search --onlyvisible --pid "$pid")
-if ((${#windows[@]} != 1)); then
-    echo "Expected one visible window for pid $pid; found ${#windows[@]}" >&2
-    exit 1
+if jq -e 'has("window")' <<<"$request" >/dev/null; then
+    window=$(jq -er '.window | select(type == "number" and . > 0 and floor == .)' <<<"$request")
+    kill -0 "$pid"
+    xwininfo -id "$window" | grep -q 'Map State: IsViewable'
+    owner=$(xdotool getwindowpid "$window" 2>/dev/null || true)
+    if [[ -n "$owner" && "$owner" != "$pid" ]]; then
+        echo "Window $window belongs to another pid: $owner" >&2
+        exit 1
+    fi
+else
+    mapfile -t windows < <(xdotool search --onlyvisible --pid "$pid")
+    if ((${#windows[@]} != 1)); then
+        echo "Expected one visible window for pid $pid; found ${#windows[@]}" >&2
+        exit 1
+    fi
+    window=${windows[0]}
 fi
-window=${windows[0]}
 xdotool windowactivate --sync "$window"
 case "$action" in
     hover)
@@ -17,10 +28,14 @@ case "$action" in
         y=$(jq -er '.y | select(type == "number" and . >= 0 and floor == .)' <<<"$request")
         xdotool mousemove --sync --window "$window" "$x" "$y"
         ;;
-    hotkey)
+    hotkey|keydown|keyup)
         keys=$(jq -er '.keys | select(type == "string" and test("^[A-Za-z0-9_+]+$"))' <<<"$request")
-        trap 'xdotool keyup Control_L Control_R Shift_L Shift_R Alt_L Alt_R Super_L Super_R c 2>/dev/null || true' EXIT
-        xdotool key --clearmodifiers --delay 80 "$keys"
+        if [[ "$action" == hotkey ]]; then
+            trap 'xdotool keyup Control_L Control_R Shift_L Shift_R Alt_L Alt_R Super_L Super_R c 2>/dev/null || true' EXIT
+            xdotool key --clearmodifiers --delay 80 "$keys"
+        else
+            xdotool "$action" --delay 80 "$keys"
+        fi
         ;;
     clipboard)
         expected_file=$(mktemp)

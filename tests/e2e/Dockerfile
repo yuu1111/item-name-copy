@@ -10,6 +10,8 @@ RUN apt-get update \
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y --no-install-recommends x11-xserver-utils && rm -rf /var/lib/apt/lists/*
+
 ENV DISPLAY=:99 \
     LIBGL_ALWAYS_SOFTWARE=1 \
     GRADLE_USER_HOME=/cache/gradle \

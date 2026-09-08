@@ -16,6 +16,7 @@ public final class ExternalInputTestSuite implements TestSuite {
     private Object slot;
     private Object itemBefore;
     private long hoverDeadline;
+    private long copyDeadline;
 
     public ExternalInputTestSuite(ItemNameCopyClientDriver client) {
         this.client = client;
@@ -34,7 +35,16 @@ public final class ExternalInputTestSuite implements TestSuite {
             () -> hover(36), this::await,
             () -> send("screenshot", ""), this::await,
             this::verifyHover,
-            () -> send("hotkey", ",\"keys\":\"ctrl+c\""), this::await,
+            () -> {
+                copyDeadline = System.nanoTime() + 5_000_000_000L;
+                send("keydown", ",\"keys\":\"ctrl+c\"");
+            }, this::await,
+            () -> {
+                if (!"オークの原木".equals(client.clipboardText()) && System.nanoTime() < copyDeadline) {
+                    throw new Pending();
+                }
+                send("keyup", ",\"keys\":\"ctrl+c\"");
+            }, this::await,
             () -> {
                 TestAssertions.equal("オークの原木", client.clipboardText());
                 TestAssertions.require((Boolean) Reflect.call(itemBefore.getClass(), "matches|areItemStacksEqual",
@@ -78,7 +88,8 @@ public final class ExternalInputTestSuite implements TestSuite {
 
     private void verifyHover() {
         TestAssertions.require(client.screen() == client.testScreen(), "The inventory screen changed");
-        Object hovered = Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
+        Object hovered = client.isLegacy() ? Reflect.get(client.testScreen(), "hoveredSlot")
+            : Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
             "hoveredSlot", client.testScreen());
         if (hovered != slot) {
             if (hoverDeadline == 0) hoverDeadline = System.nanoTime() + 5_000_000_000L;
@@ -111,6 +122,10 @@ public final class ExternalInputTestSuite implements TestSuite {
 
     private void send(String action, String fields) {
         try {
+            if (client.isLegacy()) {
+                long handle = ((Number) Reflect.call(Reflect.type("org.lwjgl.opengl.LinuxDisplay"), "getWindow")).longValue();
+                fields += ",\"window\":" + handle;
+            }
             driver.submit(action, fields);
         } catch (Exception error) {
             throw new IllegalStateException("Could not submit external input", error);

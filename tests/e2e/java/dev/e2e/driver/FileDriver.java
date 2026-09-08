@@ -35,10 +35,10 @@ public final class FileDriver {
             Matcher responseId = Pattern.compile("\"id\"\\s*:\\s*(\\d+)").matcher(response);
             Matcher exitCode = Pattern.compile("\"exitCode\"\\s*:\\s*(\\d+)").matcher(response);
             if (responseId.find() && Integer.parseInt(responseId.group(1)) == pending) {
+                pending = 0;
                 if (!exitCode.find() || Integer.parseInt(exitCode.group(1)) != 0) {
                     throw new AssertionError("External driver failed: " + response);
                 }
-                pending = 0;
                 return true;
             }
         }

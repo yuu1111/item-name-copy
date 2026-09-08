@@ -7,6 +7,17 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+function Get-TestImageFingerprint {
+    $contents = & docker image inspect item-name-copy-e2e:local --format '{{json .RootFS.Layers}}|{{json .Config}}|{{.Os}}|{{.Architecture}}'
+    if ($LASTEXITCODE -ne 0 -or -not $contents) { throw 'Could not identify Docker image contents' }
+    $digest = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return [Convert]::ToHexString($digest.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($contents))).ToLowerInvariant()
+    } finally {
+        $digest.Dispose()
+    }
+}
+
 $repository = Split-Path -Parent $PSScriptRoot
 $matrix = @((& (Join-Path $PSScriptRoot 'Get-BuildMatrix.ps1') | ConvertFrom-Json).include)
 if ($Target) {
@@ -27,8 +38,7 @@ try {
     $compose = @('compose', '-f', 'tests/e2e/compose.yaml')
     & docker @compose build
     if ($LASTEXITCODE -ne 0) { throw 'Docker image build failed' }
-    $image = (& docker image inspect item-name-copy-e2e:local --format '{{.Id}}').Trim()
-    if ($LASTEXITCODE -ne 0 -or -not $image) { throw 'Could not identify Docker image' }
+    $image = Get-TestImageFingerprint
     $directory = Join-Path $repository 'build/docker-e2e'
     New-Item -ItemType Directory -Force -Path $directory | Out-Null
     $manifest = Join-Path $directory 'matrix.json'
@@ -47,8 +57,8 @@ try {
                 Write-Output "$key already passed for this image"
                 continue
             }
-            $currentImage = (& docker image inspect item-name-copy-e2e:local --format '{{.Id}}').Trim()
-            if ($LASTEXITCODE -ne 0 -or $currentImage -ne $image) { throw 'Docker image changed during the batch; rerun with a stable image' }
+            $currentImage = Get-TestImageFingerprint
+            if ($currentImage -ne $image) { throw 'Docker image changed during the batch; rerun with a stable image' }
             $runId = "$($node.node.Replace('.', '_'))-$inputSuite-$([guid]::NewGuid().ToString('N'))"
             Write-Output "$key starting"
             & docker @compose run --rm --no-deps -e "E2E_RUN_ID=$runId" -e E2E_TIMEOUT_SECONDS=1800 client bash tests/e2e/minecraft/run.sh $node.node $inputSuite
