@@ -3,20 +3,22 @@ package com.github.yuu1111.itemnamecopy.test.bootstrap;
 import com.github.yuu1111.itemnamecopy.test.support.ItemNameCopyClientDriver;
 import com.github.yuu1111.itemnamecopy.test.support.ItemNameCopyTestLifecycle;
 import com.github.yuu1111.itemnamecopy.test.tests.ItemNameCopyTestSuite;
+import com.github.yuu1111.itemnamecopy.test.tests.ExternalInputTestSuite;
 import com.github.yuu1111.minecraft.clienttest.ClientTestOptions;
 import com.github.yuu1111.minecraft.clienttest.ClientTestRunner;
 import com.github.yuu1111.minecraft.clienttest.SyntheticInput;
 
 public final class ItemNameCopyTestRuntime {
+    private static final boolean EXTERNAL = Boolean.getBoolean("itemnamecopy.test.external");
     private static final ClientTestOptions OPTIONS = ClientTestOptions.fromSystemProperties(
         "itemnamecopy.test",
-        "real client, synthetic input callbacks, OS clipboard");
+        EXTERNAL ? "real client, external X11 input, OS clipboard" : "real client, synthetic input callbacks, OS clipboard");
     private static final SyntheticInput INPUT = new SyntheticInput();
     private static final ItemNameCopyClientDriver CLIENT = new ItemNameCopyClientDriver(INPUT, OPTIONS);
     private static final ClientTestRunner RUNNER = new ClientTestRunner(
         INPUT,
         new ItemNameCopyTestLifecycle(CLIENT, OPTIONS),
-        new ItemNameCopyTestSuite(CLIENT),
+        EXTERNAL ? new ExternalInputTestSuite(CLIENT) : new ItemNameCopyTestSuite(CLIENT),
         OPTIONS);
 
     private ItemNameCopyTestRuntime() {

@@ -17,6 +17,7 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
     public byte[] transform(ClassLoader loader, final String name, Class<?> redefining,
                             ProtectionDomain domain, byte[] bytes) {
         final boolean minecraft = "net/minecraft/client/Minecraft".equals(name);
+        if (Boolean.getBoolean("itemnamecopy.test.external") && !minecraft) return null;
         final boolean screen = "net/minecraft/client/gui/screens/Screen".equals(name)
                 || "net/minecraft/client/gui/screen/Screen".equals(name)
                 || "net/minecraft/client/gui/GuiScreen".equals(name);

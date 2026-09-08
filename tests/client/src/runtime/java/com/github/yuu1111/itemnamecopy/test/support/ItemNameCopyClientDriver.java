@@ -1,11 +1,31 @@
 package com.github.yuu1111.itemnamecopy.test.support;
 
-import com.github.yuu1111.minecraft.clienttest.*;
+import com.github.yuu1111.minecraft.clienttest.ClientTestOptions;
+import com.github.yuu1111.minecraft.clienttest.Pending;
+import com.github.yuu1111.minecraft.clienttest.Reflect;
+import com.github.yuu1111.minecraft.clienttest.SyntheticInput;
+import com.github.yuu1111.minecraft.clienttest.TestAssertions;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 public final class ItemNameCopyClientDriver {
+    private static final String CUSTOM_ITEM_NAME = "  名付けた剣 ✨  ";
+    private static final String[] LEGACY_GAME_RULE_NAMES = {
+            "doMobSpawning", "doDaylightCycle", "doWeatherCycle"
+    };
+    private static final String[] MODERN_GAME_RULE_NAMES = {
+            "SPAWN_MOBS", "ADVANCE_TIME", "ADVANCE_WEATHER"
+    };
+    private static final String[] GAME_RULE_KEY_NAMES = {
+            "RULE_DOMOBSPAWNING", "RULE_DAYLIGHT", "RULE_WEATHER_CYCLE"
+    };
+
     private final SyntheticInput input;
     private final ClientTestOptions options;
     private final boolean legacy;
@@ -43,8 +63,16 @@ public final class ItemNameCopyClientDriver {
 
     public void inventory(boolean custom) {
         show(null);
-        Object stack;
+        Object stack = createTestStack(custom);
+        putInFirstHotbarSlot(stack);
+        testScreen = createInventoryScreen();
+        show(testScreen);
+        if ((Boolean) Reflect.call(recipeBook(), "isVisible")) toggleRecipe();
+    }
+
+    private Object createTestStack(boolean custom) {
         Class<?> itemStack = Reflect.type("net.minecraft.world.item.ItemStack", "net.minecraft.item.ItemStack");
+        Object stack;
         if (legacy) {
             Object block = Reflect.get(Reflect.type("net.minecraft.init.Blocks"), "LOG");
             stack = Reflect.make(itemStack, block, 3);
@@ -53,30 +81,36 @@ public final class ItemNameCopyClientDriver {
                     custom ? "DIAMOND_SWORD" : "OAK_LOG");
             stack = Reflect.make(itemStack, item, 3);
         }
-        if (custom) {
-            String value = "  名付けた剣 ✨  ";
-            if (legacy) Reflect.call(stack, "setStackDisplayName", value);
-            else if (Reflect.has(stack, "setHoverName|setDisplayName", 1)) {
-                Reflect.call(stack, "setHoverName|setDisplayName", literal(value));
-            } else {
-                Object customName = Reflect.get(Reflect.type("net.minecraft.core.component.DataComponents"), "CUSTOM_NAME");
-                Reflect.call(stack, "set", customName, literal(value));
-            }
+        if (custom) setCustomName(stack);
+        return stack;
+    }
+
+    private void setCustomName(Object stack) {
+        if (legacy) {
+            Reflect.call(stack, "setStackDisplayName", CUSTOM_ITEM_NAME);
+        } else if (Reflect.has(stack, "setHoverName|setDisplayName", 1)) {
+            Reflect.call(stack, "setHoverName|setDisplayName", literal(CUSTOM_ITEM_NAME));
+        } else {
+            Object customName = Reflect.get(Reflect.type("net.minecraft.core.component.DataComponents"), "CUSTOM_NAME");
+            Reflect.call(stack, "set", customName, literal(CUSTOM_ITEM_NAME));
         }
+    }
+
+    private void putInFirstHotbarSlot(Object stack) {
         Object inventory = Reflect.has(player(), "getInventory", 0)
                 ? Reflect.call(player(), "getInventory") : Reflect.get(player(), "inventory");
         Reflect.call(inventory, "setItem|setInventorySlotContents", 0, stack);
-        testScreen = Reflect.make(Reflect.type("net.minecraft.client.gui.screens.inventory.InventoryScreen",
+    }
+
+    private Object createInventoryScreen() {
+        return Reflect.make(Reflect.type("net.minecraft.client.gui.screens.inventory.InventoryScreen",
                 "net.minecraft.client.gui.screen.inventory.InventoryScreen", "net.minecraft.client.gui.inventory.GuiInventory"), player());
-        show(testScreen);
-        Object book = recipeBook();
-        if ((Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
     }
 
     public void openCreative() {
-        Object level = Reflect.get(minecraft, "level", "world");
         Class<?> type = Reflect.type("net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen",
                 "net.minecraft.client.gui.screen.inventory.CreativeScreen", "net.minecraft.client.gui.inventory.GuiContainerCreative");
+        Object level = level();
         if (Reflect.has(level, "enabledFeatures", 0)) {
             testScreen = Reflect.make(type, player(), Reflect.call(level, "enabledFeatures"), true);
         } else testScreen = Reflect.make(type, player());
@@ -140,10 +174,8 @@ public final class ItemNameCopyClientDriver {
 
     public void hover(int index) {
         testSlot = slots().get(index);
-        int x = ((Number) Reflect.get(testScreen, "leftPos", "guiLeft")).intValue()
-                + ((Number) Reflect.get(testSlot, "x", "xPos")).intValue() + 8;
-        int y = ((Number) Reflect.get(testScreen, "topPos", "guiTop")).intValue()
-                + ((Number) Reflect.get(testSlot, "y", "yPos")).intValue() + 8;
+        int x = coordinate(testScreen, "leftPos", "guiLeft") + coordinate(testSlot, "x", "xPos") + 8;
+        int y = coordinate(testScreen, "topPos", "guiTop") + coordinate(testSlot, "y", "yPos") + 8;
         int guiWidth = ((Number) Reflect.get(testScreen, "width")).intValue();
         int guiHeight = ((Number) Reflect.get(testScreen, "height")).intValue();
         if (legacy) {
@@ -161,32 +193,10 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void copy(int action, int flags) {
-        if (action != 0) {
-            Object hovered = legacy ? Reflect.get(testScreen, "hoveredSlot")
-                    : Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
-                    "hoveredSlot", testScreen);
-            if (hovered != testSlot) {
-                hover(slots().indexOf(testSlot));
-                throw new Pending();
-            }
-        }
+        if (action != 0) ensureTestSlotIsHovered();
         input.beginKeyEvent(action, flags);
         try {
-            if (legacy) {
-                Class<?> eventType = Reflect.type("net.minecraftforge.client.event.GuiScreenEvent$KeyboardInputEvent$Pre");
-                Object event = Reflect.make(eventType, testScreen);
-                Object bus = Reflect.get(Reflect.type("net.minecraftforge.common.MinecraftForge"), "EVENT_BUS");
-                boolean consumed = (Boolean) Reflect.call(bus, "post", event);
-                if (!consumed) Reflect.call(testScreen, "handleKeyboardInput");
-            } else {
-                Object keyboard = Reflect.get(minecraft, "keyboardHandler", "keyboardListener");
-                if (Reflect.has(keyboard, "keyPress|onKeyEvent", 5)) {
-                    Reflect.call(keyboard, "keyPress|onKeyEvent", handle(), 67, 0, action, flags);
-                } else {
-                    Object event = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), 67, 0, flags);
-                    Reflect.call(keyboard, "keyPress", handle(), action, event);
-                }
-            }
+            dispatchCopyKeyEvent(action, flags);
         } finally {
             input.endKeyEvent();
         }
@@ -203,27 +213,10 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void verifyGameRules(Object server) {
-        Object rules;
-        if (Reflect.has(server, "getGameRules", 0)) rules = Reflect.call(server, "getGameRules");
-        else {
-            Object level;
-            if (legacy) level = Reflect.call(server, "getWorld", 0);
-            else if (Reflect.has(server, "overworld", 0)) level = Reflect.call(server, "overworld");
-            else level = Reflect.call(server, "getLevel|getWorld", Reflect.get(Reflect.type(
-                        "net.minecraft.world.level.dimension.DimensionType", "net.minecraft.world.dimension.DimensionType"), "OVERWORLD"));
-            rules = Reflect.call(level, "getGameRules");
-        }
-        String[] oldNames = {"doMobSpawning", "doDaylightCycle", "doWeatherCycle"};
-        String[] newNames = {"SPAWN_MOBS", "ADVANCE_TIME", "ADVANCE_WEATHER"};
-        String[] keyNames = {"RULE_DOMOBSPAWNING", "RULE_DAYLIGHT", "RULE_WEATHER_CYCLE"};
-        for (int i = 0; i < oldNames.length; i++) {
-            Object value;
-            if (modernGameRules()) value = Reflect.call(rules, "get", Reflect.get(
-                    Reflect.type("net.minecraft.world.level.gamerules.GameRules"), newNames[i]));
-            else if (Reflect.optionalGet(rules.getClass(), keyNames[i]) != null) {
-                value = Reflect.call(rules, "getBoolean", Reflect.get(rules.getClass(), keyNames[i]));
-            } else value = Reflect.call(rules, "getBoolean|func_82766_b|method_8355", oldNames[i]);
-            TestAssertions.equal(Boolean.FALSE, value);
+        Object rules = gameRules(server);
+        boolean modern = modernGameRules();
+        for (int i = 0; i < LEGACY_GAME_RULE_NAMES.length; i++) {
+            TestAssertions.equal(Boolean.FALSE, gameRuleValue(rules, modern, i));
         }
     }
 
@@ -259,16 +252,14 @@ public final class ItemNameCopyClientDriver {
         if (legacy) {
             return (String) Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "getClipboardString");
         }
-        return (String) Reflect.call(Reflect.get(minecraft, "keyboardHandler", "keyboardListener"),
-                "getClipboard|getClipboardString");
+        return (String) Reflect.call(keyboard(), "getClipboard|getClipboardString");
     }
 
     public void seedClipboard(String value) {
         if (legacy) {
             Reflect.call(Reflect.type("net.minecraft.client.gui.GuiScreen"), "setClipboardString", value);
         } else {
-            Reflect.call(Reflect.get(minecraft, "keyboardHandler", "keyboardListener"),
-                    "setClipboard|setClipboardString", value);
+            Reflect.call(keyboard(), "setClipboard|setClipboardString", value);
         }
         try {
             Thread.sleep(150L);
@@ -368,7 +359,7 @@ public final class ItemNameCopyClientDriver {
             if (Boolean.FALSE.equals(visible)) continue;
             String label = label(widget);
             boolean matches = prefix
-                    ? label.toLowerCase(java.util.Locale.ROOT).startsWith(text.toLowerCase(java.util.Locale.ROOT))
+                    ? label.toLowerCase(Locale.ROOT).startsWith(text.toLowerCase(Locale.ROOT))
                     : label.equalsIgnoreCase(text);
             if (!matches) continue;
             if (isButton(widget)) return widget;
@@ -431,6 +422,69 @@ public final class ItemNameCopyClientDriver {
         } catch (IllegalStateException missing) {
             return false;
         }
+    }
+
+    private Object gameRules(Object server) {
+        if (Reflect.has(server, "getGameRules", 0)) return Reflect.call(server, "getGameRules");
+        return Reflect.call(serverLevel(server), "getGameRules");
+    }
+
+    private Object serverLevel(Object server) {
+        if (legacy) return Reflect.call(server, "getWorld", 0);
+        if (Reflect.has(server, "overworld", 0)) return Reflect.call(server, "overworld");
+        Object overworld = Reflect.get(Reflect.type("net.minecraft.world.level.dimension.DimensionType",
+                "net.minecraft.world.dimension.DimensionType"), "OVERWORLD");
+        return Reflect.call(server, "getLevel|getWorld", overworld);
+    }
+
+    private Object gameRuleValue(Object rules, boolean modern, int index) {
+        if (modern) {
+            Object key = Reflect.get(Reflect.type("net.minecraft.world.level.gamerules.GameRules"),
+                    MODERN_GAME_RULE_NAMES[index]);
+            return Reflect.call(rules, "get", key);
+        }
+        Object key = Reflect.optionalGet(rules.getClass(), GAME_RULE_KEY_NAMES[index]);
+        if (key != null) return Reflect.call(rules, "getBoolean", key);
+        return Reflect.call(rules, "getBoolean|func_82766_b|method_8355", LEGACY_GAME_RULE_NAMES[index]);
+    }
+
+    private void ensureTestSlotIsHovered() {
+        Object hovered = legacy ? Reflect.get(testScreen, "hoveredSlot")
+                : Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.MinecraftAccess"),
+                "hoveredSlot", testScreen);
+        if (hovered == testSlot) return;
+        hover(slots().indexOf(testSlot));
+        throw new Pending();
+    }
+
+    private void dispatchCopyKeyEvent(int action, int flags) {
+        if (legacy) {
+            Class<?> eventType = Reflect.type("net.minecraftforge.client.event.GuiScreenEvent$KeyboardInputEvent$Pre");
+            Object event = Reflect.make(eventType, testScreen);
+            Object bus = Reflect.get(Reflect.type("net.minecraftforge.common.MinecraftForge"), "EVENT_BUS");
+            boolean consumed = (Boolean) Reflect.call(bus, "post", event);
+            if (!consumed) Reflect.call(testScreen, "handleKeyboardInput");
+            return;
+        }
+        Object keyboard = keyboard();
+        if (Reflect.has(keyboard, "keyPress|onKeyEvent", 5)) {
+            Reflect.call(keyboard, "keyPress|onKeyEvent", handle(), 67, 0, action, flags);
+            return;
+        }
+        Object event = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), 67, 0, flags);
+        Reflect.call(keyboard, "keyPress", handle(), action, event);
+    }
+
+    private int coordinate(Object owner, String... names) {
+        return ((Number) Reflect.get(owner, names)).intValue();
+    }
+
+    private Object level() {
+        return Reflect.get(minecraft, "level", "world");
+    }
+
+    private Object keyboard() {
+        return Reflect.get(minecraft, "keyboardHandler", "keyboardListener");
     }
 
     private Object window() {

@@ -38,17 +38,22 @@ if (providers.gradleProperty("clientTestSource").isPresent) {
                     ?: throw GradleException("Unsupported client run task: $path (${javaClass.name})")
                 val bootstrap = rootProject.file("tests/client/build/libs/client-test-bootstrap.jar")
                 val report = layout.buildDirectory.file("reports/client-test/results.json").get().asFile
+                val external = providers.gradleProperty("clientTestInput").orNull == "external"
 
+                clientTask.dependsOn(":client-tests:assemble")
                 clientTask.workingDir(runDirectory)
                 clientTask.jvmArgs("-javaagent:${bootstrap.absolutePath}")
-                clientTask.systemProperty("itemnamecopy.test.target", name)
+                clientTask.systemProperty("itemnamecopy.test.target", clientTask.project.name)
                 clientTask.systemProperty("itemnamecopy.test.report", report.absolutePath)
                 clientTask.systemProperty("itemnamecopy.test.source", findProperty("clientTestSource") ?: "unknown")
+                clientTask.systemProperty("itemnamecopy.test.external", external)
+                if (external) clientTask.maxHeapSize = "1536m"
                 clientTask.timeout.set(Duration.ofMinutes(5))
                 clientTask.doFirst {
                     runDirectory.mkdirs()
                     runDirectory.resolve("options.txt")
-                        .writeText("lang:en_us\nguiScale:1\nonboardAccessibility:false\n")
+                        .writeText("lang:en_us\nguiScale:1\nonboardAccessibility:false\n" +
+                            if (external) "renderDistance:2\nsimulationDistance:5\nmaxFps:30\n" else "")
                     for (file in listOf(report, report.parentFile.resolve("TEST-client.xml"))) {
                         if (file.exists() && !file.delete()) {
                             throw GradleException("Cannot remove stale report: $file")

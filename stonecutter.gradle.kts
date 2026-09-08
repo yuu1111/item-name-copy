@@ -55,7 +55,7 @@ stonecutter parameters {
 }
 
 gradle.projectsEvaluated {
-    val targets = subprojects.filter { it.name != "core" }
+    val targets = subprojects.filter { it.findProperty("minecraft_version") != null }
     tasks.register<Sync>("buildAndCollect") {
         group = "build"
         dependsOn(":core:test")

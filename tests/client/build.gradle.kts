@@ -10,6 +10,7 @@ tasks.withType<JavaCompile>().configureEach {
 
 val transformer = sourceSets.create("transformer")
 val runtime = sourceSets.create("runtime")
+runtime.java.srcDir(rootProject.file("tests/e2e/java"))
 val runtimeBundle = configurations.create("runtimeBundle")
 dependencies {
     add(transformer.implementationConfigurationName, "org.ow2.asm:asm:9.9.1")
