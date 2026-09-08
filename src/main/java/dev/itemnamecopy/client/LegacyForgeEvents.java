@@ -17,7 +17,9 @@ public final class LegacyForgeEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public static void beforeScreenKey(GuiScreenEvent.KeyboardKeyPressedEvent.Pre event) {
-        if (!isCopyKey(event.getKeyCode())) return;
+        if (isCopyKey(event.getKeyCode())) {
+            return;
+        }
 
         int action = copyKeyDown ? GLFW.GLFW_REPEAT : GLFW.GLFW_PRESS;
         updateCopyKey(action);
@@ -25,18 +27,22 @@ public final class LegacyForgeEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public static void beforeScreenRelease(GuiScreenEvent.KeyboardKeyReleasedEvent.Pre event) {
-        if (!isCopyKey(event.getKeyCode())) return;
+        if (isCopyKey(event.getKeyCode())) {
+            return;
+        }
         updateCopyKey(GLFW.GLFW_RELEASE);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void afterRawKey(InputEvent.KeyInputEvent event) {
-        if (!isCopyKey(event.getKey())) return;
+        if (isCopyKey(event.getKey())) {
+            return;
+        }
         updateCopyKey(event.getAction());
     }
 
     private static boolean isCopyKey(int key) {
-        return key == GLFW.GLFW_KEY_C;
+        return key != GLFW.GLFW_KEY_C;
     }
 
     private static void updateCopyKey(int action) {

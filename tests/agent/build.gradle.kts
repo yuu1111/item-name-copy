@@ -9,11 +9,13 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 val transformer = sourceSets.create("transformer")
-val testkit = sourceSets.create("testkit")
 val runtime = sourceSets.create("runtime")
-runtime.compileClasspath += testkit.output
-runtime.runtimeClasspath += testkit.output
-dependencies { add(transformer.implementationConfigurationName, "org.ow2.asm:asm:9.9.1") }
+val runtimeBundle = configurations.create("runtimeBundle")
+dependencies {
+    add(transformer.implementationConfigurationName, "org.ow2.asm:asm:9.9.1")
+    add(runtime.implementationConfigurationName, "dev.itemnamecopy.test:minecraft-client-testkit")
+    add(runtimeBundle.name, "dev.itemnamecopy.test:minecraft-client-testkit")
+}
 
 tasks.jar {
     archiveFileName = "client-test-agent.jar"
@@ -28,7 +30,9 @@ val transformerJar = tasks.register<Jar>("transformerJar") {
 }
 val runtimeJar = tasks.register<Jar>("runtimeJar") {
     archiveFileName = "client-test-runtime.jar"
-    from(testkit.output)
     from(runtime.output)
+    from(runtimeBundle.map { files -> files.map(::zipTree) })
+    exclude("META-INF/MANIFEST.MF")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 tasks.assemble { dependsOn(transformerJar, runtimeJar) }

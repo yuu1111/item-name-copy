@@ -53,7 +53,6 @@ final class ContainerCopyTarget implements CopyShortcutHandler.Target {
     @Override
     public boolean writeClipboard(String name) {
         try {
-            // KeyboardHandlerは空文字を無視するため同じ内部APIを直接使う
             MinecraftAccess.writeClipboard(CLIPBOARD, name);
             boolean success = name.equals(minecraft.keyboardHandler.getClipboard());
             if (!success) LOGGER.warn("Clipboard did not retain the item name");
@@ -70,10 +69,9 @@ final class ContainerCopyTarget implements CopyShortcutHandler.Target {
     }
 
     private static boolean hasFocusedTextInput(GuiEventListener listener) {
-        if (listener instanceof EditBox && ((EditBox) listener).isFocused()) return true;
-        if (!(listener instanceof ContainerEventHandler)) return false;
+        if (listener instanceof EditBox && listener.isFocused()) return true;
+        if (!(listener instanceof ContainerEventHandler container)) return false;
 
-        ContainerEventHandler container = (ContainerEventHandler) listener;
         for (GuiEventListener child : container.children()) {
             if (hasFocusedTextInput(child)) return true;
         }

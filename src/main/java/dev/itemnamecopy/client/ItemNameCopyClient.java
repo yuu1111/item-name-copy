@@ -1,12 +1,12 @@
 package dev.itemnamecopy.client;
 
 import dev.itemnamecopy.core.CopyShortcutHandler;
-
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import org.lwjgl.glfw.GLFW;
 
 public final class ItemNameCopyClient {
+
     private static final CopyShortcutHandler HANDLER = new CopyShortcutHandler();
     private static int currentAction;
 
@@ -15,10 +15,15 @@ public final class ItemNameCopyClient {
 
     public static void beginKey(int key, int action) {
         currentAction = action;
-        if (key != GLFW.GLFW_KEY_C) return;
+        if (key != GLFW.GLFW_KEY_C) {
+            return;
+        }
 
-        if (action == GLFW.GLFW_PRESS) HANDLER.reset();
-        else if (action == GLFW.GLFW_RELEASE) HANDLER.releaseC();
+        if (action == GLFW.GLFW_PRESS) {
+            HANDLER.reset();
+        } else if (action == GLFW.GLFW_RELEASE) {
+            HANDLER.releaseC();
+        }
     }
 
     public static int currentAction() {
@@ -26,10 +31,14 @@ public final class ItemNameCopyClient {
     }
 
     public static boolean tryCopy(Screen screen, int key, int modifiers, int action, boolean alreadyHandled) {
-        if (key != GLFW.GLFW_KEY_C || action == GLFW.GLFW_RELEASE) return false;
-        if (MinecraftAccess.currentScreen() != screen || !(screen instanceof AbstractContainerScreen)) return false;
+        if (key != GLFW.GLFW_KEY_C || action == GLFW.GLFW_RELEASE) {
+            return false;
+        }
 
-        // GLFWのModifierはmacOSでも左右の物理Ctrlを表す
+        if (MinecraftAccess.currentScreen() != screen || !(screen instanceof AbstractContainerScreen)) {
+            return false;
+        }
+
         boolean control = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
         boolean otherModifier = hasOtherModifier(modifiers);
         boolean repeat = action != GLFW.GLFW_PRESS;
