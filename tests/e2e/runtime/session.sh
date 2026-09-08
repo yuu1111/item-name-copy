@@ -39,7 +39,7 @@ children+=("$!")
 
 bash /opt/e2e/serve-x11.sh >"$E2E_ARTIFACTS/driver.log" 2>&1 &
 children+=("$!")
-"$@" &
+timeout --kill-after=10 "${E2E_TIMEOUT_SECONDS:-600}" "$@" &
 children+=("$!")
 set +e
 wait "${children[-1]}"

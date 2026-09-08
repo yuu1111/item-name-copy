@@ -52,8 +52,9 @@ docker compose -f tests/e2e/compose.yaml run --rm client
 
 - 応答は`id`、`exitCode`、`message`を持つ
 - 各操作は15秒でタイムアウトし、Java側の応答待機は20秒で失敗する
+- 実行コマンド全体の制限は600秒で、`E2E_TIMEOUT_SECONDS`で変更できる
 - キー操作は`--window`によるSendEvent配送を使わず、専用画面内で対象を前景にして送る
-- Java側の待機中もGLFWのイベント処理を進める Minecraftへ接続する際はtickを止めない非同期ステップにする
+- Java用の`submit`と`poll`は非同期の進行に使う 検証用の`call`は待機中もGLFWのイベント処理を進める
 
 ## 検証範囲
 

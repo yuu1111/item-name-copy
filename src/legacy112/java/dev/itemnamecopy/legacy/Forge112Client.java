@@ -1,6 +1,7 @@
 package dev.itemnamecopy.legacy;
 
 import dev.itemnamecopy.core.CopyShortcutHandler;
+
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -9,6 +10,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
