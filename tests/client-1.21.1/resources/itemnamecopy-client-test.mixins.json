@@ -1,7 +1,0 @@
-{
-  "required": true,
-  "package": "dev.itemnamecopy.test.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "client": ["ClientTickMixin", "ControlStateMixin"],
-  "injectors": {"defaultRequire": 1}
-}
