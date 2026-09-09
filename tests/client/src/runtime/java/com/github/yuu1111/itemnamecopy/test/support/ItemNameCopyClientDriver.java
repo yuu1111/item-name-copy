@@ -204,13 +204,68 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void sendCopyKeyEvent(int action, int flags) {
+        sendKeyEvent(67, 46, 'c', action, flags);
+    }
+
+    public void sendAlternateCopyKeyEvent(int action, int flags) {
+        sendKeyEvent(75, 37, 'k', action, flags);
+    }
+
+    private void sendKeyEvent(int key, int legacyKey, int character, int action, int flags) {
         if (action != 0) ensureTestSlotIsHovered();
-        input.beginKeyEvent(action, flags);
+        input.beginKeyEvent(legacyKey, character, action, flags);
         try {
-            dispatchCopyKeyEvent(action, flags);
+            dispatchCopyKeyEvent(key, action, flags);
         } finally {
             input.endKeyEvent();
         }
+    }
+
+    public void rebindCopyKey(boolean alternate) {
+        int key = alternate ? 75 : 67;
+        int legacyKey = alternate ? 37 : 46;
+        Object mapping = copyKeyMapping();
+        if (legacy) {
+            Reflect.call(mapping, "setKeyCode", legacyKey);
+            Reflect.call(Reflect.type("net.minecraft.client.settings.KeyBinding"),
+                    "resetKeyBindingArrayAndHash");
+            return;
+        }
+
+        Class<?> inputConstants = Reflect.type("com.mojang.blaze3d.platform.InputConstants",
+                "com.mojang.blaze3d.platform.InputMappings", "net.minecraft.client.util.InputMappings");
+        Object inputKey;
+        if (Reflect.has(inputConstants, "getKey|getInputByCode", 2)) {
+            inputKey = Reflect.call(inputConstants, "getKey|getInputByCode", key, 0);
+        } else {
+            Object event = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), key, 0, 0);
+            inputKey = Reflect.call(inputConstants, "getKey", event);
+        }
+        Reflect.call(mapping, "setKey", inputKey);
+        Reflect.call(Reflect.type("net.minecraft.client.KeyMapping", "net.minecraft.client.settings.KeyBinding"),
+                "resetMapping|resetKeyBindingArrayAndHash");
+    }
+
+    public void verifyCopyKeyRegistration() {
+        Object mapping = copyKeyMapping();
+        Object options = Reflect.get(minecraft, "options", "gameSettings");
+        Object[] mappings = (Object[]) Reflect.get(options, "keyMappings", "keyBindings");
+        boolean registered = false;
+        for (Object candidate : mappings) {
+            if (candidate == mapping) registered = true;
+        }
+        TestAssertions.require(registered, "Copy key is absent from the controls list");
+
+        String category = String.valueOf(Reflect.call(mapping, "getCategory|getKeyCategory"));
+        TestAssertions.require(category.contains("itemnamecopy"),
+                "Copy key is not in the ItemNameCopy category: " + category);
+    }
+
+    private Object copyKeyMapping() {
+        Class<?> owner = legacy
+                ? Reflect.type("com.github.yuu1111.itemnamecopy.legacy.Forge112Client")
+                : Reflect.type("com.github.yuu1111.itemnamecopy.client.CopyKeyMapping");
+        return Reflect.call(owner, legacy ? "copyKeyMapping" : "mapping");
     }
 
     public void sendCommand(String value) {
@@ -486,7 +541,7 @@ public final class ItemNameCopyClientDriver {
         throw new Pending();
     }
 
-    private void dispatchCopyKeyEvent(int action, int flags) {
+    private void dispatchCopyKeyEvent(int key, int action, int flags) {
         if (legacy) {
             Class<?> eventType = Reflect.type("net.minecraftforge.client.event.GuiScreenEvent$KeyboardInputEvent$Pre");
             Object event = Reflect.make(eventType, testScreen);
@@ -497,10 +552,10 @@ public final class ItemNameCopyClientDriver {
         }
         Object keyboard = keyboard();
         if (Reflect.has(keyboard, "keyPress|onKeyEvent", 5)) {
-            Reflect.call(keyboard, "keyPress|onKeyEvent", windowHandle(), 67, 0, action, flags);
+            Reflect.call(keyboard, "keyPress|onKeyEvent", windowHandle(), key, 0, action, flags);
             return;
         }
-        Object event = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), 67, 0, flags);
+        Object event = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), key, 0, flags);
         Reflect.call(keyboard, "keyPress", windowHandle(), action, event);
     }
 

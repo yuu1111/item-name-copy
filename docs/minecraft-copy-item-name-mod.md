@@ -2,7 +2,7 @@
 
 ## 設計目標
 
-ItemNameCopyは、コンテナ画面に表示されたアイテム名を`Ctrl+C`でコピーするクライアント専用Mod
+ItemNameCopyは、コンテナ画面に表示されたアイテム名を設定可能なキーでコピーするクライアント専用Mod
 Mod IDは`itemnamecopy`、Java packageは`com.github.yuu1111.itemnamecopy`とする
 
 - Fabric、Forge、NeoForgeで同じ操作とコピー結果を提供する
@@ -15,7 +15,7 @@ Mod IDは`itemnamecopy`、Java packageは`com.github.yuu1111.itemnamecopy`とす
 次の条件をすべて満たしたキー押下を、一回のコピーとして扱う
 
 - 現在表示されている画面がコンテナ画面である
-- `C`の押下時に左右どちらかのCtrlだけが押されている
+- `ItemNameCopy`カテゴリで割り当てたコピーキーが押されている
 - テキスト入力欄へフォーカスがなく、他の処理がキー入力を処理済みではない
 - カーソル下に空でないスロットがある
 - 同じキー押下またはキーリピートを処理していない
@@ -34,6 +34,7 @@ Mod IDは`itemnamecopy`、Java packageは`com.github.yuu1111.itemnamecopy`とす
     ↓
 ItemNameCopyClient
     ├─ CopyShortcutHandler       コピー条件とキー押下状態
+    ├─ CopyKeyMapping            操作設定への登録と割り当て判定
     └─ ContainerCopyTarget
         ├─ MinecraftAccess       画面、Slot、Clipboard、通知の版差分
         └─ BundledFeedback       翻訳リソースを利用できない場合の通知
@@ -95,14 +96,14 @@ Loaderや版ごとに入力経路が異なっても、最終的な判定は`Copy
 
 ### 自動検証
 
-- `core`の単体テストで修飾キー、リピート、処理済み入力、空Slot、Clipboard失敗、通知条件を確認する
+- `core`の単体テストでリピート、処理済み入力、空Slot、Clipboard失敗、通知条件を確認する
 - 各Nodeのビルドでコンパイル、Loader metadata、Mixin、Jar名を検証する
 - `buildAndCollect`でNode数と収集したJar数を照合し、SHA-256を含む`verification-manifest.json`を生成する
 - GitHub Actionsで対象行列を生成し、各Nodeを独立してビルドする
-- クライアント自動テストで本体の入力処理、Clipboard、翻訳通知、検索欄との競合を確認する
+- クライアント自動テストでキー登録と再割り当て、本体の入力処理、Clipboard、翻訳通知、検索欄との競合を確認する
 
 クライアント自動テストの環境、実行方法、対象外は[tests/README.md](../tests/README.md)に記載する
-自動化できない左右Ctrlの物理入力、Mod画面、マルチプレイなどは[リリース前チェックリスト](todo.md#リリース前チェックリスト)で確認する
+自動化できない物理入力、操作設定の見た目、Mod画面、マルチプレイなどは[リリース前チェックリスト](todo.md#リリース前チェックリスト)で確認する
 
 ### 配布規則
 

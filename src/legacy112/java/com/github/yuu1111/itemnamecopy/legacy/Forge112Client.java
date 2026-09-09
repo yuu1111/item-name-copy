@@ -63,6 +63,10 @@ public final class Forge112Client {
         ClientRegistry.registerKeyBinding(COPY_KEY);
     }
 
+    public static KeyBinding copyKeyMapping() {
+        return COPY_KEY;
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onKeyboard(GuiScreenEvent.KeyboardInputEvent.Pre event) {
         if (Keyboard.getEventKey() != COPY_KEY.getKeyCode()) return;

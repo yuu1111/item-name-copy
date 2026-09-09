@@ -26,7 +26,7 @@ public final class ItemNameCopyTestSuite implements TestSuite {
         worldSettings();
         survivalCopy();
         notificationsAndEdgeCases();
-        modifierHandling();
+        configurableKey();
         recipeSearch();
         creativeInventory();
         return tests;
@@ -108,13 +108,22 @@ public final class ItemNameCopyTestSuite implements TestSuite {
                 () -> TestAssertions.equal("オークの原木", client.clipboardText()));
     }
 
-    private void modifierHandling() {
-        for (final int flags : new int[]{0, 3, 6, 10}) {
-            test("ignored-modifiers-" + flags,
-                    () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("modifier-sentinel"), () -> client.hoverSlot(36),
-                    () -> client.sendCopyKeyEvent(1, flags), () -> client.sendCopyKeyEvent(0, flags),
-                    () -> TestAssertions.equal("modifier-sentinel", client.clipboardText()));
-        }
+    private void configurableKey() {
+        test("copy-key-registration-and-rebinding",
+                () -> client.openInventoryWithRegularItem(), client::verifyCopyKeyRegistration,
+                () -> client.rebindCopyKey(true), () -> client.seedClipboard("rebind-sentinel"),
+                () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 0), () -> client.sendCopyKeyEvent(0, 0),
+                () -> TestAssertions.equal("rebind-sentinel", client.clipboardText()),
+                () -> client.sendAlternateCopyKeyEvent(1, 0),
+                () -> client.sendAlternateCopyKeyEvent(0, 0),
+                () -> TestAssertions.equal("オークの原木", client.clipboardText()),
+                () -> client.rebindCopyKey(false));
+        test("default-copy-key-does-not-require-control",
+                () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("no-control-sentinel"),
+                () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 0), () -> client.sendCopyKeyEvent(0, 0),
+                () -> TestAssertions.equal("オークの原木", client.clipboardText()));
     }
 
     private void recipeSearch() {

@@ -143,6 +143,9 @@ val verifyArtifact = tasks.register("verifyArtifact") {
             for (language in listOf("en_us", "ja_jp")) {
                 val translations = JsonSlurper().parseText(read("assets/itemnamecopy/lang/$language.json")) as Map<*, *>
                 check(translations["itemnamecopy.copied"].toString().contains("%s"))
+                check(translations["key.categories.itemnamecopy"] == "ItemNameCopy")
+                check(translations["key.category.itemnamecopy.main"] == "ItemNameCopy")
+                check(translations["key.itemnamecopy.copy"].toString().isNotBlank())
             }
             zip.entries().asSequence().filter { it.name.endsWith(".class") }.forEach { entry ->
                 zip.getInputStream(entry).use { input ->

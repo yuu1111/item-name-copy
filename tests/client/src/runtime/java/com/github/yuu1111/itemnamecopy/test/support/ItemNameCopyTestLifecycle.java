@@ -63,6 +63,7 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
 
     @Override
     public void cleanup() {
+        client.rebindCopyKey(false);
         if (originalClipboard != null) client.restoreClipboard(originalClipboard);
     }
 
