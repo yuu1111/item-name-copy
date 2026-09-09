@@ -3,6 +3,7 @@ param(
     [ValidateSet('all', 'synthetic', 'external')]
     [string]$Suite = 'all',
     [switch]$Resume,
+    [switch]$FailedOnly,
     [switch]$List
 )
 
@@ -19,6 +20,18 @@ function Get-TestImageFingerprint {
 }
 
 $repository = Split-Path -Parent $PSScriptRoot
+$directory = Join-Path $repository 'build/docker-e2e'
+$manifest = Join-Path $directory 'matrix.json'
+$entries = @{}
+if (Test-Path -LiteralPath $manifest) {
+    $previous = Get-Content -Raw -LiteralPath $manifest | ConvertFrom-Json
+    foreach ($entry in $previous.targets) {
+        if (-not $entry.image) { $entry | Add-Member -NotePropertyName image -NotePropertyValue $previous.image -Force }
+        $entries["$($entry.target)/$($entry.suite)"] = $entry
+    }
+} elseif ($FailedOnly) {
+    throw "No previous results: $manifest"
+}
 $matrix = @((& (Join-Path $PSScriptRoot 'Get-BuildMatrix.ps1') | ConvertFrom-Json).include)
 if ($Target) {
     $unknown = @($Target | Where-Object { $_ -notin $matrix.node })
@@ -26,10 +39,25 @@ if ($Target) {
     $matrix = @($matrix | Where-Object { $_.node -in $Target })
 }
 $suites = if ($Suite -eq 'all') { @('synthetic', 'external') } else { @($Suite) }
+$selected = @{}
+foreach ($node in $matrix) {
+    foreach ($inputSuite in $suites) {
+        $key = "$($node.node)/$inputSuite"
+        if (-not $FailedOnly -or ($entries.ContainsKey($key) -and $entries[$key].status -eq 'failed')) {
+            $selected[$key] = $true
+        }
+    }
+}
 if ($List) {
     foreach ($node in $matrix) {
-        foreach ($inputSuite in $suites) { Write-Output "$($node.node) $inputSuite" }
+        foreach ($inputSuite in $suites) {
+            if ($selected.ContainsKey("$($node.node)/$inputSuite")) { Write-Output "$($node.node) $inputSuite" }
+        }
     }
+    return
+}
+if ($selected.Count -eq 0) {
+    Write-Output 'No matching failed runs to retry'
     return
 }
 
@@ -39,21 +67,13 @@ try {
     & docker @compose build
     if ($LASTEXITCODE -ne 0) { throw 'Docker image build failed' }
     $image = Get-TestImageFingerprint
-    $directory = Join-Path $repository 'build/docker-e2e'
     New-Item -ItemType Directory -Force -Path $directory | Out-Null
-    $manifest = Join-Path $directory 'matrix.json'
-    $entries = @{}
-    if ($Resume -and (Test-Path -LiteralPath $manifest)) {
-        $previous = Get-Content -Raw -LiteralPath $manifest | ConvertFrom-Json
-        if ($previous.image -eq $image) {
-            foreach ($entry in $previous.targets) { $entries["$($entry.target)/$($entry.suite)"] = $entry }
-        }
-    }
     $failures = 0
     foreach ($node in $matrix) {
         foreach ($inputSuite in $suites) {
             $key = "$($node.node)/$inputSuite"
-            if ($Resume -and $entries.ContainsKey($key) -and $entries[$key].status -eq 'passed') {
+            if (-not $selected.ContainsKey($key)) { continue }
+            if ($Resume -and $entries.ContainsKey($key) -and $entries[$key].status -eq 'passed' -and $entries[$key].image -eq $image) {
                 Write-Output "$key already passed for this image"
                 continue
             }
@@ -76,9 +96,10 @@ try {
                 status = $status
                 exitCode = $runExit
                 report = $reportPath
+                image = $image
             }
             [ordered]@{
-                schemaVersion = 1
+                schemaVersion = 2
                 image = $image
                 targets = @($entries.Values | Sort-Object target, suite)
             } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath "$manifest.tmp" -Encoding utf8
