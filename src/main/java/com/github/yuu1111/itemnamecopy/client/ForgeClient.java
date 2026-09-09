@@ -3,6 +3,9 @@ package com.github.yuu1111.itemnamecopy.client;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
+//? if forge_without_mixins {
+/*import net.minecraftforge.fml.client.registry.ClientRegistry;
+*///?}
 
 //? if >=1.21.6 {
 /*import net.minecraftforge.eventbus.api.listener.Priority;
@@ -31,6 +34,9 @@ import net.minecraftforge.client.event.ScreenEvent;
 public final class ForgeClient {
     //? if <1.18.2 {
     /*public ForgeClient() {
+        //? if forge_without_mixins {
+        ClientRegistry.registerKeyBinding(CopyKeyMapping.mapping());
+        //?}
         //? if >=1.17 {
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
                 () -> new IExtensionPoint.DisplayTest(() -> "itemnamecopy", (remoteVersion, network) -> true));
@@ -48,6 +54,7 @@ public final class ForgeClient {
             return ItemNameCopyClient.tryCopy(
                     event.getScreen(),
                     event.getKeyCode(),
+                    event.getScanCode(),
                     event.getModifiers(),
                     ItemNameCopyClient.currentAction(),
                     false
@@ -70,6 +77,7 @@ public final class ForgeClient {
             boolean copied = ItemNameCopyClient.tryCopy(
                     screen,
                     event.getKeyCode(),
+                    event.getScanCode(),
                     event.getModifiers(),
                     ItemNameCopyClient.currentAction(),
                     event.isCanceled()

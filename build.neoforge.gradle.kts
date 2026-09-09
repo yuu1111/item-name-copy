@@ -29,6 +29,8 @@ java {
 sourceSets.main {
     java.srcDir(rootProject.file("core/src/main/java"))
     java.exclude("**/FabricKeyboardMixin.java", "**/ForgeClient.java", "**/LegacyForgeEvents.java")
+    if (org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) >=
+        org.gradle.util.GradleVersion.version("1.21.9")) java.exclude("**/KeyMappingAccessor.java")
 }
 
 tasks.named("createMinecraftArtifacts") { dependsOn("stonecutterGenerate") }

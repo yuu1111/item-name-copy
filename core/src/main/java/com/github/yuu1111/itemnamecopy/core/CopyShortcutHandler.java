@@ -3,22 +3,20 @@ package com.github.yuu1111.itemnamecopy.core;
 import java.util.Optional;
 
 public final class CopyShortcutHandler {
-    private boolean cDown;
+    private boolean keyDown;
 
-    public void releaseC() {
-        cDown = false;
+    public void releaseKey() {
+        keyDown = false;
     }
 
     public void reset() {
-        cDown = false;
+        keyDown = false;
     }
 
-    public boolean pressC(boolean control, boolean otherModifier, boolean repeat,
-                          boolean alreadyHandled, Target target) {
-        boolean wasDown = cDown;
-        cDown = true;
-        if (wasDown || repeat || !control || otherModifier || alreadyHandled
-                || target == null || target.isTextInputFocused()) {
+    public boolean pressKey(boolean repeat, boolean alreadyHandled, Target target) {
+        boolean wasDown = keyDown;
+        keyDown = true;
+        if (wasDown || repeat || alreadyHandled || target == null || target.isTextInputFocused()) {
             return false;
         }
 

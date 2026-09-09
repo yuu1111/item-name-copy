@@ -1,4 +1,6 @@
 {
-  "itemnamecopy.copied": "コピーしました: %s"
+  "itemnamecopy.copied": "コピーしました: %s",
+  "key.categories.itemnamecopy": "ItemNameCopy",
+  "key.category.itemnamecopy.main": "ItemNameCopy",
+  "key.itemnamecopy.copy": "カーソル下のアイテム名をコピー"
 }
-

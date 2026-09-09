@@ -17,11 +17,14 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.recipebook.GuiRecipeBook;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.inventory.Slot;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -44,6 +47,9 @@ public final class Forge112Client {
     public static final String MOD_ID = "itemnamecopy";
 
     private static final CopyShortcutHandler HANDLER = new CopyShortcutHandler();
+    private static final KeyBinding COPY_KEY = new KeyBinding(
+            "key.itemnamecopy.copy", Keyboard.KEY_C, "key.categories.itemnamecopy"
+    );
     private static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     private static final ClassValue<List<Field>> FOCUS_FIELDS = new ClassValue<List<Field>>() {
         @Override
@@ -52,41 +58,26 @@ public final class Forge112Client {
         }
     };
 
+    @Mod.EventHandler
+    public void initialize(FMLInitializationEvent event) {
+        ClientRegistry.registerKeyBinding(COPY_KEY);
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onKeyboard(GuiScreenEvent.KeyboardInputEvent.Pre event) {
-        if (Keyboard.getEventKey() != Keyboard.KEY_C) return;
+        if (Keyboard.getEventKey() != COPY_KEY.getKeyCode()) return;
 
         if (!Keyboard.getEventKeyState()) {
-            HANDLER.releaseC();
+            HANDLER.releaseKey();
             return;
         }
 
         boolean repeat = Keyboard.isRepeatEvent();
-        if (!repeat) HANDLER.releaseC();
+        if (!repeat) HANDLER.releaseKey();
 
-        if (HANDLER.pressC(
-                isControlDown(),
-                isOtherModifierDown(),
-                repeat,
-                event.isCanceled(),
-                targetFor(event.getGui())
-        )) {
+        if (HANDLER.pressKey(repeat, event.isCanceled(), targetFor(event.getGui()))) {
             event.setCanceled(true);
         }
-    }
-
-    private static boolean isControlDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)
-                || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
-    }
-
-    private static boolean isOtherModifierDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)
-                || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)
-                || Keyboard.isKeyDown(Keyboard.KEY_LMENU)
-                || Keyboard.isKeyDown(Keyboard.KEY_RMENU)
-                || Keyboard.isKeyDown(Keyboard.KEY_LMETA)
-                || Keyboard.isKeyDown(Keyboard.KEY_RMETA);
     }
 
     private static CopyShortcutHandler.Target targetFor(GuiScreen screen) {

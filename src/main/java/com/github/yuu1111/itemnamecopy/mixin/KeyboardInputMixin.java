@@ -17,13 +17,13 @@ abstract class KeyboardInputMixin {
     /*@Inject(method = "keyPress", at = @At("HEAD"))
     private void itemnamecopy$begin(long window, int action, KeyEvent event, CallbackInfo ci) {
         if (window != MinecraftAccess.windowHandle()) return;
-        ItemNameCopyClient.beginKey(event.key(), action);
+        ItemNameCopyClient.beginKey(event.key(), event.scancode(), event.modifiers(), action);
     }
     *///?} else {
     @Inject(method = "keyPress", at = @At("HEAD"))
     private void itemnamecopy$begin(long window, int key, int scanCode, int action, int modifiers, CallbackInfo ci) {
         if (window != MinecraftAccess.windowHandle()) return;
-        ItemNameCopyClient.beginKey(key, action);
+        ItemNameCopyClient.beginKey(key, scanCode, modifiers, action);
     }
     //?}
 }

@@ -23,20 +23,12 @@ class CopyShortcutHandlerTest {
     }
 
     @Test
-    void requiresControlWithoutOtherModifiers() {
-        assertFalse(handler.pressC(false, false, false, false, target));
-        handler.releaseC();
-        assertFalse(handler.pressC(true, true, false, false, target));
-        assertEquals(0, target.writes);
-    }
-
-    @Test
     void leavesTextInputAndConsumedEventsAlone() {
         target.textInput = true;
         assertFalse(press());
-        handler.releaseC();
+        handler.releaseKey();
         target.textInput = false;
-        assertFalse(handler.pressC(true, false, false, true, target));
+        assertFalse(handler.pressKey(false, true, target));
         assertEquals(0, target.writes);
     }
 
@@ -60,9 +52,9 @@ class CopyShortcutHandlerTest {
     void heldKeyCannotCopyAgainUntilReleased() {
         assertTrue(press());
         assertFalse(press());
-        assertFalse(handler.pressC(true, false, true, false, target));
+        assertFalse(handler.pressKey(true, false, target));
         assertEquals(1, target.writes);
-        handler.releaseC();
+        handler.releaseKey();
         assertTrue(press());
         assertEquals(2, target.writes);
     }
@@ -70,7 +62,7 @@ class CopyShortcutHandlerTest {
     @Test
     void repeatCannotBecomeFirstPressAfterReset() {
         handler.reset();
-        assertFalse(handler.pressC(true, false, true, false, target));
+        assertFalse(handler.pressKey(true, false, target));
         assertEquals(0, target.writes);
     }
 
@@ -84,7 +76,7 @@ class CopyShortcutHandlerTest {
     }
 
     private boolean press() {
-        return handler.pressC(true, false, false, false, target);
+        return handler.pressKey(false, false, target);
     }
 
     private static final class FakeTarget implements CopyShortcutHandler.Target {

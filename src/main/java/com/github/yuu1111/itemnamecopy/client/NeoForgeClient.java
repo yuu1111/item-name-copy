@@ -31,6 +31,7 @@ public final class NeoForgeClient {
             boolean copied = ItemNameCopyClient.tryCopy(
                     event.getScreen(),
                     event.getKeyCode(),
+                    event.getScanCode(),
                     event.getModifiers(),
                     ItemNameCopyClient.currentAction(),
                     event.isCanceled()

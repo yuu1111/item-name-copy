@@ -1,4 +1,6 @@
 {
-  "itemnamecopy.copied": "Copied: %s"
+  "itemnamecopy.copied": "Copied: %s",
+  "key.categories.itemnamecopy": "ItemNameCopy",
+  "key.category.itemnamecopy.main": "ItemNameCopy",
+  "key.itemnamecopy.copy": "Copy hovered item name"
 }
-

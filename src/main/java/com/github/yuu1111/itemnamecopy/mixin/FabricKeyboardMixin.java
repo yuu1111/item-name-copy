@@ -28,7 +28,7 @@ abstract class FabricKeyboardMixin {
     )
     private void itemnamecopy$beforeScreen(long window, int action, KeyEvent event, CallbackInfo ci) {
         boolean copied = ItemNameCopyClient.tryCopy(
-                MinecraftAccess.currentScreen(), event.key(), event.modifiers(), action, false
+                MinecraftAccess.currentScreen(), event.key(), event.scancode(), event.modifiers(), action, false
         );
         if (copied) ci.cancel();
     }
@@ -45,7 +45,7 @@ abstract class FabricKeyboardMixin {
     private void itemnamecopy$beforeScreen(long window, int key, int scanCode, int action, int modifiers,
                                           CallbackInfo ci) {
         boolean copied = ItemNameCopyClient.tryCopy(
-                MinecraftAccess.currentScreen(), key, modifiers, action, false
+                MinecraftAccess.currentScreen(), key, scanCode, modifiers, action, false
         );
         if (copied) ci.cancel();
     }
@@ -66,7 +66,7 @@ abstract class FabricKeyboardMixin {
      *///?}
     void itemnamecopy$beforeScreen(int action, Screen screen, boolean[] handled,
                                    int key, int scanCode, int modifiers, CallbackInfo ci) {
-        boolean copied = ItemNameCopyClient.tryCopy(screen, key, modifiers, action, handled[0]);
+        boolean copied = ItemNameCopyClient.tryCopy(screen, key, scanCode, modifiers, action, handled[0]);
         if (copied) {
             handled[0] = true;
             ci.cancel();
@@ -86,7 +86,9 @@ abstract class FabricKeyboardMixin {
                                           int key, int scanCode, int modifiers, CallbackInfo ci) {
         if (!(listener instanceof Screen)) return;
 
-        boolean copied = ItemNameCopyClient.tryCopy((Screen) listener, key, modifiers, action, handled[0]);
+        boolean copied = ItemNameCopyClient.tryCopy(
+                (Screen) listener, key, scanCode, modifiers, action, handled[0]
+        );
         if (copied) {
             handled[0] = true;
             ci.cancel();

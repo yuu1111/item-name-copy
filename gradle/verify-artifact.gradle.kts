@@ -39,6 +39,8 @@ tasks.named<ProcessResources>("processResources") {
         else -> requiredJava
     }
     val mixinValues = mapOf("mixin_java" to mixinJava.toString(),
+        "key_mapping_accessor" to if (org.gradle.util.GradleVersion.version(minecraftTarget) <
+            org.gradle.util.GradleVersion.version("1.21.9")) ", \"KeyMappingAccessor\"" else "",
         "keyboard_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyboardMixin\"" else "",
         "recipe_screen_mixin" to if (hasRecipeScreen) ", \"RecipeScreenAccessor\"" else "",
         "refmap" to if (requiresRefmap) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
@@ -79,7 +81,12 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 check(mixins["required"] == true)
                 check(mixins["mixins"] == null) { "Client mixins must not load on a dedicated server" }
                 val clientMixins = mixins["client"] as List<*>
-                check(clientMixins.containsAll(listOf("ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin")))
+                check(clientMixins.containsAll(listOf(
+                    "ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin", "OptionsKeyMappingMixin"
+                )))
+                check(clientMixins.contains("KeyMappingAccessor") ==
+                    (org.gradle.util.GradleVersion.version(minecraftTarget) <
+                        org.gradle.util.GradleVersion.version("1.21.9")))
                 check(clientMixins.contains("FabricKeyboardMixin") == (loaderTarget == "fabric"))
                 check(clientMixins.contains("RecipeScreenAccessor") == hasRecipeScreen)
                 clientMixins.forEach {

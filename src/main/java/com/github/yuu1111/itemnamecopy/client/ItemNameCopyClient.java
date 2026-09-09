@@ -13,16 +13,16 @@ public final class ItemNameCopyClient {
     private ItemNameCopyClient() {
     }
 
-    public static void beginKey(int key, int action) {
+    public static void beginKey(int key, int scanCode, int modifiers, int action) {
         currentAction = action;
-        if (key != GLFW.GLFW_KEY_C) {
+        if (!CopyKeyMapping.matches(key, scanCode, modifiers)) {
             return;
         }
 
         if (action == GLFW.GLFW_PRESS) {
             HANDLER.reset();
         } else if (action == GLFW.GLFW_RELEASE) {
-            HANDLER.releaseC();
+            HANDLER.releaseKey();
         }
     }
 
@@ -30,8 +30,9 @@ public final class ItemNameCopyClient {
         return currentAction;
     }
 
-    public static boolean tryCopy(Screen screen, int key, int modifiers, int action, boolean alreadyHandled) {
-        if (key != GLFW.GLFW_KEY_C || action == GLFW.GLFW_RELEASE) {
+    public static boolean tryCopy(Screen screen, int key, int scanCode, int modifiers,
+                                  int action, boolean alreadyHandled) {
+        if (!CopyKeyMapping.matches(key, scanCode, modifiers) || action == GLFW.GLFW_RELEASE) {
             return false;
         }
 
@@ -39,20 +40,7 @@ public final class ItemNameCopyClient {
             return false;
         }
 
-        boolean control = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
-        boolean otherModifier = hasOtherModifier(modifiers);
         boolean repeat = action != GLFW.GLFW_PRESS;
-        return HANDLER.pressC(
-                control,
-                otherModifier,
-                repeat,
-                alreadyHandled,
-                new ContainerCopyTarget(screen)
-        );
-    }
-
-    private static boolean hasOtherModifier(int modifiers) {
-        int otherModifiers = GLFW.GLFW_MOD_ALT | GLFW.GLFW_MOD_SHIFT | GLFW.GLFW_MOD_SUPER;
-        return (modifiers & otherModifiers) != 0;
+        return HANDLER.pressKey(repeat, alreadyHandled, new ContainerCopyTarget(screen));
     }
 }
