@@ -1,5 +1,6 @@
 import net.minecraftforge.renamer.gradle.RenamerExtension
 import java.io.File
+import org.gradle.api.internal.plugins.DslObject
 
 plugins {
     java
@@ -97,6 +98,26 @@ tasks.jar {
     archiveFileName = "item-name-copy-${project.version}+forge-mc${project.property("minecraft_version")}.jar"
     if (obfuscatedRuntime) destinationDirectory = layout.buildDirectory.dir("devlibs")
     if (mixinRuntime) manifest.attributes("MixinConfigs" to "itemnamecopy.mixins.json")
+}
+
+tasks.compileJava {
+    destinationDirectory.set(layout.buildDirectory.dir("classes/java/main"))
+}
+
+tasks.processResources {
+    DslObject(rootSpec).conventionMapping.map("destinationDir") {
+        layout.buildDirectory.dir("resources/main").get().asFile
+    }
+}
+
+val prepareModClasses = tasks.register<Sync>("prepareModClasses") {
+    from(tasks.compileJava.flatMap { it.destinationDirectory })
+    from(tasks.processResources.map { it.destinationDir })
+    into(layout.buildDirectory.dir("sourceSets/main"))
+}
+
+tasks.classes {
+    dependsOn(prepareModClasses)
 }
 
 if (obfuscatedRuntime) {
