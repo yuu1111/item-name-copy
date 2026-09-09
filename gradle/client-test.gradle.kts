@@ -47,6 +47,10 @@ if (providers.gradleProperty("clientTestSource").isPresent) {
                 clientTask.systemProperty("itemnamecopy.test.report", report.absolutePath)
                 clientTask.systemProperty("itemnamecopy.test.source", findProperty("clientTestSource") ?: "unknown")
                 clientTask.systemProperty("itemnamecopy.test.external", external)
+                clientTask.systemProperty(
+                    "itemnamecopy.test.recipeViewer",
+                    providers.gradleProperty("recipeViewerTest").orNull ?: ""
+                )
                 if (external) clientTask.maxHeapSize = "1536m"
                 clientTask.timeout.set(Duration.ofMinutes(5))
                 clientTask.doFirst {

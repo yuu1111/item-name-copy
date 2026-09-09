@@ -29,6 +29,7 @@ public final class ItemNameCopyTestSuite implements TestSuite {
         configurableKey();
         recipeSearch();
         creativeInventory();
+        recipeViewer();
         return tests;
     }
 
@@ -172,6 +173,29 @@ public final class ItemNameCopyTestSuite implements TestSuite {
                 () -> client.hoverSlot(client.firstOccupiedSlot()),
                 () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
                 () -> TestAssertions.equal("トウヒ", client.clipboardText()));
+    }
+
+    private void recipeViewer() {
+        String viewer = System.getProperty("itemnamecopy.test.recipeViewer", "");
+        if (viewer.isEmpty()) return;
+
+        test(viewer + "-pseudo-slot-copy",
+                client::openRecipeViewerAndHoverItem,
+                () -> client.seedClipboard(viewer + "-pseudo-slot-sentinel"),
+                () -> client.sendRecipeViewerCopyKeyEvent(1, 2),
+                () -> client.sendRecipeViewerCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal(client.recipeViewerItemName(), client.clipboardText()));
+        test(viewer + "-search-priority-and-return-to-pseudo-slot",
+                client::openRecipeViewerAndHoverItem,
+                () -> client.selectRecipeViewerSearch("recipe-viewer-copy-test"),
+                () -> client.seedClipboard(viewer + "-search-sentinel"),
+                () -> client.sendRecipeViewerCopyKeyEvent(1, 2),
+                () -> client.sendRecipeViewerCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("recipe-viewer-copy-test", client.clipboardText()),
+                client::unfocusRecipeViewerSearch,
+                () -> client.sendRecipeViewerCopyKeyEvent(1, 2),
+                () -> client.sendRecipeViewerCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal(client.recipeViewerItemName(), client.clipboardText()));
     }
 
     private void test(String name, TestStep... steps) {

@@ -1,11 +1,19 @@
 param(
     [string[]]$Target,
+    [ValidateSet('emi', 'rei')]
+    [string]$RecipeViewer,
     [switch]$Resume
 )
 
 $ErrorActionPreference = 'Stop'
 $repository = Split-Path -Parent $PSScriptRoot
 $matrix = (& (Join-Path $PSScriptRoot 'Get-BuildMatrix.ps1') | ConvertFrom-Json).include
+if ($RecipeViewer) {
+    if (-not $Target) { $Target = @('1.21.1-fabric') }
+    if (@($Target).Count -ne 1 -or $Target[0] -ne '1.21.1-fabric') {
+        throw 'Recipe viewer tests currently use the 1.21.1-fabric compatibility target'
+    }
+}
 if ($Target) {
     $unknown = @($Target | Where-Object { $_ -notin $matrix.node })
     if ($unknown.Count -gt 0) { throw "Unknown targets: $($unknown -join ', ')" }
@@ -31,6 +39,7 @@ try {
         $digest.AppendData([System.Text.Encoding]::UTF8.GetBytes($sourceFile + "`n"))
         $digest.AppendData([System.IO.File]::ReadAllBytes((Join-Path $repository $sourceFile)))
     }
+    $digest.AppendData([System.Text.Encoding]::UTF8.GetBytes("recipeViewer=$RecipeViewer`n"))
     $sourceHash = [Convert]::ToHexString($digest.GetHashAndReset()).ToLowerInvariant()
     $digest.Dispose()
 
@@ -61,7 +70,8 @@ try {
         if (Test-Path -LiteralPath $reportPath) { Remove-Item -LiteralPath $reportPath }
         $timer = [System.Diagnostics.Stopwatch]::StartNew()
         Write-Output "$($node.node): starting client verification"
-        & $launcher @wrapperArguments "-Ptarget=$($node.node)" "-PclientTestSource=$sourceHash" ":$($node.node):runClient" --console=plain *> $logPath
+        $viewerArgument = if ($RecipeViewer) { @("-PrecipeViewerTest=$RecipeViewer") } else { @() }
+        & $launcher @wrapperArguments "-Ptarget=$($node.node)" "-PclientTestSource=$sourceHash" @viewerArgument ":$($node.node):runClient" --console=plain *> $logPath
         $runExit = $LASTEXITCODE
         $timer.Stop()
         $result = if (Test-Path -LiteralPath $reportPath) { Get-Content -Raw -LiteralPath $reportPath | ConvertFrom-Json } else { $null }

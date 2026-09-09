@@ -8,6 +8,7 @@ base.archivesName = "item-name-copy"
 
 repositories {
     mavenCentral()
+    maven("https://api.modrinth.com/maven")
 }
 
 val legacyMappings = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
@@ -19,6 +20,17 @@ dependencies {
     if (legacyMappings) mappings(project.extra["legacyFabricMappings"].toString())
     else loomx.applyMojangMappings()
     modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
+    if (property("minecraft_version") == "1.21.1") {
+        when (providers.gradleProperty("recipeViewerTest").orNull) {
+            "emi" -> modRuntimeOnly("maven.modrinth:emi:1.1.24+1.21.1+fabric")
+            "rei" -> {
+                modRuntimeOnly("maven.modrinth:rei:16.0.799+fabric")
+                modRuntimeOnly("maven.modrinth:architectury-api:13.0.11+fabric")
+                modRuntimeOnly("maven.modrinth:cloth-config:15.0.140+fabric")
+                modRuntimeOnly("maven.modrinth:fabric-api:0.116.17+1.21.1")
+            }
+        }
+    }
 }
 
 java {

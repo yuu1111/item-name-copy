@@ -35,6 +35,9 @@ public final class ItemNameCopyClientDriver {
     private Object minecraft;
     private Object testScreen;
     private Object testSlot;
+    private int recipeViewerMouseX;
+    private int recipeViewerMouseY;
+    private String recipeViewerItemName;
     private Future<?> reload;
 
     public ItemNameCopyClientDriver(SyntheticInput input, ClientTestOptions options) {
@@ -187,6 +190,10 @@ public final class ItemNameCopyClientDriver {
         testSlot = slots().get(index);
         int x = coordinate(testScreen, "leftPos", "guiLeft") + coordinate(testSlot, "x", "xPos") + 8;
         int y = coordinate(testScreen, "topPos", "guiTop") + coordinate(testSlot, "y", "yPos") + 8;
+        movePointer(x, y);
+    }
+
+    private void movePointer(int x, int y) {
         int guiWidth = ((Number) Reflect.get(testScreen, "width")).intValue();
         int guiHeight = ((Number) Reflect.get(testScreen, "height")).intValue();
         if (legacy) {
@@ -209,6 +216,110 @@ public final class ItemNameCopyClientDriver {
 
     public void sendAlternateCopyKeyEvent(int action, int flags) {
         sendKeyEvent(75, 37, 'k', action, flags);
+    }
+
+    public void sendRecipeViewerCopyKeyEvent(int action, int flags) {
+        input.beginKeyEvent(46, 'c', action, flags);
+        try {
+            dispatchCopyKeyEvent(67, action, flags);
+        } finally {
+            input.endKeyEvent();
+        }
+    }
+
+    public void openRecipeViewerAndHoverItem() {
+        openInventoryWithRegularItem();
+        String viewer = System.getProperty("itemnamecopy.test.recipeViewer", "");
+        if (viewer.equals("emi")) openEmiAndHoverItem();
+        else if (viewer.equals("rei")) openReiAndHoverItem();
+        else throw new IllegalStateException("Recipe viewer test mode is not configured");
+    }
+
+    public String recipeViewerItemName() {
+        return recipeViewerItemName;
+    }
+
+    public void selectRecipeViewerSearch(String value) {
+        String viewer = System.getProperty("itemnamecopy.test.recipeViewer", "");
+        Object search;
+        if (viewer.equals("emi")) {
+            search = Reflect.get(Reflect.type("dev.emi.emi.screen.EmiScreenManager"), "search");
+        } else if (viewer.equals("rei")) {
+            Object runtime = Reflect.call(Reflect.type("me.shedaniel.rei.api.client.REIRuntime"), "getInstance");
+            search = Reflect.call(runtime, "getSearchTextField");
+        } else throw new IllegalStateException("Recipe viewer test mode is not configured");
+        select(search, value);
+    }
+
+    public void unfocusRecipeViewerSearch() {
+        String viewer = System.getProperty("itemnamecopy.test.recipeViewer", "");
+        Object search;
+        if (viewer.equals("emi")) {
+            search = Reflect.get(Reflect.type("dev.emi.emi.screen.EmiScreenManager"), "search");
+        } else {
+            Object runtime = Reflect.call(Reflect.type("me.shedaniel.rei.api.client.REIRuntime"), "getInstance");
+            search = Reflect.call(runtime, "getSearchTextField");
+        }
+        Reflect.call(search, "setFocused", false);
+        movePointer(recipeViewerMouseX, recipeViewerMouseY);
+    }
+
+    private void openEmiAndHoverItem() {
+        Object stack = itemInSlot(slots().get(36));
+        Object emiStack = Reflect.call(Reflect.type("dev.emi.emi.api.stack.EmiStack"), "of", stack);
+        Reflect.call(Reflect.type("dev.emi.emi.api.EmiApi"), "displayUses", emiStack);
+        testScreen = screen();
+
+        int width = ((Number) Reflect.get(testScreen, "width")).intValue();
+        int height = ((Number) Reflect.get(testScreen, "height")).intValue();
+        Class<?> api = Reflect.type("dev.emi.emi.api.EmiApi");
+        for (int y = 2; y < height; y += 4) {
+            for (int x = 2; x < width; x += 4) {
+                Object interaction = Reflect.call(api, "getHoveredStack", x, y, false);
+                if ((Boolean) Reflect.call(interaction, "isEmpty")) continue;
+                List<?> stacks = (List<?>) Reflect.call(Reflect.call(interaction, "getStack"), "getEmiStacks");
+                if (stacks.size() != 1) continue;
+                Object item = Reflect.call(stacks.get(0), "getItemStack");
+                if ((Boolean) Reflect.call(item, "isEmpty")) continue;
+                rememberRecipeViewerItem(x, y, item);
+                return;
+            }
+        }
+        throw new AssertionError("EMI did not expose an item pseudo-slot");
+    }
+
+    private void openReiAndHoverItem() {
+        Object stack = itemInSlot(slots().get(36));
+        Object entry = Reflect.call(Reflect.type("me.shedaniel.rei.api.common.util.EntryStacks"), "of", stack);
+        Object builder = Reflect.call(Reflect.type("me.shedaniel.rei.api.client.view.ViewSearchBuilder"), "builder");
+        Reflect.call(builder, "addUsagesFor", entry);
+        TestAssertions.require((Boolean) Reflect.call(builder, "open"), "REI did not open a usage view");
+        testScreen = screen();
+
+        Class<?> slotType = Reflect.type("me.shedaniel.rei.api.client.gui.widgets.Slot");
+        for (Object widget : widgets(testScreen)) {
+            if (!slotType.isInstance(widget)) continue;
+            List<?> entries = (List<?>) Reflect.call(widget, "getEntries");
+            if (entries.size() != 1) continue;
+            Object current = Reflect.call(widget, "getCurrentEntry");
+            if ((Boolean) Reflect.call(current, "isEmpty")) continue;
+            Object item = Reflect.call(current, "getValue");
+            if (!Reflect.has(item, "isEmpty", 0) || (Boolean) Reflect.call(item, "isEmpty")) continue;
+            Object bounds = Reflect.call(widget, "getBounds");
+            int x = coordinate(bounds, "x") + Math.max(1, coordinate(bounds, "width") / 2);
+            int y = coordinate(bounds, "y") + Math.max(1, coordinate(bounds, "height") / 2);
+            rememberRecipeViewerItem(x, y, item);
+            return;
+        }
+        throw new AssertionError("REI did not expose an item pseudo-slot");
+    }
+
+    private void rememberRecipeViewerItem(int x, int y, Object item) {
+        recipeViewerMouseX = x;
+        recipeViewerMouseY = y;
+        recipeViewerItemName = text(Reflect.call(item, "getHoverName|getDisplayName"));
+        testSlot = null;
+        movePointer(x, y);
     }
 
     private void sendKeyEvent(int key, int legacyKey, int character, int action, int flags) {
