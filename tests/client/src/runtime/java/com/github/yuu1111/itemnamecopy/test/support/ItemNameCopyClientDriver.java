@@ -25,6 +25,9 @@ public final class ItemNameCopyClientDriver {
     private static final String[] GAME_RULE_KEY_NAMES = {
             "RULE_DOMOBSPAWNING", "RULE_DAYLIGHT", "RULE_WEATHER_CYCLE"
     };
+    private static final String[] MCP_GAME_RULE_KEY_NAMES = {
+            "DO_MOB_SPAWNING", "DO_DAYLIGHT_CYCLE", "DO_WEATHER_CYCLE"
+    };
 
     private final SyntheticInput input;
     private final ClientTestOptions options;
@@ -148,7 +151,7 @@ public final class ItemNameCopyClientDriver {
         Object book = recipeBook();
         if (!(Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
         Object search = Reflect.get(book, "searchBox", "searchBar", "searchField");
-        if (!legacy) Reflect.call(testScreen, "setFocused", book);
+        if (!legacy) Reflect.call(testScreen, "setFocused|setListener", book);
         select(search, value);
     }
 
@@ -213,6 +216,8 @@ public final class ItemNameCopyClientDriver {
     public void sendCommand(String value) {
         Object connection = Reflect.optionalGet(player(), "connection");
         if (Reflect.has(connection, "sendCommand", 1)) Reflect.call(connection, "sendCommand", value);
+        else if (Reflect.has(player(), "command", 1)) Reflect.call(player(), "command", value);
+        else if (Reflect.has(player(), "commandSigned", 2)) Reflect.call(player(), "commandSigned", value, null);
         else Reflect.call(player(), "chat|sendChatMessage", "/" + value);
     }
 
@@ -467,7 +472,7 @@ public final class ItemNameCopyClientDriver {
                     MODERN_GAME_RULE_NAMES[index]);
             return Reflect.call(rules, "get", key);
         }
-        Object key = Reflect.optionalGet(rules.getClass(), GAME_RULE_KEY_NAMES[index]);
+        Object key = Reflect.optionalGet(rules.getClass(), GAME_RULE_KEY_NAMES[index], MCP_GAME_RULE_KEY_NAMES[index]);
         if (key != null) return Reflect.call(rules, "getBoolean", key);
         return Reflect.call(rules, "getBoolean|func_82766_b|method_8355", LEGACY_GAME_RULE_NAMES[index]);
     }

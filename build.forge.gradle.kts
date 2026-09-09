@@ -47,6 +47,21 @@ repositories {
     mavenCentral()
 }
 
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (project.property("minecraft_version").toString() in listOf("1.16.3", "1.16.4") &&
+            requested.group == "cpw.mods" && requested.name == "modlauncher") {
+            useVersion("8.1.3")
+            because("Supports both ManifestEntryVerifier constructors used by Java 8 updates")
+        }
+        if (project.property("minecraft_version").toString() == "1.21" &&
+            requested.group == "net.sf.jopt-simple" && requested.name == "jopt-simple") {
+            useVersion("5.0.4")
+            because("Forge 51.0.33 requires the jopt.simple module name")
+        }
+    }
+}
+
 dependencies {
     implementation(
         minecraft.dependency(

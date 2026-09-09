@@ -26,12 +26,25 @@ collect() {
     fi
 }
 trap collect EXIT
-set +e
-bash gradlew "-Ptarget=$target" "-PclientTestSource=$source_hash" "-PclientTestInput=$input" \
-    '-Dorg.gradle.jvmargs=-Xmx2G' --max-workers=2 --no-daemon ":$target:runClient" --console=plain \
-    >"$E2E_ARTIFACTS/minecraft.log" 2>&1
-status=$?
-set -e
+for attempt in 1 2 3; do
+    set +e
+    bash gradlew "-Ptarget=$target" "-PclientTestSource=$source_hash" "-PclientTestInput=$input" \
+        '-Dorg.gradle.jvmargs=-Xmx2G' --max-workers=2 --no-daemon ":$target:runClient" --console=plain \
+        >"$E2E_ARTIFACTS/minecraft.log" 2>&1
+    status=$?
+    set -e
+    if ((status == 0)); then break; fi
+    if ((attempt == 3)) || [[ -f "$report/results.json" ]] ||
+        grep -q 'CLIENT_TEST ' "$E2E_ARTIFACTS/minecraft.log" ||
+        { grep -Eq '^> Task :[^ ]*:runClient' "$E2E_ARTIFACTS/minecraft.log" &&
+          ! grep -q 'IllegalStateException: Failed to download minecraft/' "$E2E_ARTIFACTS/minecraft.log"; } ||
+        ! grep -Eq 'Received status code (429|500|502|503|504)|SocketTimeoutException|HttpTimeoutException|ConnectTimeoutException|Read timed out|Connection reset|Failed to verify asset ' "$E2E_ARTIFACTS/minecraft.log"; then
+        break
+    fi
+    cp "$E2E_ARTIFACTS/minecraft.log" "$E2E_ARTIFACTS/minecraft-attempt-$attempt.log"
+    echo "Download failed for $target; retrying ($attempt/2)"
+    sleep "$((attempt * 10))"
+done
 if ((status != 0)); then
     tail -n 60 "$E2E_ARTIFACTS/minecraft.log"
     exit "$status"
