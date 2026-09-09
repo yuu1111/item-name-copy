@@ -42,6 +42,7 @@ tasks.named<ProcessResources>("processResources") {
         "key_mapping_accessor" to if (org.gradle.util.GradleVersion.version(minecraftTarget) <
             org.gradle.util.GradleVersion.version("1.21.9")) ", \"KeyMappingAccessor\"" else "",
         "keyboard_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyboardMixin\"" else "",
+        "fabric_keybind_mixin" to if (loaderTarget == "fabric") ", \"FabricKeyBindsScreenMixin\"" else "",
         "recipe_screen_mixin" to if (hasRecipeScreen) ", \"RecipeScreenAccessor\"" else "",
         "refmap" to if (requiresRefmap) "\"refmap\": \"itemnamecopy.refmap.json\"," else "")
     inputs.properties(mixinValues)
@@ -88,6 +89,7 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                     (org.gradle.util.GradleVersion.version(minecraftTarget) <
                         org.gradle.util.GradleVersion.version("1.21.9")))
                 check(clientMixins.contains("FabricKeyboardMixin") == (loaderTarget == "fabric"))
+                check(clientMixins.contains("FabricKeyBindsScreenMixin") == (loaderTarget == "fabric"))
                 check(clientMixins.contains("RecipeScreenAccessor") == hasRecipeScreen)
                 clientMixins.forEach {
                     check(zip.getEntry("com/github/yuu1111/itemnamecopy/mixin/$it.class") != null) { "Missing mixin class $it" }

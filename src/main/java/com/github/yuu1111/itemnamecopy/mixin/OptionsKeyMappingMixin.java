@@ -2,6 +2,7 @@ package com.github.yuu1111.itemnamecopy.mixin;
 
 import com.github.yuu1111.itemnamecopy.client.CopyKeyMapping;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Arrays;
+import java.io.File;
 
 @Mixin(value = Options.class, remap = MappingPolicy.REMAP)
 abstract class OptionsKeyMappingMixin {
@@ -24,7 +26,7 @@ abstract class OptionsKeyMappingMixin {
             method = "<init>",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;load()V")
     )
-    private void itemnamecopy$registerKeyMapping(CallbackInfo ci) {
+    private void itemnamecopy$registerKeyMapping(Minecraft minecraft, File gameDirectory, CallbackInfo ci) {
         //? if <1.21.9 {
         KeyMappingAccessor.itemnamecopy$getCategorySortOrder().putIfAbsent(
                 CopyKeyMapping.CATEGORY,
@@ -33,5 +35,11 @@ abstract class OptionsKeyMappingMixin {
         //?}
         this.keyMappings = Arrays.copyOf(this.keyMappings, this.keyMappings.length + 1);
         this.keyMappings[this.keyMappings.length - 1] = CopyKeyMapping.mapping();
+        CopyKeyMapping.beginOptionsLoad(gameDirectory);
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void itemnamecopy$finishOptionsLoad(Minecraft minecraft, File gameDirectory, CallbackInfo ci) {
+        CopyKeyMapping.finishOptionsLoad();
     }
 }

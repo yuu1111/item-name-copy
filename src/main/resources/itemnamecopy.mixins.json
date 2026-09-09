@@ -4,6 +4,6 @@
   "package": "com.github.yuu1111.itemnamecopy.mixin",
   "compatibilityLevel": "JAVA_${mixin_java}",
   ${refmap}
-  "client": ["ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin", "OptionsKeyMappingMixin"${key_mapping_accessor}${keyboard_mixin}${recipe_screen_mixin}],
+  "client": ["ContainerScreenAccessor", "RecipeBookAccessor", "KeyboardInputMixin", "OptionsKeyMappingMixin"${key_mapping_accessor}${keyboard_mixin}${fabric_keybind_mixin}${recipe_screen_mixin}],
   "injectors": { "defaultRequire": 1 }
 }

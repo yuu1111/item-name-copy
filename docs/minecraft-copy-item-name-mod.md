@@ -15,7 +15,9 @@ Mod IDは`itemnamecopy`、Java packageは`com.github.yuu1111.itemnamecopy`とす
 次の条件をすべて満たしたキー押下を、一回のコピーとして扱う
 
 - 現在表示されている画面がコンテナ画面である
-- `ItemNameCopy`カテゴリで割り当てたコピーキーが押されている
+- `ItemNameCopy`カテゴリで割り当てたコピーショートカットが押されている
+  - 既定は`Ctrl+C`
+  - Ctrl、Shift、Altまたは修飾キーなしと、任意の通常キーを組み合わせられる
 - テキスト入力欄へフォーカスがなく、他の処理がキー入力を処理済みではない
 - カーソル下に空でないスロットがある
 - 同じキー押下またはキーリピートを処理していない
@@ -34,7 +36,7 @@ Mod IDは`itemnamecopy`、Java packageは`com.github.yuu1111.itemnamecopy`とす
     ↓
 ItemNameCopyClient
     ├─ CopyShortcutHandler       コピー条件とキー押下状態
-    ├─ CopyKeyMapping            操作設定への登録と割り当て判定
+    ├─ CopyKeyMapping            操作設定への登録とショートカット判定
     └─ ContainerCopyTarget
         ├─ MinecraftAccess       画面、Slot、Clipboard、通知の版差分
         └─ BundledFeedback       翻訳リソースを利用できない場合の通知

@@ -22,6 +22,8 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -48,7 +50,11 @@ public final class Forge112Client {
 
     private static final CopyShortcutHandler HANDLER = new CopyShortcutHandler();
     private static final KeyBinding COPY_KEY = new KeyBinding(
-            "key.itemnamecopy.copy", Keyboard.KEY_C, "key.categories.itemnamecopy"
+            "key.itemnamecopy.copy",
+            KeyConflictContext.UNIVERSAL,
+            KeyModifier.CONTROL,
+            Keyboard.KEY_C,
+            "key.categories.itemnamecopy"
     );
     private static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     private static final ClassValue<List<Field>> FOCUS_FIELDS = new ClassValue<List<Field>>() {
@@ -78,6 +84,7 @@ public final class Forge112Client {
 
         boolean repeat = Keyboard.isRepeatEvent();
         if (!repeat) HANDLER.releaseKey();
+        if (!COPY_KEY.isActiveAndMatches(Keyboard.getEventKey())) return;
 
         if (HANDLER.pressKey(repeat, event.isCanceled(), targetFor(event.getGui()))) {
             event.setCanceled(true);

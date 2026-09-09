@@ -86,7 +86,10 @@ java {
 
 sourceSets.main {
     java.srcDir(rootProject.file("core/src/main/java"))
-    java.exclude("**/FabricKeyboardMixin.java", "**/NeoForgeClient.java")
+    java.exclude(
+        "**/FabricKeyboardMixin.java", "**/FabricKeyBindsScreenMixin.java",
+        "**/FabricChordKeyMapping.java", "**/NeoForgeClient.java"
+    )
     if (org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) >=
         org.gradle.util.GradleVersion.version("1.21.9")) java.exclude("**/KeyMappingAccessor.java")
     if (mixinRuntime) java.exclude("**/LegacyForgeEvents.java")

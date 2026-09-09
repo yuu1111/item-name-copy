@@ -221,12 +221,13 @@ public final class ItemNameCopyClientDriver {
         }
     }
 
-    public void rebindCopyKey(boolean alternate) {
+    public void setCopyShortcut(boolean alternate, int modifiers) {
         int key = alternate ? 75 : 67;
         int legacyKey = alternate ? 37 : 46;
         Object mapping = copyKeyMapping();
         if (legacy) {
-            Reflect.call(mapping, "setKeyCode", legacyKey);
+            Object modifier = keyModifier(modifiers);
+            Reflect.call(mapping, "setKeyModifierAndCode", modifier, legacyKey);
             Reflect.call(Reflect.type("net.minecraft.client.settings.KeyBinding"),
                     "resetKeyBindingArrayAndHash");
             return;
@@ -241,9 +242,19 @@ public final class ItemNameCopyClientDriver {
             Object event = Reflect.make(Reflect.type("net.minecraft.client.input.KeyEvent"), key, 0, 0);
             inputKey = Reflect.call(inputConstants, "getKey", event);
         }
-        Reflect.call(mapping, "setKey", inputKey);
+        if (Reflect.has(mapping, "setKeyModifierAndCode", 2)) {
+            Reflect.call(mapping, "setKeyModifierAndCode", keyModifier(modifiers), inputKey);
+        } else {
+            Reflect.call(Reflect.type("com.github.yuu1111.itemnamecopy.client.CopyKeyMapping"),
+                    "prepareRebind", modifiers);
+            Reflect.call(mapping, "setKey", inputKey);
+        }
         Reflect.call(Reflect.type("net.minecraft.client.KeyMapping", "net.minecraft.client.settings.KeyBinding"),
                 "resetMapping|resetKeyBindingArrayAndHash");
+    }
+
+    public void restoreDefaultCopyShortcut() {
+        setCopyShortcut(false, 2);
     }
 
     public void verifyCopyKeyRegistration() {
@@ -266,6 +277,13 @@ public final class ItemNameCopyClientDriver {
                 ? Reflect.type("com.github.yuu1111.itemnamecopy.legacy.Forge112Client")
                 : Reflect.type("com.github.yuu1111.itemnamecopy.client.CopyKeyMapping");
         return Reflect.call(owner, legacy ? "copyKeyMapping" : "mapping");
+    }
+
+    private Object keyModifier(int modifiers) {
+        Class<?> type = Reflect.type("net.minecraftforge.client.settings.KeyModifier",
+                "net.neoforged.neoforge.client.settings.KeyModifier");
+        String name = modifiers == 1 ? "SHIFT" : modifiers == 2 ? "CONTROL" : modifiers == 4 ? "ALT" : "NONE";
+        return Reflect.get(type, name);
     }
 
     public void sendCommand(String value) {

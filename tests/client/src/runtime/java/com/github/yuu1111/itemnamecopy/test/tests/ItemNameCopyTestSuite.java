@@ -109,21 +109,33 @@ public final class ItemNameCopyTestSuite implements TestSuite {
     }
 
     private void configurableKey() {
-        test("copy-key-registration-and-rebinding",
+        test("default-copy-shortcut-requires-control",
                 () -> client.openInventoryWithRegularItem(), client::verifyCopyKeyRegistration,
-                () -> client.rebindCopyKey(true), () -> client.seedClipboard("rebind-sentinel"),
+                () -> client.seedClipboard("default-shortcut-sentinel"), () -> client.hoverSlot(36),
+                () -> client.sendCopyKeyEvent(1, 0), () -> client.sendCopyKeyEvent(0, 0),
+                () -> TestAssertions.equal("default-shortcut-sentinel", client.clipboardText()),
+                () -> client.sendCopyKeyEvent(1, 2), () -> client.sendCopyKeyEvent(0, 2),
+                () -> TestAssertions.equal("オークの原木", client.clipboardText()));
+        test("copy-shortcut-without-modifier",
+                () -> client.openInventoryWithRegularItem(), client::verifyCopyKeyRegistration,
+                () -> client.setCopyShortcut(true, 0), () -> client.seedClipboard("rebind-sentinel"),
                 () -> client.hoverSlot(36),
                 () -> client.sendCopyKeyEvent(1, 0), () -> client.sendCopyKeyEvent(0, 0),
                 () -> TestAssertions.equal("rebind-sentinel", client.clipboardText()),
                 () -> client.sendAlternateCopyKeyEvent(1, 0),
                 () -> client.sendAlternateCopyKeyEvent(0, 0),
                 () -> TestAssertions.equal("オークの原木", client.clipboardText()),
-                () -> client.rebindCopyKey(false));
-        test("default-copy-key-does-not-require-control",
-                () -> client.openInventoryWithRegularItem(), () -> client.seedClipboard("no-control-sentinel"),
-                () -> client.hoverSlot(36),
-                () -> client.sendCopyKeyEvent(1, 0), () -> client.sendCopyKeyEvent(0, 0),
-                () -> TestAssertions.equal("オークの原木", client.clipboardText()));
+                client::restoreDefaultCopyShortcut);
+        test("copy-shortcut-with-alternate-modifier",
+                () -> client.openInventoryWithRegularItem(), () -> client.setCopyShortcut(true, 1),
+                () -> client.seedClipboard("shift-shortcut-sentinel"), () -> client.hoverSlot(36),
+                () -> client.sendAlternateCopyKeyEvent(1, 0),
+                () -> client.sendAlternateCopyKeyEvent(0, 0),
+                () -> TestAssertions.equal("shift-shortcut-sentinel", client.clipboardText()),
+                () -> client.sendAlternateCopyKeyEvent(1, 1),
+                () -> client.sendAlternateCopyKeyEvent(0, 1),
+                () -> TestAssertions.equal("オークの原木", client.clipboardText()),
+                client::restoreDefaultCopyShortcut);
     }
 
     private void recipeSearch() {
