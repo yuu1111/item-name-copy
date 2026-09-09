@@ -12,12 +12,21 @@
 ./scripts/Invoke-ClientTests.ps1 -Resume
 ```
 
+EMI、REI、JEIとの連携は、1.21.1 Fabricで実際のModと必要な依存を追加して個別に検証する
+
+```powershell
+./scripts/Invoke-ClientTests.ps1 -Target '1.21.1-fabric' -RecipeViewer emi
+./scripts/Invoke-ClientTests.ps1 -Target '1.21.1-fabric' -RecipeViewer rei
+./scripts/Invoke-ClientTests.ps1 -Target '1.21.1-fabric' -RecipeViewer jei
+```
+
 ## 実行と判定
 
 - 汎用ランナーは`minecraft-client-testkit`、ItemNameCopyのクライアントテストは`tests/client`でビルドし、配布Jarには含めない
 - 対象一覧は`Get-BuildMatrix.ps1`から読み、`-Target`で絞り込む
 - `-Resume`はソースとビルド設定のハッシュが一致する成功結果だけを再利用する
-- Fabric APIを追加せず、本体と同じリソース読み込み条件で検証する
+- 通常構成ではFabric APIを追加せず、本体と同じリソース読み込み条件で検証する
+- `-RecipeViewer`を指定した構成だけは、対象のレシピビューアーと起動に必要なModをテスト実行時の依存へ追加する
 - 専用の実行ディレクトリに、シード値1、構造物なしのスーパーフラットワールドを毎回作成する
   - ピースフル、チートON、Mob生成・昼夜変化・天候変化OFFで開始する
   - サバイバルの検証後にクリエイティブへ切り替える
@@ -36,5 +45,5 @@
 
 - [Dockerの外部入力検証](e2e/README.md)では、別スイートでX11経由のホバーとCtrl+Cを確認する
 - Windowsの物理キー入力と、操作設定に表示されるカテゴリの見た目は別途Computer Useまたは手動で確認する
-- チェスト・かまど・金床、他Modの画面、マルチプレイはこのテストの対象外
+- チェスト・かまど・金床、レシピビューアー以外のMod画面、マルチプレイはこのテストの対象外
 - [Client tests workflow](../.github/workflows/client-test.yml)は手動起動でき、ログとレポートを保存する

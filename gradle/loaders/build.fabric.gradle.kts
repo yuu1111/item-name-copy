@@ -16,6 +16,9 @@ repositories {
     maven("https://repo.sleeping.town/") {
         content { includeGroup("dev.emi") }
     }
+    maven("https://maven.shedaniel.me/") {
+        content { includeGroup("me.shedaniel.cloth") }
+    }
 }
 
 val legacyMappings = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
@@ -40,6 +43,7 @@ dependencies {
                 modImplementation("maven.modrinth:rei:16.0.799+fabric")
                 modImplementation("maven.modrinth:architectury-api:13.0.11+fabric")
                 modImplementation("maven.modrinth:cloth-config:15.0.140+fabric")
+                modImplementation("me.shedaniel.cloth:basic-math:0.6.1")
             }
             "jei" -> {
                 modImplementation("mezz.jei:jei-1.21.1-fabric:19.53.0.426")
