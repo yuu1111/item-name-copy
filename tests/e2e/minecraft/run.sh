@@ -12,6 +12,14 @@ if [[ ! "$target" =~ ^[0-9][0-9A-Za-z.-]*$ || ! -f "versions/$target/gradle.prop
     echo "Unknown Minecraft target: $target" >&2
     exit 1
 fi
+source tests/e2e/minecraft/prepare-build-cache.sh
+run_directory="versions/$target/build/client-test/run"
+mkdir -p "$(dirname "$run_directory")" /tmp/itemnamecopy-run
+if [[ -e "$run_directory" && ! -L "$run_directory" ]]; then
+    echo "Expected an isolated run directory: $run_directory" >&2
+    exit 1
+fi
+ln -sfn /tmp/itemnamecopy-run "$run_directory"
 source_hash=$({
     find src core/src gradle minecraft-client-testkit tests/client tests/e2e -type f \
         -not -path '*/build/*' -not -path '*/.gradle/*' -print0
@@ -19,19 +27,22 @@ source_hash=$({
     printf '%s\0' "versions/$target/gradle.properties"
 } | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
 report="versions/$target/build/reports/client-test"
+rm -f "$report/results.json" "$report/TEST-client.xml"
 collect() {
     if [[ -d "$report" ]]; then cp -a "$report" "$E2E_ARTIFACTS/client-report"; fi
-    if [[ -d "versions/$target/build/client-test/run/logs" ]]; then
-        cp -a "versions/$target/build/client-test/run/logs" "$E2E_ARTIFACTS/client-logs"
+    if [[ -d "$run_directory/logs" ]]; then
+        cp -a "$run_directory/logs" "$E2E_ARTIFACTS/client-logs"
     fi
 }
 trap collect EXIT
 for attempt in 1 2 3; do
     set +e
     bash gradlew "-Ptarget=$target" "-PclientTestSource=$source_hash" "-PclientTestInput=$input" \
-        '-Dorg.gradle.jvmargs=-Xmx2G' --max-workers=2 --no-daemon ":$target:runClient" --console=plain \
-        >"$E2E_ARTIFACTS/minecraft.log" 2>&1
-    status=$?
+        '-Dorg.gradle.jvmargs=-Xmx2G' --max-workers=2 --no-daemon --build-cache ":$target:runClient" --console=plain \
+        2>&1 | tee "$E2E_ARTIFACTS/minecraft.log" | awk '
+            /^> Task |^> Configure project|^BUILD / || /CLIENT_TEST / { print; fflush(); }
+        '
+    status=${PIPESTATUS[0]}
     set -e
     if ((status == 0)); then break; fi
     if ((attempt == 3)) || [[ -f "$report/results.json" ]] ||
