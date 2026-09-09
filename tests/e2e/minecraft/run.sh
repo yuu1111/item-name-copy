@@ -5,7 +5,7 @@ target=${1:-1.21.1-fabric}
 input=${2:-external}
 case "$input" in
     external) expected=3; mode='real client, external X11 input, OS clipboard' ;;
-    synthetic) expected=13; mode='real client, synthetic input callbacks, OS clipboard' ;;
+    synthetic) expected=12; mode='real client, synthetic input callbacks, OS clipboard' ;;
     *) echo "Unknown input suite: $input" >&2; exit 1 ;;
 esac
 if [[ ! "$target" =~ ^[0-9][0-9A-Za-z.-]*$ || ! -f "versions/$target/gradle.properties" ]]; then

@@ -141,11 +141,6 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void toggleRecipe() {
-        Object book = recipeBook();
-        if (book != null && Reflect.has(book, "toggleVisibility", 0)) {
-            Reflect.call(book, "toggleVisibility");
-            return;
-        }
         for (Object widget : widgets(testScreen)) {
             String name = widget.getClass().getSimpleName();
             if (name.equals("ImageButton") || name.equals("GuiButtonImage")) {
@@ -159,7 +154,6 @@ public final class ItemNameCopyClientDriver {
     public void selectRecipeSearch(String value) {
         Object book = recipeBook();
         if (!(Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
-        Reflect.call(book, "initVisuals");
         Object search = Reflect.get(book, "searchBox", "searchBar", "searchField");
         if (!legacy) Reflect.call(testScreen, "setFocused|setListener", book);
         select(search, value);

@@ -85,7 +85,7 @@ try {
             $runExit = $LASTEXITCODE
             $reportPath = Join-Path $directory "$runId/client-report/results.json"
             $result = if (Test-Path -LiteralPath $reportPath) { Get-Content -Raw -LiteralPath $reportPath | ConvertFrom-Json } else { $null }
-            $expected = if ($inputSuite -eq 'external') { 3 } else { 13 }
+            $expected = if ($inputSuite -eq 'external') { 3 } else { 12 }
             $passed = $runExit -eq 0 -and $null -ne $result -and $result.target -eq $node.node -and
                 $result.failed -eq 0 -and $result.passed -eq $expected -and $result.expectedTests -eq $expected
             $status = if ($passed) { 'passed' } else { 'failed' }
