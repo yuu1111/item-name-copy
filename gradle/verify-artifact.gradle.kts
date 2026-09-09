@@ -122,7 +122,8 @@ val verifyArtifact = tasks.register("verifyArtifact") {
                 check(metadata.contains("version=\"${project.version}\""))
                 check(metadata.contains("versionRange=\"[$minecraftTarget]\""))
                 check(metadata.contains("versionRange=\"[${project.property("loader_version")},)\""))
-                check(metadata.contains("javaVersion=\"[$requiredJava,)\""))
+                val javaFeature = if (metadataPath == "META-INF/mods.toml") "java_version" else "javaVersion"
+                check(metadata.contains("$javaFeature=\"[$requiredJava,)\""))
                 check(zip.getEntry("fabric.mod.json") == null)
                 val otherMetadata = if (metadataPath == "META-INF/mods.toml") "META-INF/neoforge.mods.toml" else "META-INF/mods.toml"
                 check(zip.getEntry(otherMetadata) == null) { "Jar contains metadata for another loader generation" }

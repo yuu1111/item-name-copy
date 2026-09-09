@@ -69,6 +69,9 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     }
 
     private void prepareMainMenu(String screenName) {
+        if (screenName.equals("LoadingErrorScreen")) {
+            throw new AssertionError("Mod loading failed: " + client.describeScreen());
+        }
         if (!screenName.equals(bootScreen)) {
             bootScreen = screenName;
             options.log("startup-screen " + client.describeScreen());

@@ -23,7 +23,13 @@ legacyForge {
         register("itemnamecopy") { sourceSet(sourceSets.main.get()) }
     }
     runs {
-        register("client") { client() }
+        register("client") {
+            client()
+            if (org.gradle.util.GradleVersion.version(project.property("minecraft_version").toString()) <
+                org.gradle.util.GradleVersion.version("1.18.2")) {
+                jvmArgument("--add-opens=java.base/java.lang.invoke=cpw.mods.securejarhandler")
+            }
+        }
     }
 }
 

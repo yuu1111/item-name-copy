@@ -11,7 +11,7 @@ displayTest="IGNORE_ALL_VERSION"
 description='''Copy a hovered item display name with Ctrl+C.'''
 
 [features.itemnamecopy]
-javaVersion="[${java},)"
+java_version="[${java},)"
 
 [[dependencies.itemnamecopy]]
 modId="forge"
