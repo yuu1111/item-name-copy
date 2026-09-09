@@ -9,7 +9,9 @@ services:
     shm_size: 256m
     volumes:
       - gradle-cache:/cache/gradle
+      - minecraft-assets:/root/.minecraft/assets
       - ../../build/docker-e2e:/artifacts
 
 volumes:
   gradle-cache:
+  minecraft-assets:

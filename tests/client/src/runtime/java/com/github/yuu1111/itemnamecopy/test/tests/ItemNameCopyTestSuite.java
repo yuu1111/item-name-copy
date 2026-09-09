@@ -40,8 +40,8 @@ public final class ItemNameCopyTestSuite implements TestSuite {
             Object server = Reflect.call(minecraft, "getSingleplayerServer|getIntegratedServer|integratedServer");
             client.verifyGameRules(server);
             Object data;
-            if (Reflect.has(server, "getWorldData", 0)) {
-                data = Reflect.call(server, "getWorldData");
+            if (Reflect.has(server, "getWorldData|func_240793_aU_", 0)) {
+                data = Reflect.call(server, "getWorldData|func_240793_aU_");
             } else {
                 Object serverLevel;
                 if (client.isLegacy()) {
@@ -59,8 +59,9 @@ public final class ItemNameCopyTestSuite implements TestSuite {
             TestAssertions.require(cheats, "Commands are disabled");
             if (Reflect.has(data, "isFlatWorld", 0)) {
                 TestAssertions.require((Boolean) Reflect.call(data, "isFlatWorld"), "World is not flat");
-            } else if (Reflect.has(data, "worldGenSettings", 0)) {
-                TestAssertions.require((Boolean) Reflect.call(Reflect.call(data, "worldGenSettings"), "isFlatWorld"),
+            } else if (Reflect.has(data, "worldGenSettings|getDimensionGeneratorSettings", 0)) {
+                TestAssertions.require((Boolean) Reflect.call(
+                        Reflect.call(data, "worldGenSettings|getDimensionGeneratorSettings"), "isFlatWorld|func_236228_i_"),
                         "World is not flat");
             } else {
                 Object worldType = Reflect.call(data, "getGeneratorType|getTerrainType|getGenerator");
