@@ -3,5 +3,6 @@
 **/run/
 .idea/
 *.iml
+*.ipr
+*.iws
 versions/**/src/
-

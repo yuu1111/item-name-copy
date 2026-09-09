@@ -36,7 +36,7 @@ stonecutter {
             val script =
                 checkNotNull(properties.getProperty("build_script")) { "Missing build_script in ${directory.name}" }
             check(directory.name.substringBefore('-') == minecraft) { "Node/version mismatch: ${directory.name}" }
-            version(directory.name, minecraft).buildscript(script)
+            version(directory.name, minecraft).buildscript("gradle/loaders/$script")
         }
         vcsVersion = vcsNode
     }

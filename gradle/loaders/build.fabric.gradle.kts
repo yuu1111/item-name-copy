@@ -22,7 +22,10 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
     if (property("minecraft_version") == "1.21.1") {
         when (providers.gradleProperty("recipeViewerTest").orNull) {
-            "emi" -> modRuntimeOnly("maven.modrinth:emi:1.1.24+1.21.1+fabric")
+            "emi" -> {
+                modRuntimeOnly("maven.modrinth:emi:1.1.24+1.21.1+fabric")
+                modRuntimeOnly("maven.modrinth:fabric-api:0.116.17+1.21.1")
+            }
             "rei" -> {
                 modRuntimeOnly("maven.modrinth:rei:16.0.799+fabric")
                 modRuntimeOnly("maven.modrinth:architectury-api:13.0.11+fabric")

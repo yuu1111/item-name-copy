@@ -70,8 +70,10 @@ try {
         if (Test-Path -LiteralPath $reportPath) { Remove-Item -LiteralPath $reportPath }
         $timer = [System.Diagnostics.Stopwatch]::StartNew()
         Write-Output "$($node.node): starting client verification"
-        $viewerArgument = if ($RecipeViewer) { @("-PrecipeViewerTest=$RecipeViewer") } else { @() }
-        & $launcher @wrapperArguments "-Ptarget=$($node.node)" "-PclientTestSource=$sourceHash" @viewerArgument ":$($node.node):runClient" --console=plain *> $logPath
+        $runArguments = @("-Ptarget=$($node.node)", "-PclientTestSource=$sourceHash")
+        if ($RecipeViewer) { $runArguments += "-PrecipeViewerTest=$RecipeViewer" }
+        $runArguments += ":$($node.node):runClient", '--console=plain'
+        & $launcher @wrapperArguments @runArguments *> $logPath
         $runExit = $LASTEXITCODE
         $timer.Stop()
         $result = if (Test-Path -LiteralPath $reportPath) { Get-Content -Raw -LiteralPath $reportPath | ConvertFrom-Json } else { $null }
