@@ -1,6 +1,6 @@
 param(
     [string[]]$Target,
-    [ValidateSet('emi', 'rei', 'jei')]
+    [ValidateSet('emi', 'rei', 'jei', 'all')]
     [string]$RecipeViewer,
     [switch]$Resume
 )
@@ -8,6 +8,28 @@ param(
 $ErrorActionPreference = 'Stop'
 $repository = Split-Path -Parent $PSScriptRoot
 $matrix = (& (Join-Path $PSScriptRoot 'Get-BuildMatrix.ps1') | ConvertFrom-Json).include
+if ($RecipeViewer -eq 'all') {
+    if ($Target -and (@($Target).Count -ne 1 -or $Target[0] -ne '1.21.1-fabric')) {
+        throw 'Recipe viewer tests currently use the 1.21.1-fabric compatibility target'
+    }
+
+    $powershell = (Get-Process -Id $PID).Path
+    $failedViewers = @()
+    foreach ($viewer in @('emi', 'rei', 'jei')) {
+        Write-Output "Recipe viewer verification: $viewer"
+        $arguments = @('-NoProfile', '-File', $PSCommandPath, '-Target', '1.21.1-fabric', '-RecipeViewer', $viewer)
+        if ($Resume) { $arguments += '-Resume' }
+        & $powershell @arguments
+        if ($LASTEXITCODE -ne 0) { $failedViewers += $viewer }
+    }
+
+    if ($failedViewers.Count -gt 0) {
+        Write-Output "Recipe viewer verification finished: failed: $($failedViewers -join ', ')"
+        exit 1
+    }
+    Write-Output 'Recipe viewer verification finished: EMI, REI and JEI passed'
+    exit 0
+}
 if ($RecipeViewer) {
     if (-not $Target) { $Target = @('1.21.1-fabric') }
     if (@($Target).Count -ne 1 -or $Target[0] -ne '1.21.1-fabric') {
@@ -20,7 +42,11 @@ if ($Target) {
     $matrix = @($matrix | Where-Object { $_.node -in $Target })
 }
 
-$reportDirectory = Join-Path $repository 'build/runtime-verification'
+$reportDirectory = if ($RecipeViewer) {
+    Join-Path $repository "build/runtime-verification/recipe-viewer/$RecipeViewer"
+} else {
+    Join-Path $repository 'build/runtime-verification'
+}
 $manifestPath = Join-Path $reportDirectory 'matrix.json'
 $logDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ('itemnamecopy-client-tests-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $reportDirectory, $logDirectory -Force | Out-Null
@@ -66,8 +92,9 @@ try {
             continue
         }
         $logPath = Join-Path $logDirectory ($node.node + '.log')
-        $reportPath = Join-Path $repository "versions/$($node.node)/build/reports/client-test/results.json"
-        if (Test-Path -LiteralPath $reportPath) { Remove-Item -LiteralPath $reportPath }
+        $executionReportDirectory = Join-Path $repository "versions/$($node.node)/build/reports/client-test"
+        $executionReportPath = Join-Path $executionReportDirectory 'results.json'
+        if (Test-Path -LiteralPath $executionReportPath) { Remove-Item -LiteralPath $executionReportPath }
         $timer = [System.Diagnostics.Stopwatch]::StartNew()
         Write-Output "$($node.node): starting client verification"
         $runArguments = @("-Ptarget=$($node.node)", "-PclientTestSource=$sourceHash")
@@ -76,11 +103,22 @@ try {
         & $launcher @wrapperArguments @runArguments *> $logPath
         $runExit = $LASTEXITCODE
         $timer.Stop()
-        $result = if (Test-Path -LiteralPath $reportPath) { Get-Content -Raw -LiteralPath $reportPath | ConvertFrom-Json } else { $null }
+        $result = if (Test-Path -LiteralPath $executionReportPath) {
+            Get-Content -Raw -LiteralPath $executionReportPath | ConvertFrom-Json
+        } else { $null }
         $passed = $runExit -eq 0 -and $null -ne $result -and $result.target -eq $node.node -and
             $result.source -eq $sourceHash -and $result.failed -eq 0 -and $result.passed -gt 0 -and $result.passed -eq $result.expectedTests
         $status = if ($passed) { 'passed' } else { 'failed' }
         if (-not $passed) { $failed++ }
+        $storedReportDirectory = Join-Path $reportDirectory "reports/$($node.node)"
+        $storedLogDirectory = Join-Path $reportDirectory 'logs'
+        New-Item -ItemType Directory -Path $storedReportDirectory, $storedLogDirectory -Force | Out-Null
+        if (Test-Path -LiteralPath $executionReportDirectory) {
+            Copy-Item -Path (Join-Path $executionReportDirectory '*') -Destination $storedReportDirectory -Recurse -Force
+        }
+        $storedLogPath = Join-Path $storedLogDirectory "$($node.node).log"
+        Copy-Item -LiteralPath $logPath -Destination $storedLogPath -Force
+        $storedReportPath = Join-Path $storedReportDirectory 'results.json'
         $entries[$node.node] = [ordered]@{
             target = $node.node
             status = $status
@@ -88,8 +126,8 @@ try {
             durationSeconds = [math]::Round($timer.Elapsed.TotalSeconds, 1)
             passed = if ($null -ne $result) { $result.passed } else { 0 }
             failed = if ($null -ne $result) { $result.failed } else { $null }
-            report = if ($null -ne $result) { $reportPath } else { $null }
-            log = $logPath
+            report = if ($null -ne $result) { $storedReportPath } else { $null }
+            log = $storedLogPath
         }
         [ordered]@{
             schemaVersion = 1

@@ -12,13 +12,17 @@
 ./scripts/Invoke-ClientTests.ps1 -Resume
 ```
 
-EMI、REI、JEIとの連携は、1.21.1 Fabricで実際のModと必要な依存を追加して個別に検証する
+EMI、REI、JEIとの連携は、1.21.1 Fabricで実際のModと必要な依存を追加して検証する
 
 ```powershell
+./scripts/Invoke-ClientTests.ps1 -RecipeViewer all
 ./scripts/Invoke-ClientTests.ps1 -Target '1.21.1-fabric' -RecipeViewer emi
 ./scripts/Invoke-ClientTests.ps1 -Target '1.21.1-fabric' -RecipeViewer rei
 ./scripts/Invoke-ClientTests.ps1 -Target '1.21.1-fabric' -RecipeViewer jei
 ```
+
+`all`は3種類を順に実行し、失敗した種類があっても残りの検証を続ける
+個別指定は失敗の再現や調査に使う
 
 ## 実行と判定
 
@@ -37,7 +41,8 @@ EMI、REI、JEIとの連携は、1.21.1 Fabricで実際のModと必要な依存�
 - コピー内容、空スロット、カスタム名、リピート抑止、ショートカット登録と再割り当て、既定のCtrl、修飾キーなし、別の修飾キー、レシピ検索、クリエイティブ検索、翻訳通知を検証する
 - ワールドの生成方式、難易度、チート許可と3つのゲームルールは、統合サーバーの実値を検証する
 - 個別結果は`versions/<対象>/build/reports/client-test/`の`results.json`と`TEST-client.xml`へ出力する
-- 集計結果は`build/runtime-verification/matrix.json`へ出力し、各対象の実行ログへのパスも保存する
+- 通常構成の集計結果は`build/runtime-verification/matrix.json`へ出力する
+- レシピビューアーの結果は`build/runtime-verification/recipe-viewer/<種類>/`へ分け、レポートと実行ログも保存する
 - 失敗、レポート欠落、テスト0件はGradleタスクの失敗とし、起動を含め5分でタイムアウトする
 - 実行ディレクトリと生成ワールドは`versions/<対象>/build/client-test/run/`に残る
 
