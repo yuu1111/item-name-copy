@@ -18,21 +18,139 @@ import net.minecraft.world.item.ItemStack;
 final class RecipeViewerAccess {
     private static final ViewerAdapter EMI = EmiAdapter.create();
     private static final ViewerAdapter REI = ReiAdapter.create();
+    private static final ViewerAdapter JEI = JeiAdapter.create();
 
     private RecipeViewerAccess() {
     }
 
     static boolean supports(Screen screen) {
-        return EMI.supports(screen) || REI.supports(screen);
+        return EMI.supports(screen) || REI.supports(screen) || JEI.supports(screen);
     }
 
     static boolean isSearchFocused() {
-        return EMI.isSearchFocused() || REI.isSearchFocused();
+        return EMI.isSearchFocused() || REI.isSearchFocused() || JEI.isSearchFocused();
     }
 
     static Optional<String> hoveredItemName(Screen screen) {
         Optional<String> name = EMI.hoveredItemName(screen);
-        return name.isPresent() ? name : REI.hoveredItemName(screen);
+        if (name.isPresent()) return name;
+        name = REI.hoveredItemName(screen);
+        return name.isPresent() ? name : JEI.hoveredItemName(screen);
+    }
+
+    private static final class JeiAdapter implements ViewerAdapter {
+        private final Method getRuntime;
+        private final Method runtimeGetIngredientListOverlay;
+        private final Method runtimeGetBookmarkOverlay;
+        private final Method runtimeGetRecipesGui;
+        private final Method overlayGetIngredientUnderMouse;
+        private final Method overlayHasKeyboardFocus;
+        private final Method bookmarkGetIngredientUnderMouse;
+        private final Method typedGetIngredient;
+        private final Method recipesGetIngredientUnderMouse;
+        private final Object itemStackType;
+
+        private JeiAdapter(Method getRuntime, Method runtimeGetIngredientListOverlay,
+                           Method runtimeGetBookmarkOverlay, Method runtimeGetRecipesGui,
+                           Method overlayGetIngredientUnderMouse, Method overlayHasKeyboardFocus,
+                           Method bookmarkGetIngredientUnderMouse, Method typedGetIngredient,
+                           Method recipesGetIngredientUnderMouse, Object itemStackType) {
+            this.getRuntime = getRuntime;
+            this.runtimeGetIngredientListOverlay = runtimeGetIngredientListOverlay;
+            this.runtimeGetBookmarkOverlay = runtimeGetBookmarkOverlay;
+            this.runtimeGetRecipesGui = runtimeGetRecipesGui;
+            this.overlayGetIngredientUnderMouse = overlayGetIngredientUnderMouse;
+            this.overlayHasKeyboardFocus = overlayHasKeyboardFocus;
+            this.bookmarkGetIngredientUnderMouse = bookmarkGetIngredientUnderMouse;
+            this.typedGetIngredient = typedGetIngredient;
+            this.recipesGetIngredientUnderMouse = recipesGetIngredientUnderMouse;
+            this.itemStackType = itemStackType;
+        }
+
+        static ViewerAdapter create() {
+            try {
+                ClassLoader loader = RecipeViewerAccess.class.getClassLoader();
+                Class<?> internal = Class.forName("mezz.jei.common.Internal", false, loader);
+                Class<?> runtime = Class.forName("mezz.jei.api.runtime.IJeiRuntime", false, loader);
+                Class<?> ingredientList = Class.forName(
+                        "mezz.jei.api.runtime.IIngredientListOverlay", false, loader);
+                Class<?> bookmark = Class.forName("mezz.jei.api.runtime.IBookmarkOverlay", false, loader);
+                Class<?> typed = Class.forName("mezz.jei.api.ingredients.ITypedIngredient", false, loader);
+                Class<?> recipes = Class.forName("mezz.jei.api.runtime.IRecipesGui", false, loader);
+                Class<?> ingredientType = Class.forName("mezz.jei.api.ingredients.IIngredientType", false, loader);
+                Class<?> vanillaTypes = Class.forName("mezz.jei.api.constants.VanillaTypes", false, loader);
+                Method getRuntime;
+                try {
+                    getRuntime = internal.getMethod("getOptionalJeiRuntime");
+                } catch (NoSuchMethodException exception) {
+                    getRuntime = internal.getMethod("getRuntime");
+                }
+                return new JeiAdapter(
+                        getRuntime, runtime.getMethod("getIngredientListOverlay"),
+                        runtime.getMethod("getBookmarkOverlay"), runtime.getMethod("getRecipesGui"),
+                        ingredientList.getMethod("getIngredientUnderMouse"),
+                        ingredientList.getMethod("hasKeyboardFocus"),
+                        bookmark.getMethod("getIngredientUnderMouse"), typed.getMethod("getIngredient"),
+                        recipes.getMethod("getIngredientUnderMouse", ingredientType),
+                        vanillaTypes.getField("ITEM_STACK").get(null)
+                );
+            } catch (ReflectiveOperationException | LinkageError exception) {
+                return MissingAdapter.INSTANCE;
+            }
+        }
+
+        @Override
+        public boolean supports(Screen screen) {
+            return true;
+        }
+
+        @Override
+        public boolean isSearchFocused() {
+            try {
+                Object runtime = runtime();
+                if (runtime == null) return false;
+                Object overlay = runtimeGetIngredientListOverlay.invoke(runtime);
+                return Boolean.TRUE.equals(overlayHasKeyboardFocus.invoke(overlay));
+            } catch (ReflectiveOperationException | RuntimeException | LinkageError exception) {
+                return false;
+            }
+        }
+
+        @Override
+        public Optional<String> hoveredItemName(Screen screen) {
+            try {
+                Object runtime = runtime();
+                if (runtime == null) return Optional.empty();
+
+                Object overlay = runtimeGetIngredientListOverlay.invoke(runtime);
+                Optional<String> name = typedIngredientName(overlayGetIngredientUnderMouse.invoke(overlay));
+                if (name.isPresent()) return name;
+
+                Object bookmark = runtimeGetBookmarkOverlay.invoke(runtime);
+                name = typedIngredientName(bookmarkGetIngredientUnderMouse.invoke(bookmark));
+                if (name.isPresent()) return name;
+
+                Object recipes = runtimeGetRecipesGui.invoke(runtime);
+                return itemName(optionalValue(recipesGetIngredientUnderMouse.invoke(recipes, itemStackType)));
+            } catch (ReflectiveOperationException | RuntimeException | LinkageError exception) {
+                return Optional.empty();
+            }
+        }
+
+        private Object runtime() throws ReflectiveOperationException {
+            return optionalValue(getRuntime.invoke(null));
+        }
+
+        private Optional<String> typedIngredientName(Object result) throws ReflectiveOperationException {
+            Object typed = optionalValue(result);
+            return typed == null ? Optional.empty() : itemName(typedGetIngredient.invoke(typed));
+        }
+
+        private Object optionalValue(Object value) {
+            if (!(value instanceof Optional)) return value;
+            Optional<?> optional = (Optional<?>) value;
+            return optional.isPresent() ? optional.get() : null;
+        }
     }
 
     private interface ViewerAdapter {

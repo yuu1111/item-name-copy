@@ -9,6 +9,13 @@ base.archivesName = "item-name-copy"
 repositories {
     mavenCentral()
     maven("https://api.modrinth.com/maven")
+    maven("https://maven.fabricmc.net/")
+    maven("https://maven.blamejared.com/") {
+        content { includeGroup("mezz.jei") }
+    }
+    maven("https://repo.sleeping.town/") {
+        content { includeGroup("dev.emi") }
+    }
 }
 
 val legacyMappings = org.gradle.util.GradleVersion.version(property("minecraft_version").toString()) <
@@ -21,16 +28,21 @@ dependencies {
     else loomx.applyMojangMappings()
     modImplementation("net.fabricmc:fabric-loader:${property("loader_version")}")
     if (property("minecraft_version") == "1.21.1") {
-        when (providers.gradleProperty("recipeViewerTest").orNull) {
+        val recipeViewer = providers.gradleProperty("recipeViewerTest").orNull
+        if (recipeViewer != null) {
+            modImplementation("net.fabricmc.fabric-api:fabric-api:0.116.17+1.21.1")
+        }
+        when (recipeViewer) {
             "emi" -> {
-                modRuntimeOnly("maven.modrinth:emi:1.1.24+1.21.1+fabric")
-                modRuntimeOnly("maven.modrinth:fabric-api:0.116.17+1.21.1")
+                modImplementation("dev.emi:emi-fabric:1.1.24+1.21.1")
             }
             "rei" -> {
-                modRuntimeOnly("maven.modrinth:rei:16.0.799+fabric")
-                modRuntimeOnly("maven.modrinth:architectury-api:13.0.11+fabric")
-                modRuntimeOnly("maven.modrinth:cloth-config:15.0.140+fabric")
-                modRuntimeOnly("maven.modrinth:fabric-api:0.116.17+1.21.1")
+                modImplementation("maven.modrinth:rei:16.0.799+fabric")
+                modImplementation("maven.modrinth:architectury-api:13.0.11+fabric")
+                modImplementation("maven.modrinth:cloth-config:15.0.140+fabric")
+            }
+            "jei" -> {
+                modImplementation("mezz.jei:jei-1.21.1-fabric:19.53.0.426")
             }
         }
     }

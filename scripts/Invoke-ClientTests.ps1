@@ -1,6 +1,6 @@
 param(
     [string[]]$Target,
-    [ValidateSet('emi', 'rei')]
+    [ValidateSet('emi', 'rei', 'jei')]
     [string]$RecipeViewer,
     [switch]$Resume
 )

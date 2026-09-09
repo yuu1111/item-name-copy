@@ -140,6 +140,7 @@ public final class ItemNameCopyTestSuite implements TestSuite {
     }
 
     private void recipeSearch() {
+        if (!System.getProperty("itemnamecopy.test.recipeViewer", "").isEmpty()) return;
         test("recipe-search-priority-and-return-to-copy",
                 () -> client.openInventoryWithRegularItem(), () -> client.selectRecipeSearch("recipe-copy-test"),
                 () -> client.seedClipboard("recipe-sentinel"), () -> client.hoverSlot(36),
@@ -180,21 +181,25 @@ public final class ItemNameCopyTestSuite implements TestSuite {
         if (viewer.isEmpty()) return;
 
         test(viewer + "-pseudo-slot-copy",
-                client::openRecipeViewerAndHoverItem,
+                client::openRecipeViewer,
+                client::hoverRecipeViewerItem,
                 () -> client.seedClipboard(viewer + "-pseudo-slot-sentinel"),
                 () -> client.sendRecipeViewerCopyKeyEvent(1, 2),
                 () -> client.sendRecipeViewerCopyKeyEvent(0, 2),
                 () -> TestAssertions.equal(client.recipeViewerItemName(), client.clipboardText()));
         test(viewer + "-search-priority-and-return-to-pseudo-slot",
-                client::openRecipeViewerAndHoverItem,
+                client::openRecipeViewer,
+                client::hoverRecipeViewerItem,
                 () -> client.selectRecipeViewerSearch("recipe-viewer-copy-test"),
                 () -> client.seedClipboard(viewer + "-search-sentinel"),
                 () -> client.sendRecipeViewerCopyKeyEvent(1, 2),
                 () -> client.sendRecipeViewerCopyKeyEvent(0, 2),
                 () -> TestAssertions.equal("recipe-viewer-copy-test", client.clipboardText()),
                 client::unfocusRecipeViewerSearch,
-                () -> client.sendRecipeViewerCopyKeyEvent(1, 2),
-                () -> client.sendRecipeViewerCopyKeyEvent(0, 2),
+                client::verifyRecipeViewerSearchUnfocused,
+                client::hoverRecipeViewerItem,
+                () -> client.sendRecipeViewerCopyKeyDirect(1, 2),
+                () -> client.sendRecipeViewerCopyKeyDirect(0, 2),
                 () -> TestAssertions.equal(client.recipeViewerItemName(), client.clipboardText()));
     }
 

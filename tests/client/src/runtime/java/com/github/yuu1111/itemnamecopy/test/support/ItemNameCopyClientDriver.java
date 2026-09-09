@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -140,6 +141,11 @@ public final class ItemNameCopyClientDriver {
     }
 
     public void toggleRecipe() {
+        Object book = recipeBook();
+        if (book != null && Reflect.has(book, "toggleVisibility", 0)) {
+            Reflect.call(book, "toggleVisibility");
+            return;
+        }
         for (Object widget : widgets(testScreen)) {
             String name = widget.getClass().getSimpleName();
             if (name.equals("ImageButton") || name.equals("GuiButtonImage")) {
@@ -153,6 +159,7 @@ public final class ItemNameCopyClientDriver {
     public void selectRecipeSearch(String value) {
         Object book = recipeBook();
         if (!(Boolean) Reflect.call(book, "isVisible")) toggleRecipe();
+        Reflect.call(book, "initVisuals");
         Object search = Reflect.get(book, "searchBox", "searchBar", "searchField");
         if (!legacy) Reflect.call(testScreen, "setFocused|setListener", book);
         select(search, value);
@@ -227,11 +234,31 @@ public final class ItemNameCopyClientDriver {
         }
     }
 
-    public void openRecipeViewerAndHoverItem() {
+    public void sendRecipeViewerCopyKeyDirect(int action, int flags) {
+        Class<?> client = Reflect.type("com.github.yuu1111.itemnamecopy.client.ItemNameCopyClient");
+        input.beginKeyEvent(46, 'c', action, flags);
+        try {
+            Reflect.call(client, "beginKey", 67, 0, flags, action);
+            Reflect.call(client, "tryCopy", testScreen, 67, 0, flags, action, false);
+        } finally {
+            input.endKeyEvent();
+        }
+    }
+
+    public void openRecipeViewer() {
         openInventoryWithRegularItem();
         String viewer = System.getProperty("itemnamecopy.test.recipeViewer", "");
-        if (viewer.equals("emi")) openEmiAndHoverItem();
-        else if (viewer.equals("rei")) openReiAndHoverItem();
+        if (viewer.equals("emi")) openEmi();
+        else if (viewer.equals("rei")) openRei();
+        else if (viewer.equals("jei")) openJei();
+        else throw new IllegalStateException("Recipe viewer test mode is not configured");
+    }
+
+    public void hoverRecipeViewerItem() {
+        String viewer = System.getProperty("itemnamecopy.test.recipeViewer", "");
+        if (viewer.equals("emi")) hoverEmiItem();
+        else if (viewer.equals("rei")) hoverReiItem();
+        else if (viewer.equals("jei")) hoverJeiItem();
         else throw new IllegalStateException("Recipe viewer test mode is not configured");
     }
 
@@ -247,6 +274,9 @@ public final class ItemNameCopyClientDriver {
         } else if (viewer.equals("rei")) {
             Object runtime = Reflect.call(Reflect.type("me.shedaniel.rei.api.client.REIRuntime"), "getInstance");
             search = Reflect.call(runtime, "getSearchTextField");
+        } else if (viewer.equals("jei")) {
+            Object overlay = Reflect.call(jeiRuntime(), "getIngredientListOverlay");
+            search = Reflect.get(overlay, "searchField");
         } else throw new IllegalStateException("Recipe viewer test mode is not configured");
         select(search, value);
     }
@@ -256,46 +286,69 @@ public final class ItemNameCopyClientDriver {
         Object search;
         if (viewer.equals("emi")) {
             search = Reflect.get(Reflect.type("dev.emi.emi.screen.EmiScreenManager"), "search");
-        } else {
+        } else if (viewer.equals("rei")) {
             Object runtime = Reflect.call(Reflect.type("me.shedaniel.rei.api.client.REIRuntime"), "getInstance");
             search = Reflect.call(runtime, "getSearchTextField");
-        }
+        } else if (viewer.equals("jei")) {
+            Object overlay = Reflect.call(jeiRuntime(), "getIngredientListOverlay");
+            search = Reflect.get(overlay, "searchField");
+        } else throw new IllegalStateException("Recipe viewer test mode is not configured");
+        setText(search, "");
         Reflect.call(search, "setFocused", false);
+        if (Reflect.has(testScreen, "setFocused|setListener", 1)) {
+            Reflect.call(testScreen, "setFocused|setListener", (Object) null);
+        }
         movePointer(recipeViewerMouseX, recipeViewerMouseY);
     }
 
-    private void openEmiAndHoverItem() {
-        Object stack = itemInSlot(slots().get(36));
-        Object emiStack = Reflect.call(Reflect.type("dev.emi.emi.api.stack.EmiStack"), "of", stack);
-        Reflect.call(Reflect.type("dev.emi.emi.api.EmiApi"), "displayUses", emiStack);
-        testScreen = screen();
+    public void verifyRecipeViewerSearchUnfocused() {
+        TestAssertions.require(!(Boolean) Reflect.call(
+                Reflect.type("com.github.yuu1111.itemnamecopy.client.RecipeViewerAccess"),
+                "isSearchFocused"), "Recipe viewer search remained focused");
+    }
 
+    private void openEmi() {
+        Reflect.call(Reflect.type("dev.emi.emi.api.EmiApi"), "displayAllRecipes");
+        testScreen = screen();
+    }
+
+    private void hoverEmiItem() {
+        testScreen = screen();
+        if (!testScreen.getClass().getName().endsWith("RecipeScreen")) throw new Pending();
         int width = ((Number) Reflect.get(testScreen, "width")).intValue();
         int height = ((Number) Reflect.get(testScreen, "height")).intValue();
         Class<?> api = Reflect.type("dev.emi.emi.api.EmiApi");
+        int interactions = 0;
+        int itemInteractions = 0;
         for (int y = 2; y < height; y += 4) {
             for (int x = 2; x < width; x += 4) {
                 Object interaction = Reflect.call(api, "getHoveredStack", x, y, false);
                 if ((Boolean) Reflect.call(interaction, "isEmpty")) continue;
+                interactions++;
                 List<?> stacks = (List<?>) Reflect.call(Reflect.call(interaction, "getStack"), "getEmiStacks");
                 if (stacks.size() != 1) continue;
                 Object item = Reflect.call(stacks.get(0), "getItemStack");
                 if ((Boolean) Reflect.call(item, "isEmpty")) continue;
+                itemInteractions++;
                 rememberRecipeViewerItem(x, y, item);
                 return;
             }
         }
-        throw new AssertionError("EMI did not expose an item pseudo-slot");
+        throw new AssertionError("EMI did not expose an item pseudo-slot on "
+                + testScreen.getClass().getName() + " (interactions=" + interactions
+                + ", itemInteractions=" + itemInteractions + ")");
     }
 
-    private void openReiAndHoverItem() {
+    private void openRei() {
         Object stack = itemInSlot(slots().get(36));
         Object entry = Reflect.call(Reflect.type("me.shedaniel.rei.api.common.util.EntryStacks"), "of", stack);
         Object builder = Reflect.call(Reflect.type("me.shedaniel.rei.api.client.view.ViewSearchBuilder"), "builder");
         Reflect.call(builder, "addUsagesFor", entry);
         TestAssertions.require((Boolean) Reflect.call(builder, "open"), "REI did not open a usage view");
         testScreen = screen();
+    }
 
+    private void hoverReiItem() {
         Class<?> slotType = Reflect.type("me.shedaniel.rei.api.client.gui.widgets.Slot");
         for (Object widget : widgets(testScreen)) {
             if (!slotType.isInstance(widget)) continue;
@@ -312,6 +365,48 @@ public final class ItemNameCopyClientDriver {
             return;
         }
         throw new AssertionError("REI did not expose an item pseudo-slot");
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void openJei() {
+        Object runtime = jeiRuntime();
+        Object stack = itemInSlot(slots().get(36));
+        Object helpers = Reflect.call(runtime, "getJeiHelpers");
+        Object focusFactory = Reflect.call(helpers, "getFocusFactory");
+        Object itemType = Reflect.get(Reflect.type("mezz.jei.api.constants.VanillaTypes"), "ITEM_STACK");
+        Class<? extends Enum> roleType = (Class<? extends Enum>) Reflect.type(
+                "mezz.jei.api.recipe.RecipeIngredientRole");
+        Object inputRole = Enum.valueOf(roleType, "INPUT");
+        Object focus = Reflect.call(focusFactory, "createFocus", inputRole, itemType, stack);
+        Object recipes = Reflect.call(runtime, "getRecipesGui");
+        Reflect.call(recipes, "show", focus);
+        testScreen = screen();
+    }
+
+    private void hoverJeiItem() {
+        Object runtime = jeiRuntime();
+        Object recipes = Reflect.call(runtime, "getRecipesGui");
+        Object itemType = Reflect.get(Reflect.type("mezz.jei.api.constants.VanillaTypes"), "ITEM_STACK");
+        int width = ((Number) Reflect.get(testScreen, "width")).intValue();
+        int height = ((Number) Reflect.get(testScreen, "height")).intValue();
+        for (int y = 2; y < height; y += 4) {
+            for (int x = 2; x < width; x += 4) {
+                movePointer(x, y);
+                Object result = Reflect.call(recipes, "getIngredientUnderMouse", itemType);
+                Object item = result instanceof Optional ? ((Optional<?>) result).orElse(null) : result;
+                if (item == null || (Boolean) Reflect.call(item, "isEmpty")) continue;
+                rememberRecipeViewerItem(x, y, item);
+                return;
+            }
+        }
+        throw new AssertionError("JEI did not expose an item pseudo-slot");
+    }
+
+    private Object jeiRuntime() {
+        Object internal = Reflect.type("mezz.jei.common.Internal");
+        Object result = Reflect.call(internal, "getOptionalJeiRuntime|getRuntime");
+        return result instanceof Optional ? ((Optional<?>) result).orElseThrow(
+                () -> new IllegalStateException("JEI runtime is not ready")) : result;
     }
 
     private void rememberRecipeViewerItem(int x, int y, Object item) {

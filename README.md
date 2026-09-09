@@ -12,7 +12,7 @@
 - 長押しでは一度だけコピー
 - 検索欄や金床の名前入力欄では、選択した文字列のコピーを優先
 - 標準のコンテナ画面を継承するMod画面に対応
-- EMI 1.18.2以降とREI 1.17以降のアイテム表示欄やレシピの疑似スロットに対応
+- EMI 1.18.2以降、REI 1.17以降、JEI 1.18.2以降のアイテム表示欄やレシピの疑似スロットに対応
 - サーバーへの導入と、Fabric APIやArchitectury APIなどの追加Modは不要
 
 ## 導入
@@ -67,10 +67,6 @@ Minecraftごとのコンパイル用JavaはToolchainで取得するため、初�
 ```powershell
 ./gradlew '-Ptarget=1.21.1-fabric' :1.21.1-fabric:runClient
 ```
-
-自動クライアントテストの実行方法と検証範囲は[tests/README.md](tests/README.md)にまとめている
-マルチバージョン構成、入力処理、互換境界の設計は[設計と対応方針](docs/minecraft-copy-item-name-mod.md)を参照する
-配布前の手動確認は[リリース前チェックリスト](docs/todo.md#リリース前チェックリスト)にまとめている
 
 ## ライセンス
 
