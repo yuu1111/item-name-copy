@@ -40,14 +40,18 @@ final class ContainerCopyTarget implements CopyShortcutHandler.Target {
     public boolean isTextInputFocused() {
         RecipeBookComponent recipeBook = MinecraftAccess.recipeBook(containerScreen);
         if (recipeBook != null && MinecraftAccess.isRecipeSearchFocused(recipeBook)) return true;
-        return hasFocusedTextInput(containerScreen);
+        return hasFocusedTextInput(containerScreen) || RecipeViewerAccess.isSearchFocused();
     }
 
     @Override
     public Optional<String> hoveredItemName() {
-        Slot slot = MinecraftAccess.hoveredSlot(containerScreen);
-        if (slot == null || !slot.hasItem()) return Optional.empty();
-        return Optional.of(slot.getItem().getHoverName().getString());
+        if (containerScreen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen) {
+            Slot slot = MinecraftAccess.hoveredSlot(containerScreen);
+            if (slot != null && slot.hasItem()) {
+                return Optional.of(slot.getItem().getHoverName().getString());
+            }
+        }
+        return RecipeViewerAccess.hoveredItemName(containerScreen);
     }
 
     @Override

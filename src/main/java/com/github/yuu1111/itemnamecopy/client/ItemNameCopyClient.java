@@ -36,7 +36,8 @@ public final class ItemNameCopyClient {
             return false;
         }
 
-        if (MinecraftAccess.currentScreen() != screen || !(screen instanceof AbstractContainerScreen)) {
+        if (MinecraftAccess.currentScreen() != screen
+                || (!(screen instanceof AbstractContainerScreen) && !RecipeViewerAccess.supports(screen))) {
             return false;
         }
 
