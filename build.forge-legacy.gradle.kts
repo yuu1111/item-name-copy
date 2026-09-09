@@ -66,7 +66,9 @@ tasks.withType<Jar>().configureEach { from(rootProject.file("LICENSE")) }
 tasks.processResources {
     val values = mapOf(
         "version" to project.version, "minecraft" to project.property("minecraft_version"),
-        "java" to project.property("java_version"), "loader" to project.property("loader_version"),
+        "java" to project.property("java_version"),
+        "java_feature" to if (targetLoader == "forge" && project.property("loader_version").toString().substringBefore('.').toInt() < 47) "java_version" else "javaVersion",
+        "loader" to project.property("loader_version"),
         "fml" to project.property("loader_version").toString().substringBefore('.')
     )
     inputs.properties(values)

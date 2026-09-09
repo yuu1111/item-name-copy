@@ -32,6 +32,9 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     public boolean prepare() {
         Object screen = client.screen();
         String screenName = screen == null ? "" : screen.getClass().getSimpleName();
+        if (screenName.equals("LoadingErrorScreen")) {
+            throw new AssertionError("Mod loading failed: " + client.describeScreen());
+        }
         switch (stage) {
             case WAIT_FOR_MAIN_MENU: prepareMainMenu(screenName); return false;
             case OPEN_WORLD_SELECTION: openWorldSelection(); return false;
@@ -69,9 +72,6 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
     }
 
     private void prepareMainMenu(String screenName) {
-        if (screenName.equals("LoadingErrorScreen")) {
-            throw new AssertionError("Mod loading failed: " + client.describeScreen());
-        }
         if (!screenName.equals(bootScreen)) {
             bootScreen = screenName;
             options.log("startup-screen " + client.describeScreen());
@@ -103,6 +103,7 @@ public final class ItemNameCopyTestLifecycle implements ClientTestLifecycle {
             advance();
             return;
         }
+        if (!screenName.contains("WorldSelection") && !screenName.contains("SelectWorld")) throw new Pending();
         client.press(client.requireButton("Create New World"));
         advance();
     }

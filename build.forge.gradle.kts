@@ -1,4 +1,5 @@
 import net.minecraftforge.renamer.gradle.RenamerExtension
+import java.io.File
 
 plugins {
     java
@@ -99,6 +100,13 @@ tasks.jar {
 }
 
 if (obfuscatedRuntime) {
+    tasks.withType<JavaExec>().matching { it.name == "runClient" }.configureEach {
+        doFirst {
+            environment("MOD_CLASSES", sourceSets.main.get().output.files.joinToString(File.pathSeparator) {
+                "itemnamecopy%%${it.absolutePath}"
+            })
+        }
+    }
     val renamer = extensions.getByType<RenamerExtension>()
     if (mixinRuntime) {
         renamer.enableMixinRefmaps {
@@ -126,7 +134,9 @@ tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
 tasks.processResources {
     val values = mapOf(
         "version" to project.version, "minecraft" to project.property("minecraft_version"),
-        "java" to project.property("java_version"), "loader" to project.property("loader_version"),
+        "java" to project.property("java_version"),
+        "java_feature" to if (project.property("loader_version").toString().substringBefore('.').toInt() < 47) "java_version" else "javaVersion",
+        "loader" to project.property("loader_version"),
         "fml" to project.property("loader_version").toString().substringBefore('.')
     )
     inputs.properties(values)
