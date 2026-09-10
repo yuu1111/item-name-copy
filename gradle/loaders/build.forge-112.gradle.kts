@@ -1,6 +1,8 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import net.minecraftforge.renamer.gradle.RenamerExtension
+import java.io.File
+import org.gradle.api.internal.plugins.DslObject
 import java.util.zip.ZipFile
 
 plugins {
@@ -103,6 +105,34 @@ val generateLegacyResources = tasks.register("generateLegacyResources") {
     }
 }
 sourceSets.main { resources.srcDir(generateLegacyResources) }
+
+tasks.compileJava {
+    destinationDirectory.set(layout.buildDirectory.dir("classes/java/main"))
+}
+
+tasks.processResources {
+    DslObject(rootSpec).conventionMapping.map("destinationDir") {
+        layout.buildDirectory.dir("resources/main").get().asFile
+    }
+}
+
+val prepareModClasses = tasks.register<Sync>("prepareModClasses") {
+    from(tasks.compileJava.flatMap { it.destinationDirectory })
+    from(tasks.processResources.map { it.destinationDir })
+    into(layout.buildDirectory.dir("sourceSets/main"))
+}
+
+tasks.classes {
+    dependsOn(prepareModClasses)
+}
+
+tasks.withType<JavaExec>().matching { it.name == "runClient" }.configureEach {
+    doFirst {
+        environment("MOD_CLASSES", sourceSets.main.get().output.files.joinToString(File.pathSeparator) {
+            "itemnamecopy%%${it.absolutePath}"
+        })
+    }
+}
 
 tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
 tasks.withType<Jar>().configureEach {

@@ -24,7 +24,8 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                 || "net/minecraft/client/gui/GuiScreen".equals(name);
         final boolean keyboard = "org/lwjgl/input/Keyboard".equals(name);
         final boolean mouse = "org/lwjgl/input/Mouse".equals(name);
-        if (!minecraft && !screen && !keyboard && !mouse) return null;
+        final boolean inputConstants = "com/mojang/blaze3d/platform/InputConstants".equals(name);
+        if (!minecraft && !screen && !keyboard && !mouse && !inputConstants) return null;
         try {
             ClassReader reader = new ClassReader(bytes);
             final boolean stackMapFrames = reader.readUnsignedShort(6) >= V1_6;
@@ -53,6 +54,12 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                             && ("hasControlDown".equals(method) || "isControlDown".equals(method)
                             || "isCtrlKeyDown".equals(method) || "func_146271_m".equals(method)))
                         override = "controlState";
+                    if (screen && "()Z".equals(descriptor)
+                            && ("hasShiftDown".equals(method) || "isShiftKeyDown".equals(method)))
+                        override = "shiftState";
+                    if (screen && "()Z".equals(descriptor)
+                            && ("hasAltDown".equals(method) || "isAltKeyDown".equals(method)))
+                        override = "altState";
                     if (keyboard && "getEventKey".equals(method)) override = "eventKey";
                     if (keyboard && "getEventCharacter".equals(method)) override = "eventCharacter";
                     if (keyboard && "getEventKeyState".equals(method)) override = "eventKeyState";
@@ -60,15 +67,22 @@ public final class Transformer implements ClassFileTransformer, Opcodes {
                     if (keyboard && "isKeyDown".equals(method)) override = "keyDown";
                     if (mouse && "getX".equals(method)) override = "mouseX";
                     if (mouse && "getY".equals(method)) override = "mouseY";
+                    if (inputConstants && "isKeyDown".equals(method)
+                            && ("(JI)Z".equals(descriptor)
+                            || "(Lcom/mojang/blaze3d/platform/Window;I)Z".equals(descriptor)))
+                        override = "glfwKeyDown";
                     if (override == null) return original;
                     final String overrideName = override;
-                    final boolean parameter = descriptor.startsWith("(I)");
+                    final int parameterIndex = descriptor.startsWith("(I)") ? 0
+                            : "(JI)Z".equals(descriptor) ? 2
+                            : "(Lcom/mojang/blaze3d/platform/Window;I)Z".equals(descriptor) ? 1 : -1;
                     return new MethodVisitor(ASM9, original) {
                         @Override
                         public void visitCode() {
                             super.visitCode();
-                            if (parameter) visitVarInsn(ILOAD, 0);
-                            visitMethodInsn(INVOKESTATIC, RUNTIME, overrideName, parameter ? "(I)I" : "()I", false);
+                            if (parameterIndex >= 0) visitVarInsn(ILOAD, parameterIndex);
+                            visitMethodInsn(INVOKESTATIC, RUNTIME, overrideName,
+                                    parameterIndex >= 0 ? "(I)I" : "()I", false);
                             visitInsn(DUP);
                             Label fallback = new Label();
                             visitJumpInsn(IFLT, fallback);

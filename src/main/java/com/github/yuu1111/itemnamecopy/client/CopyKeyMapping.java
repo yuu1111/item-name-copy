@@ -5,13 +5,16 @@ import net.minecraft.client.KeyMapping;
 //? if forge {
 /*import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
-*///?} elif neoforge {
+*///?} elif neoforge && >=1.20.2 {
 /*import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
+*///?} elif neoforge {
+/*import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.client.settings.KeyModifier;
 *///?}
 //? if >=1.21.9 {
 /*import net.minecraft.client.input.KeyEvent;
-//? if >=26.1 {
+//? if >=1.21.11 {
 import net.minecraft.resources.Identifier;
 //?} else {
 import net.minecraft.resources.ResourceLocation;
@@ -26,7 +29,7 @@ public final class CopyKeyMapping {
 
     //? if >=1.21.9 {
     /*private static final KeyMapping.Category KEY_CATEGORY = KeyMapping.Category.register(
-            //? if >=26.1 {
+            //? if >=1.21.11 {
             Identifier.fromNamespaceAndPath("itemnamecopy", "main")
             //?} else {
             ResourceLocation.fromNamespaceAndPath("itemnamecopy", "main")
@@ -49,7 +52,7 @@ public final class CopyKeyMapping {
                     "key.itemnamecopy.copy",
                     KeyConflictContext.UNIVERSAL,
                     KeyModifier.CONTROL,
-                    //? if forge && >=26.1 {
+                    //? if forge && >=1.21.11 {
                     /^InputConstants.Type.KEYSYM.getOrCreate(GLFW.GLFW_KEY_C),
                     KEY_CATEGORY,
                     0
@@ -79,7 +82,13 @@ public final class CopyKeyMapping {
         /*//? if >=1.21.9 {
         return COPY.isActiveAndMatches(InputConstants.getKey(new KeyEvent(key, scanCode, modifiers)));
         //?} else {
+        //? if >=1.14.2 && <1.14.4 {
+        /^return COPY.isActiveAndMatches(InputConstants.getInputByCode(key, scanCode));
+        ^///?} elif >=1.16.1 && <1.16.2 {
+        /^return COPY.isActiveAndMatches(InputConstants.getInputByCode(key, scanCode));
+        ^///?} else {
         return COPY.isActiveAndMatches(InputConstants.getKey(key, scanCode));
+        //?}
         //?}
         *///?}
     }

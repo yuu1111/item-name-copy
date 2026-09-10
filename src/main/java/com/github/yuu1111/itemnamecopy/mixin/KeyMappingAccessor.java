@@ -8,7 +8,11 @@ import java.util.Map;
 
 @Mixin(value = KeyMapping.class, remap = MappingPolicy.REMAP)
 public interface KeyMappingAccessor {
+    //? if forge && >=1.16.1 && <1.16.2 {
+    /*@Accessor("CATEGORY_ORDER")
+    *///?} else {
     @Accessor("CATEGORY_SORT_ORDER")
+    //?}
     static Map<String, Integer> itemnamecopy$getCategorySortOrder() {
         throw new AssertionError();
     }

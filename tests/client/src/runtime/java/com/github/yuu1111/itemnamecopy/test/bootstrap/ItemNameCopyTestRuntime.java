@@ -28,6 +28,14 @@ public final class ItemNameCopyTestRuntime {
         return INPUT.controlState();
     }
 
+    public static int shiftState() {
+        return INPUT.shiftState();
+    }
+
+    public static int altState() {
+        return INPUT.altState();
+    }
+
     public static int eventKey() {
         return INPUT.eventKey();
     }
@@ -54,6 +62,10 @@ public final class ItemNameCopyTestRuntime {
 
     public static int keyDown(int key) {
         return INPUT.keyDown(key);
+    }
+
+    public static int glfwKeyDown(int key) {
+        return INPUT.glfwKeyDown(key);
     }
 
     public static void tick(Object client) {
